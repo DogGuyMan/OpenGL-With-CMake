@@ -1,1 +1,28 @@
-[Bb]uild*
+# Ignore build directories
+[Bb]uild*/
+[Cc]make[Bb]uild*/
+
+# Ignore CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+
+# Ignore project-specific files
+*.cbp
+*.user
+*.ncb
+*.suo
+*.sln
+*.vcxproj
+*.vcxproj.filters
+
+# Ignore temporary files
+*.swp
+*.bak
+*.tmp
+*.log
+
+# Ignore OS-specific files
+.DS_Store

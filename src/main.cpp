@@ -1,7 +1,8 @@
 #include <iostream>
-#include <spdlog/logger.h>
+#include <stack>
+#include <spdlog/spdlog.h>
 
 int main(int argc, char *argv[]) {
-    std::cout << "Hello, World!" << std::endl;
+    spdlog::info("Hello, World! with spdlog");
     return 0;
 }

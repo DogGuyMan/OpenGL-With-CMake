@@ -10,4 +10,17 @@ FetchContent_Declare(spdlog
     # UPDATE_COMMAND "<_command_>" 업데이트가 있을떄 자동으로 CLI에서 수행할 커맨드
 )
 
-FetchContent_MakeAvailable(spdlog)
+FetchContent_Declare(glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_SHALLOW 1 # 1==true 로 하면 깃 변경 내역 최신것만 받아온다는 의미.
+    # UPDATE_COMMAND "<_command_>" 업데이트가 있을떄 자동으로 CLI에서 수행할 커맨드
+)
+
+set(GLFW_BUILD_EXAMPLES OFF)
+set(GLFW_BUILD_TESTS OFF)
+set(GLFW_BUILD_DOCS OFF)
+set(GLFW_INSTALL OFF)
+set(GLFW_USE_HYBRID_HPG ON)
+
+
+FetchContent_MakeAvailable(spdlog glfw)

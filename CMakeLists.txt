@@ -1,5 +1,6 @@
 # https://csj000714.tistory.com/414
 # https://github.com/cpichard/usdtweak/blob/develop/CMakeLists.txt
+# https://jonathanhamberg.com/post/2019-01-27-cmake-dependencies-fetch-content/
 # 최소 CMkae버젼 요구사항 명시
 
 # 필요한 CMake 최소 버전 명시
@@ -23,20 +24,14 @@ if(NOT CXX_FILESYSTEM_HAVE_HEADER)
     message(STATUS "Oh no! can't use filesystem!")
 endif()
 
-# 외부 라이브러리를 다운로드하고 빌드에 포함하기 위한 FetchContent 모듈 로드
-include(FetchContent)
+# Dpendency.cmake 파일을 include
+include(Dependency.cmake)
 
-FetchContent_Declare(spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG 706ad7059125f32158dad4441938c08fa910f143
-)
-
-FetchContent_MakeAvailable(spdlog)
-
-# 타겟 프로그램 정의
+# 타겟 실행파일 정의
 add_executable(${PROJECT_NAME} src/main.cpp)
 
 # 타겟을 링킹할 때 필요한 타겟이나 라이브러러리를 지정
+# 라이브러리 지정시 ::은 namespace까지도 의미하는것이다.
 target_link_libraries(${PROJECT_NAME} 
 PRIVATE
     spdlog::spdlog

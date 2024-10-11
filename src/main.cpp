@@ -3,6 +3,6 @@
 #include <spdlog/spdlog.h>
 
 int main(int argc, char *argv[]) {
-    spdlog::info("Hello, World! with spdlog");
+    SPDLOG_INFO("Hello, OpenGL"); // [2024-10-11 15:34:51.545] [info] [main.cpp:6] Hello, OpenGL
     return 0;
 }

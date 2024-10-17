@@ -7,11 +7,11 @@
 cmake_minimum_required(VERSION 3.11.0)
 
 # 사용할 C++ 버전을 20으로 설정
-set(PROJECT_NAME cmake_project-example)
+set(PROJECT_NAME first_opengl_exmample)
 set(CMAKE_CXX_STANDARD 20)
 
 # 윈도우 해상도 설정하는 변수 설정
-set(WINDOW_NAME "CMake Project Example")
+set(WINDOW_NAME "First OpenGL Example")
 set(WINDOW_WIDTH 800)
 set(WINDOW_HEIGHT 600)
 

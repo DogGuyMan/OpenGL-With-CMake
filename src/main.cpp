@@ -1,5 +1,6 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 int main(int argc, char *argv[]) {
@@ -28,7 +29,7 @@ int main(int argc, char *argv[]) {
     while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();
     }
-
+    
     SPDLOG_INFO("Terminate GLFW"); // [2024-10-11 16:04:33.541] [info] [main.cpp:32] Terminate GLFW
     glfwTerminate();
     return 0;

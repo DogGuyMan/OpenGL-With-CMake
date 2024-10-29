@@ -16,6 +16,39 @@ sh GNU_DirectoryStructure.sh CMAKE_PROJECT_EXAMPLE
 
 ---
 
+> ### CMake
+
+#### 1). FecthContent시 주의사항
+```
+glad를 다운받는 예시
+
+CMakeLists의 Dependency.cmake를 에서 
+
+FetchContent_Declare 에서 
+target을 "glad" 라고 하는 대신 
+target을 "dep-gald" 로 하여 의존성 추가하니 작동됨
+```
+
+```txt
+// FetchContent_Declare(glad
+//     GIT_REPOSITORY https://github.com/Dav1dde/glad.git
+//     GIT_TAG "v0.1.34"
+//     GIT_SHALLOW 1
+// )
+// 
+// set(DEP_LIST ${DEP_LIST} dep-glad)
+// set(DEP_LIBS ${DEP_LIBS} glad)
+
+FetchContent_Declare(dep-glad
+    GIT_REPOSITORY https://github.com/Dav1dde/glad.git
+    GIT_TAG "v0.1.34"
+    GIT_SHALLOW 1
+)
+
+set(DEP_LIST ${DEP_LIST} dep-glad)
+set(DEP_LIBS ${DEP_LIBS} glad)
+```
+
 > ### 참고 강의
 
 #### 1). [삼각형의 실전! CMake 초급](https://www.inflearn.com/course/%EC%8B%A4%EC%A0%84-cmake-%EC%B4%88%EA%B8%89/dashboard) 

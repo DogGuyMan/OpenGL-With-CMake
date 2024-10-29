@@ -3,17 +3,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-/* 
-...
-[2024-10-17 19:09:12.655] [info] [main.cpp:7] 프레임 버퍼 사이즈가 변경됨 : (1718 X 1114)
-[2024-10-17 19:09:12.661] [info] [main.cpp:7] 프레임 버퍼 사이즈가 변경됨 : (1710 X 1154)
-[2024-10-17 19:09:12.673] [info] [main.cpp:7] 프레임 버퍼 사이즈가 변경됨 : (1702 X 1184)
-[2024-10-17 19:09:12.678] [info] [main.cpp:7] 프레임 버퍼 사이즈가 변경됨 : (1698 X 1202)
-[2024-10-17 19:09:12.689] [info] [main.cpp:7] 프레임 버퍼 사이즈가 변경됨 : (1696 X 1214)
-[2024-10-17 19:09:12.694] [info] [main.cpp:7] 프레임 버퍼 사이즈가 변경됨 : (1690 X 1242)
-[2024-10-17 19:09:12.705] [info] [main.cpp:7] 프레임 버퍼 사이즈가 변경됨 : (1684 X 1256)
-...
-*/
 void OnFramebufferSizeChange(GLFWwindow* window, int width, int height) 
 {
     SPDLOG_INFO("프레임 버퍼 사이즈가 변경됨 : ({} X {})", width, height);
@@ -21,18 +10,6 @@ void OnFramebufferSizeChange(GLFWwindow* window, int width, int height)
     glViewport(0,0, width, height);
 }
 
-/*
-...
-[2024-10-17 19:18:54.418] [info] [main.cpp:35] key: 256 ,scancode: 53 ,action: Repeat, mods: ---
-[2024-10-17 19:18:54.452] [info] [main.cpp:35] key: 256 ,scancode: 53 ,action: Repeat, mods: ---
-[2024-10-17 19:18:54.485] [info] [main.cpp:35] key: 256 ,scancode: 53 ,action: Repeat, mods: ---
-[2024-10-17 19:18:54.514] [info] [main.cpp:35] key: 256 ,scancode: 53 ,action: Released, mods: ---
-[2024-10-17 19:18:54.827] [info] [main.cpp:35] key: 65 ,scancode: 0 ,action: Pressed, mods: ---
-[2024-10-17 19:18:54.900] [info] [main.cpp:35] key: 83 ,scancode: 1 ,action: Pressed, mods: ---
-[2024-10-17 19:18:54.975] [info] [main.cpp:35] key: 65 ,scancode: 0 ,action: Released, mods: ---
-[2024-10-17 19:18:54.993] [info] [main.cpp:35] key: 68 ,scancode: 2 ,action: Pressed, mods: ---
-...
-*/
 void OnKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods)  {
     SPDLOG_INFO("key: {} ,scancode: {} ,action: {}, mods: {}{}{}",
         key, scancode,

@@ -18,6 +18,14 @@ sh GNU_DirectoryStructure.sh CMAKE_PROJECT_EXAMPLE
 
 > ### CMake
 
+#### 0). 빌드와 실행법
+```
+cmake -B build
+cmake --build build
+
+./build/opengl_example
+```
+
 #### 1). FecthContent시 주의사항
 ```
 glad를 다운받는 예시

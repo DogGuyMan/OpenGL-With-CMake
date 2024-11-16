@@ -1,3 +1,4 @@
+#include "common.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>

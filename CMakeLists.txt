@@ -41,7 +41,11 @@ endif()
 include(Dependency.cmake)
 
 # 타겟 실행파일 정의
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} 
+    src/main.cpp
+    include/common.cpp include/common.h
+    include/shader.cpp include/shader.h
+)
 
 # 타겟을 링킹할 때 필요한 타겟이나 라이브러러리를 지정
 # 라이브러리 지정시 ::은 namespace까지도 의미하는것으로 보임?
@@ -49,8 +53,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${DEP_LIBS})
 
 target_include_directories(${PROJECT_NAME}
 PUBLIC
-    include/common/
-    include/shader/
+    include
+PRIVATE 
+    src
 )
 
 # 컴파일러에게 전달할 매크로 #define 설정

@@ -1,4 +1,6 @@
 #include "common.h"
+#include "shader.h"
+
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
@@ -67,11 +69,16 @@ int main(int argc, char *argv[]) {
     SPDLOG_INFO("OpenGL context version: {}", reinterpret_cast<const char*>(glVersion)); 
     // OpenGL 버젼을 불러올 . 수있음
 
+    ShaderUPtr vertexShader = Shader::CreateFromFile("./shader/simple.vs", GL_VERTEX_SHADER);     
+    ShaderUPtr fragmentShader = Shader::CreateFromFile("./shader/simple.fs", GL_FRAGMENT_SHADER);
+    SPDLOG_INFO("vertex shader id : {}", vertexShader->Get());
+    SPDLOG_INFO("fragment shader id : {}", fragmentShader->Get());
+
     OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
     glfwSetKeyCallback(window, OnKeyEvent);
+ 
     glClearColor(0.0,0.1f,0.2f,0.0f);
-
     // GLFW 루프 시작, 윈도우 close 버튼을 누르면 루프 종료
     SPDLOG_INFO("Start GLFW main loop"); // [2024-10-11 16:03:55.099] [info] [main.cpp:27] Start GLFW main loop
     while(!glfwWindowShouldClose(window)) {

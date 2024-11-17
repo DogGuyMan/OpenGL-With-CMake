@@ -50,6 +50,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${DEP_LIBS})
 target_include_directories(${PROJECT_NAME}
 PUBLIC
     include/common/
+    include/shader/
 )
 
 # 컴파일러에게 전달할 매크로 #define 설정

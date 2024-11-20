@@ -22,9 +22,19 @@ bool Context::Init() {
     SPDLOG_INFO("program id : {}", mProgram->Get());
     
     glClearColor(0.0, 0.1f, 0.2f, 0.0f);
+
+    // 쉐이터 프로그램 테스트
+    uint32_t vao = 0;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
     return true;
 }
 
 void Context::Render() {
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // 쉐이터 프로그램 테스트
+    glUseProgram(mProgram->Get());
+    glDrawArrays(GL_POINTS, 0, 1);
 }

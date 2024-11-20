@@ -57,6 +57,25 @@ set(DEP_LIST ${DEP_LIST} dep-glad)
 set(DEP_LIBS ${DEP_LIBS} glad)
 ```
 
+#### 2). include 파일 링킹
+```
+# 타겟 실행파일 정의
+add_executable(${PROJECT_NAME} 
+    src/main.cpp
+    include/common.cpp include/common.h
+    include/shader.cpp include/shader.h
+)
+
+...
+
+target_include_directories(${PROJECT_NAME}
+PUBLIC
+    include
+PRIVATE 
+    src
+)
+```
+
 > ### 참고 강의
 
 #### 1). [삼각형의 실전! CMake 초급](https://www.inflearn.com/course/%EC%8B%A4%EC%A0%84-cmake-%EC%B4%88%EA%B8%89/dashboard) 

@@ -46,6 +46,7 @@ add_executable(${PROJECT_NAME}
     include/common.cpp include/common.h
     include/shader.cpp include/shader.h
     include/program.cpp include/program.h
+    include/context.cpp include/context.h
 )
 
 # 타겟을 링킹할 때 필요한 타겟이나 라이브러러리를 지정

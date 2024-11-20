@@ -1,6 +1,7 @@
 #include "common.h"
 #include "shader.h"
 #include "program.h"
+#include "context.h"
 
 #include <iostream>
 #include <spdlog/spdlog.h>
@@ -85,27 +86,15 @@ int main(int argc, char *argv[])
 
     // [2024-11-21 02:47:05.895] [info] [main.cpp:87] OpenGL context version: 4.1 Metal - 89.3
     SPDLOG_INFO("OpenGL context version: {}", reinterpret_cast<const char *>(glVersion));
-    
-    /*** 쉐이더 인스턴스 생성 ***/
-    
-    // UPtr이 아니고 Ptr로 해야지 Program::Create에서 사용 가능한 소유권을 얻는다.
-        // ShaderUPtr vertShader = Shader::CreateFromFile("./shader/simple.vs", GL_VERTEX_SHADER);
-        // ShaderUPtr fragShader = Shader::CreateFromFile("./shader/simple.fs", GL_FRAGMENT_SHADER); 
 
-    ShaderPtr vertShader = Shader::CreateFromFile("./shader/simple.vs", GL_VERTEX_SHADER);
-    ShaderPtr fragShader = Shader::CreateFromFile("./shader/simple.fs", GL_FRAGMENT_SHADER);
-    // [2024-11-21 02:47:05.896] [info] [main.cpp:97] vertex shader id : 1
-    // [2024-11-21 02:47:05.896] [info] [main.cpp:98] fragment shader id : 2
-    SPDLOG_INFO("vertex shader id : {}", vertShader->Get());
-    SPDLOG_INFO("fragment shader id : {}", fragShader->Get());
 
-    /*** 프로그램 인스턴스 생성 ***/
-    ProgramPtr program = Program::Create({fragShader, vertShader});
-    // [2024-11-21 02:47:05.896] [info] [main.cpp:102] program id : 3
-    SPDLOG_INFO("program id : {}", program->Get());
-
-    /*** 스크린 배경색 세팅 ***/
-    glClearColor(0.0, 0.1f, 0.2f, 0.0f);
+    /*** 렌더링 파이프라인 프로그램 생성 책임을 수행하는 Context 생성, 초기화 ***/
+    ContextPtr context = Context::Create();
+    if(!context) {
+        SPDLOG_ERROR("failed to create context");
+        glfwTerminate();
+        return -1;
+    }
 
     /*** OpenGL 스크린 사이즈 및 키보드 콜백 ***/
     OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -116,17 +105,15 @@ int main(int argc, char *argv[])
     SPDLOG_INFO("Start GLFW main loop"); // [2024-10-11 16:03:55.099] [info] [main.cpp:27] Start GLFW main loop
     while (!glfwWindowShouldClose(window))
     {
-        // 윈도우의 크기가 변경되었을 때
-        // 윈도우에 마우스 입력이 들어왔을 때
-        // 윈도우에 키보드 입력이 들어왔을 때
-        // 콜백 수행부
-        glfwPollEvents(); // ??
-        glClear(GL_COLOR_BUFFER_BIT);
+        context.get()->Render();
         glfwSwapBuffers(window);
+        glfwPollEvents(); // ??
     }
 
-
     /*** GLFW 종료 호출 전에 만들어 놨던 Shader, Program의 메모리를 한꺼번에 정리를 해야한다. ***/
+    // 유니크 포인터의 reset으로 모두 초기화 해제할 수 있다.
+    context.reset();
+  //context = nullptr; 혹은 context의 소유권을 null로 만드는 방법도 수행할 수 있다.
 
     // [2024-10-11 16:04:33.541] [info] [main.cpp:32] Terminate GLFW
     SPDLOG_INFO("Terminate GLFW"); 

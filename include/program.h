@@ -13,6 +13,7 @@ public :
     static ProgramUPtr Create(const std::vector<ShaderPtr> & shaders);
     ~Program();
     uint32_t Get() const {return mProgram;}
+    void Use() const;
 private:
     // Program 개채 생성을 Create라는 함수로 책임 전가 따라서 
     // 내부가 아닌 외부에서 기본 생성자로 만든다는 것은 에러임

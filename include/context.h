@@ -16,7 +16,8 @@ private :
     ProgramUPtr mProgram;
 
     uint32_t mVertexArrayObject;
-    uint32_t mVertexBuffer;
+    uint32_t mVertexBufferObject;
+    uint32_t mElementBufferObject;
 };
 
 #endif //__CONTEXT_H__

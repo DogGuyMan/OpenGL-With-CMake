@@ -30,12 +30,6 @@ bool Context::Init() {
     mIndexBufferObject = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indexes, sizeof(indexes));
 
     // 4. Vertex Attribute(정점 속성) 포인터를 세팅
-        // 0 번 attribute를 쓸 것이고 그 attribute는 아래와 같이 생겼다.
-            // 그리고 이 "0" 번 attribute는 뭘 가르키냐면 VAO attribute 0번을 의미함
-            // simple.vs 버텍스 쉐이더에 layout (location = 0) in vec3 aPos;의 aPos로 들어온다.
-        // floating point 값이 3개 씩이고, 노멀라이즈, 
-        // 스트라이드 : sizeof(float) * 3 만큼 건너 뛰고, 
-        // offset은 0부터 이것이 바로 vertices이 어떻게 구성되어있는지 값을 나타낸다.
     mVertexLayout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
 
@@ -52,10 +46,14 @@ bool Context::Init() {
         return false;
     SPDLOG_INFO("program id : {}", mProgram->Get());
     
+    auto location = glGetUniformLocation(mProgram->Get(), "color");
+    mProgram->Use();
+    glUniform4f(location, 1.0f, 1.0f, 0.0f, 1.0f); // shader의 uniform color 변수에 들어갈 rgba를 float4로 전달
+
     glClearColor(0.0, 0.1f, 0.2f, 0.0f);
     
     // OpenGL이 primitive를 어떻게 그릴 것인지 설정할 수 있습니다. 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     return true;
 }

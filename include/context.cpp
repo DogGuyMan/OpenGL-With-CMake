@@ -8,11 +8,12 @@ ContextUPtr Context::Create() {
 }
 
 bool Context::Init() {
+    // 위치 {0.5f, 0.5f, 0.0f} | 컬러 {1.0f, 0.0f, 0.0f}
     float vertices[] = {
-         0.5f,  0.5f, 0.0f,  // 우측 상단
-         0.5f, -0.5f, 0.0f,  // 우측 하단
-        -0.5f, -0.5f, 0.0f,  // 좌측 하단
-        -0.5f,  0.5f, 0.0f   // 좌측 상단
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // top right, red
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right, green
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom left, blue
+        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, // top left, yellow
     };
 
     uint32_t indexes[] = {
@@ -30,11 +31,14 @@ bool Context::Init() {
     mIndexBufferObject = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indexes, sizeof(indexes));
 
     // 4. Vertex Attribute(정점 속성) 포인터를 세팅
-    mVertexLayout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+    // mVertexLayout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+    
+    mVertexLayout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);                   // 오프셋 이동 안해도 되는 position
+    mVertexLayout->SetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, sizeof(float) * 3);   // offset 이동해야하는 vertex color
 
 
-    ShaderPtr vertShader = Shader::CreateFromFile("./shader/simple.vs", GL_VERTEX_SHADER);
-    ShaderPtr fragShader = Shader::CreateFromFile("./shader/simple.fs", GL_FRAGMENT_SHADER);
+    ShaderPtr vertShader = Shader::CreateFromFile("./shader/per_vertex_color.vs", GL_VERTEX_SHADER);
+    ShaderPtr fragShader = Shader::CreateFromFile("./shader/per_vertex_color.fs", GL_FRAGMENT_SHADER);
     if(!vertShader || !fragShader)
         return false;
 
@@ -46,10 +50,6 @@ bool Context::Init() {
         return false;
     SPDLOG_INFO("program id : {}", mProgram->Get());
     
-    auto location = glGetUniformLocation(mProgram->Get(), "color");
-    mProgram->Use();
-    glUniform4f(location, 1.0f, 1.0f, 0.0f, 1.0f); // shader의 uniform color 변수에 들어갈 rgba를 float4로 전달
-
     glClearColor(0.0, 0.1f, 0.2f, 0.0f);
     
     // OpenGL이 primitive를 어떻게 그릴 것인지 설정할 수 있습니다. 
@@ -60,8 +60,6 @@ bool Context::Init() {
 
 void Context::Render() {
     glClear(GL_COLOR_BUFFER_BIT); 
-
-    // 쉐이터 프로그램 테스트
     mProgram->Use();
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // uint32_t indexes[]의 자료형을 맞춰줘야 함
+    glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

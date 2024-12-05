@@ -22,7 +22,7 @@ FetchContent_Declare(dep_glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG "3.3.2"
     GIT_SHALLOW 1
-    CMAKE_ARGS 
+    CMAKE_ARGS
         -DGLFW_BUILD_EXAMPLES=OFF
         -DGLFW_BUILD_TESTS=OFF
         -DGLFW_BUILD_DOCS=OFF

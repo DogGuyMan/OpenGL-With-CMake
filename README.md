@@ -14,6 +14,10 @@
 sh GNU_DirectoryStructure.sh CMAKE_PROJECT_EXAMPLE
 ```
 
+"⌘ + P" -> "C/C++ Config: Generate C++ Config Files"
+
+![](image/2024-12-03-17-54-11.png)
+
 ---
 
 > ### CMake
@@ -75,6 +79,12 @@ PRIVATE
     src
 )
 ```
+
+#### 3). `CMAKE_ARCS`
+
+> -DGLFW_BUILD_DOCS=OFF 라던가, -DGLAD_INSTALL=ON 등 추가적으로 입력하는 인자는 빌드하고자 하는 외부 프로젝트의 CMakeLists.txt 안을 확인해가면서 찾아야 합니다;;; 외부 프로젝트가 저마다 만듦새가 달라서 (심지어는 stb와 같이 빌드 필요 없이 동작하는 라이브러리도 있지요) 결국 케이스 바이 케이스가 되고 맙니다.
+> 예를 들어, GLFW_BUILD_DOCS라는 옵션은, https://github.com/glfw/glfw/blob/master/CMakeLists.txt 여기에 보시면 여러 option() 들 중에 하나로 작성되어 있습니다 ㅎㅎ;
+
 
 > ### 참고 강의
 

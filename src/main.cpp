@@ -17,12 +17,12 @@ void OnFramebufferSizeChange(GLFWwindow *window, int width, int height)
 
 void OnKeyEvent(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    SPDLOG_INFO("key: {} ,scancode: {} ,action: {}, mods: {}{}{}", 
-                key, 
+    SPDLOG_INFO("key: {} ,scancode: {} ,action: {}, mods: {}{}{}",
+                key,
                 scancode,
-                action == GLFW_PRESS        ? "Pressed"     : 
-                action == GLFW_RELEASE      ? "Released"    : 
-                action == GLFW_REPEAT       ? "Repeat"      : 
+                action == GLFW_PRESS        ? "Pressed"     :
+                action == GLFW_RELEASE      ? "Released"    :
+                action == GLFW_REPEAT       ? "Repeat"      :
                                             "Unknown",
 
                 mods & GLFW_MOD_CONTROL     ? "C" : "-",
@@ -39,12 +39,12 @@ void OnKeyEvent(GLFWwindow *window, int key, int scancode, int action, int mods)
 int main(int argc, char *argv[])
 {
     // [2024-10-11 16:03:54.849] [info] [main.cpp:6] Hello, OpenGL
-    SPDLOG_INFO("Hello, OpenGL"); 
+    SPDLOG_INFO("Hello, OpenGL");
 
-    
+
     /*** GLFW 라이브러리 초기화, 실패하면 에러 메시지 출력 ***/
     // [2024-10-11 16:03:54.850] [info] [main.cpp:9] Initialize GLFW
-    SPDLOG_INFO("Initialize GLFW"); 
+    SPDLOG_INFO("Initialize GLFW");
     if (!glfwInit())
     {
         const char *description = nullptr;
@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    
-    
+
+
     /*** GLFW 윈도우 생성, 실패하면 에러 출력후 종료  ***/
     SPDLOG_INFO("Create glfw window");
     auto window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_NAME, nullptr, nullptr);
@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
     }
     glfwMakeContextCurrent(window);
 
-    
-    
+
+
     /*** glad 를 활용한 OpenGL 함수를 로딩함 이게 성공하면 OpenGL 함수를 앞으로 사용할 수있게됨 ***/
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
     glfwSetKeyCallback(window, OnKeyEvent);
-    
+
     /*** GLFW 루프 시작, 윈도우 close 버튼을 누르면 루프 종료 ***/
     SPDLOG_INFO("Start GLFW main loop"); // [2024-10-11 16:03:55.099] [info] [main.cpp:27] Start GLFW main loop
     while (!glfwWindowShouldClose(window))
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
   //context = nullptr; 혹은 context의 소유권을 null로 만드는 방법도 수행할 수 있다.
 
     // [2024-10-11 16:04:33.541] [info] [main.cpp:32] Terminate GLFW
-    SPDLOG_INFO("Terminate GLFW"); 
+    SPDLOG_INFO("Terminate GLFW");
     glfwTerminate();
     return 0;
 }

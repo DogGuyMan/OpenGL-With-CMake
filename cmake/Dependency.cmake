@@ -3,7 +3,10 @@ include(FetchContent)
 
 # ./build/_deps 에 추가되고, 해당 디렉토리의 CMakeLists.txt도 서브 디렉토리에 추가됨.
 # dep의 유래는... dependency의 줄임말인가?
-
+set(DEP_INSTALL_DIR ${CMAKE_BINARY_DIR}/install)    # build/install
+set(DEP_INCLUDE_DIR ${DEP_INSTALL_DIR}/include)     # build/install/include
+set(DEP_LIB_DIR ${DEP_INSTALL_DIR}/lib)             # build/install/lib
+set(CMAKE_INSTALL_PREFIX ${DEP_INSTALL_DIR})
 
 # Dependency 관련 변수 설정
 
@@ -16,31 +19,31 @@ FetchContent_Declare(dep_spdlog
 # Dependency 리스트 및 라이브러리 파일 리스트 추가
 set(DEP_LIST ${DEP_LIST} dep_spdlog)
 set(DEP_LIBS ${DEP_LIBS} spdlog::spdlog)
+# set(SPDLOG_INSTALL ON CACHE BOOL "") # 이거 안해주면 build에 install이 안생김
 
 # glfw
 FetchContent_Declare(dep_glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG "3.3.2"
     GIT_SHALLOW 1
-    CMAKE_ARGS
-        -DGLFW_BUILD_EXAMPLES=OFF
-        -DGLFW_BUILD_TESTS=OFF
-        -DGLFW_BUILD_DOCS=OFF
 )
 
 set(DEP_LIST ${DEP_LIST} dep_glfw)
 set(DEP_LIBS ${DEP_LIBS} glfw)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "")
+# set(GLFW_INSTALL ON CACHE BOOL "") # 이거 안해주면 build에 install이 안생김
 
 # glad
 FetchContent_Declare(dep_glad
     GIT_REPOSITORY https://github.com/Dav1dde/glad.git
     GIT_TAG "v0.1.34"
-    CMAKE_ARGS
-        -DGLAD_INSTALL=ON
 )
 
 set(DEP_LIST ${DEP_LIST} dep_glad)
 set(DEP_LIBS ${DEP_LIBS} glad)
+# set(GLAD_INSTALL ON CACHE BOOL "") # 이거 안해주면 build에 install이 안생김
 
 # stb
 FetchContent_Declare(dep_stb
@@ -48,12 +51,7 @@ FetchContent_Declare(dep_stb
     GIT_TAG "master"
     GIT_SHALLOW 1
 )
-set(DEP_LIST ${DEP_LIST} dep_stb)
 
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_BINARY_DIR}/_deps/dep_stb-src/stb_image.h
-    ${CMAKE_BINARY_DIR}/_deps/dep_stb-build/stb_image.h
-)
+set(DEP_LIST ${DEP_LIST} dep_stb)
 
 FetchContent_MakeAvailable(${DEP_LIST})

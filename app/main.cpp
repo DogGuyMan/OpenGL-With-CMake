@@ -1,7 +1,7 @@
-#include "common.h"
-#include "shader.h"
-#include "program.h"
-#include "context.h"
+#include <common.h>
+#include <shader.h>
+#include <program.h>
+#include <context.h>
 
 #include <iostream>
 #include <spdlog/spdlog.h>

@@ -3,9 +3,9 @@ include(FetchContent)
 
 # ./build/_deps 에 추가되고, 해당 디렉토리의 CMakeLists.txt도 서브 디렉토리에 추가됨.
 # dep의 유래는... dependency의 줄임말인가?
-set(DEP_INSTALL_DIR ${CMAKE_BINARY_DIR}/install)
-set(DEP_INCLUDE_DIR ${DEP_INSTALL_DIR}/include)
-set(DEP_LIB_DIR ${DEP_INSTALL_DIR}/lib)
+set(DEP_INSTALL_DIR ${CMAKE_BINARY_DIR}/install)    # build/install
+set(DEP_INCLUDE_DIR ${DEP_INSTALL_DIR}/include)     # build/install/include
+set(DEP_LIB_DIR ${DEP_INSTALL_DIR}/lib)             # build/install/lib
 set(CMAKE_INSTALL_PREFIX ${DEP_INSTALL_DIR})
 
 # Dependency 관련 변수 설정
@@ -19,7 +19,7 @@ FetchContent_Declare(dep_spdlog
 # Dependency 리스트 및 라이브러리 파일 리스트 추가
 set(DEP_LIST ${DEP_LIST} dep_spdlog)
 set(DEP_LIBS ${DEP_LIBS} spdlog::spdlog)
-set(SPDLOG_INSTALL ON CACHE BOOL "")
+set(SPDLOG_INSTALL ON CACHE BOOL "") # 이거 안해주면 build에 install이 안생김
 
 # glfw
 FetchContent_Declare(dep_glfw
@@ -33,7 +33,7 @@ set(DEP_LIBS ${DEP_LIBS} glfw)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "")
-set(GLFW_INSTALL ON CACHE BOOL "")
+set(GLFW_INSTALL ON CACHE BOOL "") # 이거 안해주면 build에 install이 안생김
 
 # glad
 FetchContent_Declare(dep_glad
@@ -43,7 +43,7 @@ FetchContent_Declare(dep_glad
 
 set(DEP_LIST ${DEP_LIST} dep_glad)
 set(DEP_LIBS ${DEP_LIBS} glad)
-set(GLAD_INSTALL ON CACHE BOOL "")
+set(GLAD_INSTALL ON CACHE BOOL "") # 이거 안해주면 build에 install이 안생김
 
 # stb
 FetchContent_Declare(dep_stb

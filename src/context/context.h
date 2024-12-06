@@ -12,7 +12,7 @@ class Context {
 public :
     static ContextUPtr Create();
     void Render();
-private :  
+private :
     Context() {}
     bool Init();
     ProgramUPtr mProgram;

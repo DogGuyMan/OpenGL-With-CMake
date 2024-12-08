@@ -26,12 +26,12 @@ include(Dependency)
 # Executable에 사용하는 Source들과 Header 모음
 set(PROJECT_SOURCES
     src/buffer.cpp src/common.cpp src/context.cpp src/image.cpp src/program.cpp
-    src/shader.cpp src/vertex_layout.cpp
+    src/shader.cpp src/vertex_layout.cpp src/texture.cpp
 )
 
 set(PROJECT_HEADERS
     src/buffer.h src/common.h src/context.h src/image.h src/program.h
-    src/shader.h src/vertex_layout.h
+    src/shader.h src/vertex_layout.h src/texture.h
 )
 
 # Executable 설정

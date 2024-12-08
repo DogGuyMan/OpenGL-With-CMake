@@ -23,6 +23,7 @@ private :
     BufferUPtr  mVertexBufferObject;
     BufferUPtr  mIndexBufferObject;
     TextureUPtr mTexture;
+    TextureUPtr mTexture2;
 };
 
 #endif //__CONTEXT_H__

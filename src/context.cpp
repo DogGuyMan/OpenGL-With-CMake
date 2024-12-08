@@ -62,13 +62,31 @@ bool Context::Init() {
 
 
     //이미지를 CPU 쪽에 로딩한다.
-    ImageUPtr image = Image::Load("./image/container.jpg");
+    // ImageUPtr image = Image::Load("./image/container.jpg");
+    ImageUPtr image = Image::Create(512, 512);
+    image->SetCheckImage(16, 16);
     if(!image)
         return false;
     SPDLOG_INFO("image: {}x{}, {} channels", image->GetWidth(), image->GetHeight(), image->GetChannelCount());
-
     //이미지를 GPU로 복사한다
     mTexture = Texture::CreateFromImage(image.get());
+
+    ImageUPtr image2 = Image::Load("./image/awesomeface.png");
+    if(!image2)
+        return false;
+    SPDLOG_INFO("image2: {}x{}, {} channels", image2->GetWidth(), image2->GetHeight(), image2->GetChannelCount());
+
+    mTexture2 = Texture::CreateFromImage(image2.get());
+
+    // 멀티 텍스쳐를 사용하기
+    // Active -> Bind 순서로 코드 작성 그리고 0번 슬롯부터 n번 슬롯까지 반복
+    glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, mTexture->Get());    // Checker
+    glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, mTexture2->Get());   // awesomeface.png
+
+    mProgram->Use();
+    glUniform1i(glGetUniformLocation(mProgram->Get(), "tex"), 0);   // location 값을 얻어와서 0번 텍스쳐 슬롯을 이용하겠다 설정후, 쉐이더에서는 uniform sampler2D에다 이 바인딩 된 텍스쳐를 이용할 수 있다.
+    glUniform1i(glGetUniformLocation(mProgram->Get(), "tex2"), 1);  // location 값을 얻어와서 1번 텍스쳐 슬롯을 이용하겠다 설정후, 쉐이더에서는 uniform sampler2D에다 이 바인딩 된 텍스쳐를 이용할 수 있다.
+
     return true;
 }
 

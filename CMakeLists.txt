@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
-project(OpenGL-With-CMake VERSION 0.1.0 LANGUAGES CXX)
+set(PROJECT_NAME "OpenGL-With-CMake")
+project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES CXX)
 
 # ── Export compile_commands.json for IDE / clangd ────────────
 

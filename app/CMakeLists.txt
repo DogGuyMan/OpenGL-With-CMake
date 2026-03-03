@@ -13,12 +13,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     spdlog::spdlog
     glfw
     glad::glad
+    fmt::fmt
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}   # 생성된 config.h 탐색 경로
     ${Stb_INCLUDE_DIR}
     ${SJH_OPENGL_SRC_DIR}
+    ${CMAKE_SOURCE_DIR}/include   # 프로젝트 퍼블릭 헤더 루트
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

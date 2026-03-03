@@ -18,6 +18,9 @@ add_custom_target(install-deps
 )
 
 # ── find_package ─────────────────────────────────────────────
+# fmt: fast formatting library
+find_package(fmt CONFIG REQUIRED)
+
 # spdlog: fast C++ logging library
 find_package(spdlog CONFIG REQUIRED)
 

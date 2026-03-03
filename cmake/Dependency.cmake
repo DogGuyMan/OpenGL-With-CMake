@@ -1,57 +1,32 @@
-# 외부 라이브러리를 다운로드하고 빌드에 포함하기 위한 FetchContent 모듈 로드
-include(FetchContent)
+# vcpkg manifest mode (vcpkg.json) 로 관리되는 외부 라이브러리 탐색.
+# vcpkg install은 cmake --preset 시점(configure phase)에 자동 실행됨.
+# cmake --build 시점(build phase)에는 vcpkg가 실행되지 않음.
+#
+# 명시적 의존성 설치 타겟:
+#   cmake --build build_Darwin --target install-deps
+#
+# vcpkg 자동 설치를 끄고 싶을 때 (빠른 재구성):
+#   cmake --preset debug -DVCPKG_MANIFEST_INSTALL=OFF
 
-# ./build/_deps 에 추가되고, 해당 디렉토리의 CMakeLists.txt도 서브 디렉토리에 추가됨.
-# dep의 유래는... dependency의 줄임말인가?
-set(DEP_INSTALL_DIR ${CMAKE_BINARY_DIR}/install)    # build/install
-set(DEP_INCLUDE_DIR ${DEP_INSTALL_DIR}/include)     # build/install/include
-set(DEP_LIB_DIR ${DEP_INSTALL_DIR}/lib)             # build/install/lib
-set(CMAKE_INSTALL_PREFIX ${DEP_INSTALL_DIR})
-
-# Dependency 관련 변수 설정
-
-# spdlog: fast logger library
-FetchContent_Declare(dep_spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG "v1.x"
-    GIT_SHALLOW 1 # 1==true 로 하면 깃 변경 내역 최신것만 받아온다는 의미.
-)
-# Dependency 리스트 및 라이브러리 파일 리스트 추가
-set(DEP_LIST ${DEP_LIST} dep_spdlog)
-set(DEP_LIBS ${DEP_LIBS} spdlog::spdlog)
-# set(SPDLOG_INSTALL ON CACHE BOOL "") # 이거 안해주면 build에 install이 안생김
-
-# glfw
-FetchContent_Declare(dep_glfw
-    GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG "3.3.2"
-    GIT_SHALLOW 1
+# ── install-deps 커스텀 타겟 ─────────────────────────────────
+# vcpkg.json 변경 후 의존성만 별도로 설치할 때 사용
+add_custom_target(install-deps
+    COMMAND $ENV{VCPKG_ROOT}/vcpkg install --triplet ${VCPKG_TARGET_TRIPLET}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "vcpkg install --triplet ${VCPKG_TARGET_TRIPLET}"
+    VERBATIM
 )
 
-set(DEP_LIST ${DEP_LIST} dep_glfw)
-set(DEP_LIBS ${DEP_LIBS} glfw)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "")
-# set(GLFW_INSTALL ON CACHE BOOL "") # 이거 안해주면 build에 install이 안생김
+# ── find_package ─────────────────────────────────────────────
+# spdlog: fast C++ logging library
+find_package(spdlog CONFIG REQUIRED)
 
-# glad
-FetchContent_Declare(dep_glad
-    GIT_REPOSITORY https://github.com/Dav1dde/glad.git
-    GIT_TAG "v0.1.34"
-)
+# glfw3: window / OpenGL context / input
+find_package(glfw3 CONFIG REQUIRED)
 
-set(DEP_LIST ${DEP_LIST} dep_glad)
-set(DEP_LIBS ${DEP_LIBS} glad)
-# set(GLAD_INSTALL ON CACHE BOOL "") # 이거 안해주면 build에 install이 안생김
+# glad: OpenGL function loader
+find_package(glad CONFIG REQUIRED)
 
-# stb
-FetchContent_Declare(dep_stb
-    GIT_REPOSITORY https://github.com/nothings/stb.git
-    GIT_TAG "master"
-    GIT_SHALLOW 1
-)
-
-set(DEP_LIST ${DEP_LIST} dep_stb)
-
-FetchContent_MakeAvailable(${DEP_LIST})
+# stb: header-only image / utility library
+# vcpkg installs headers; use ${Stb_INCLUDE_DIR} in target_include_directories()
+find_package(Stb REQUIRED)

@@ -1,0 +1,5 @@
+#pragma once
+
+#define WINDOW_NAME   "@WINDOW_NAME@"
+#define WINDOW_WIDTH  @WINDOW_WIDTH@
+#define WINDOW_HEIGHT @WINDOW_HEIGHT@

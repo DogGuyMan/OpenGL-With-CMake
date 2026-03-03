@@ -1,0 +1,38 @@
+# Doxyfile.in — Doxygen 설정 템플릿
+# cmake/Doxygen.cmake 에서 configure_file() 로 변수가 치환됩니다.
+#   @DOXYGEN_INPUT_DIR@   → PROJECT_SOURCE_DIR/src
+#   @DOXYGEN_OUTPUT_DIR@  → PROJECT_SOURCE_DIR/doc
+#   @PROJECT_VERSION@     → CMake 프로젝트 버전
+
+# ── 프로젝트 정보 ────────────────────────────────────────────
+PROJECT_NAME           = "OpenGL-With-CMake"
+PROJECT_NUMBER         = @PROJECT_VERSION@
+PROJECT_BRIEF          = "OpenGL learning project built with CMake & vcpkg"
+
+# ── 입출력 경로 ──────────────────────────────────────────────
+INPUT                  = @DOXYGEN_INPUT_DIR@
+OUTPUT_DIRECTORY       = @DOXYGEN_OUTPUT_DIR@
+RECURSIVE              = YES
+
+# ── 추출 범위 ────────────────────────────────────────────────
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+
+# ── 파일 패턴 ────────────────────────────────────────────────
+FILE_PATTERNS          = *.cpp *.h *.hpp
+
+# ── HTML 출력 ────────────────────────────────────────────────
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_EXTRA_STYLESHEET  =
+
+# ── LaTeX 비활성화 ───────────────────────────────────────────
+GENERATE_LATEX         = NO
+
+# ── 기타 설정 ────────────────────────────────────────────────
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+GENERATE_TREEVIEW      = YES
+USE_MDFILE_AS_MAINPAGE = README.md

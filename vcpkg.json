@@ -1,0 +1,11 @@
+{
+    "name": "opengl-with-cmake",
+    "version": "0.1.0",
+    "dependencies": [
+        "fmt",
+        "spdlog",
+        "glfw3",
+        "glad",
+        "stb"
+    ]
+}

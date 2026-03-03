@@ -8,7 +8,7 @@
 # vcpkg 자동 설치를 끄고 싶을 때 (빠른 재구성):
 #   cmake --preset debug -DVCPKG_MANIFEST_INSTALL=OFF
 
-# ── install-deps 커스텀 타겟 ─────────────────────────────────
+#  install-deps 커스텀 타겟
 # vcpkg.json 변경 후 의존성만 별도로 설치할 때 사용
 add_custom_target(install-deps
     COMMAND $ENV{VCPKG_ROOT}/vcpkg install --triplet ${VCPKG_TARGET_TRIPLET}
@@ -17,7 +17,7 @@ add_custom_target(install-deps
     VERBATIM
 )
 
-# ── find_package ─────────────────────────────────────────────
+#  find_package
 # fmt: fast formatting library
 find_package(fmt CONFIG REQUIRED)
 

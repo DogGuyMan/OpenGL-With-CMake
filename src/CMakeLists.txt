@@ -1,7 +1,7 @@
-# ── Source Modules ────────────────────────────────────────────
-# Common include root: all modules use src/ as the base include path.
-# Headers are included as: #include "common/types.h", etc.
-set(SJH_OPENGL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "SJH_OPENGL source include root")
+#  Source Modules
+# 각 모듈은 자체 CMakeLists.txt에서 include 경로를 관리.
+# target_link_libraries(SJH::<모듈>) 시 include 경로가 INTERFACE로 전파됨.
+# 모듈 간 명시적 의존성: 각 모듈 CMakeLists.txt에 target_link_libraries 추가.
 
 add_subdirectory("buffer")
 add_subdirectory("common")

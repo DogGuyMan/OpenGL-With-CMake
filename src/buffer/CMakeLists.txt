@@ -1,4 +1,11 @@
-add_library(buffer STATIC
+add_library(sjhopengl_buffer STATIC
     buffer.cpp
 )
-target_include_directories(buffer PUBLIC ${SJH_OPENGL_SRC_DIR})
+add_library(SJH::buffer ALIAS sjhopengl_buffer)
+
+target_include_directories(sjhopengl_buffer
+    PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_compile_features(sjhopengl_buffer PRIVATE cxx_std_17)

@@ -1,4 +1,4 @@
-# ── Tests ────────────────────────────────────────────────────
+#  Tests
 # Catch2 또는 GTest 추가 시 vcpkg.json에 "catch2" / "gtest" 추가 후 아래 주석 해제.
 
 # find_package(Catch2 CONFIG REQUIRED)

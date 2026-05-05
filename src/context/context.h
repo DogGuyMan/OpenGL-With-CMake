@@ -5,31 +5,38 @@
 #include "program/program.h"
 #include "shader/shader.h"
 
-//컨텍스트 클래스 디자인의 철학
-/*
-* Context가 담당하는것
-    * Scene Specific (매우 매우 고변동) 캡슐화
-    * VBO/EBO 생성 (Buffer)               // GL_ARRAY_BUFFER / GL_ELEMENT_ARRAY_BUFFER
-    * VAO + Vertex Attribute (VertexLayout) // glGenVertexArrays + glVertexAttribPointer
-    * 쉐이더/프로그램코드 (Shader/Program)
-    * 텍스쳐 로드 + 바인딩 + uniform 설정 (Image / Texture)
-    * 매 프레임 draw call 시퀀스 (Render)
-    * 위 객체들 자동 파괴 (UPtr 소멸)
-
-* Context가 담당하지 않는것 (앱마다 거~~~의 동일한거)
-    * OpenGL 보일러 플레이트 (프로그램마다 필요하지만 거의 동일하게 반복되는 저변동 코드)
-    * app/main.cpp의 Life Cycle 영역
-    * GLFW init/terminate, OpenGL 컨텍스트 생성, glad 함수 로딩
-    * 키/마우스 입력 콜백, 프레임버퍼 리사이즈
-    * glfwSwapBuffers / glfwPollEvents 메인 루프
-*/
 namespace SJH
 {
     CLASS_PTR(Context)
+
+    /**
+     * @brief 한 씬(scene)의 OpenGL 자원과 매 프레임 draw call 시퀀스를 캡슐화하는 클래스.
+     *
+     * @par 책임 분담 — Context 가 담당하는 것 (Scene-specific, 고변동)
+     *  - VBO/EBO 생성 (Buffer)              — @c GL_ARRAY_BUFFER / @c GL_ELEMENT_ARRAY_BUFFER
+     *  - VAO + Vertex Attribute (VertexLayout) — @c glGenVertexArrays + @c glVertexAttribPointer
+     *  - 셰이더/프로그램 (@ref Shader / @ref Program)
+     *  - 텍스처 로드 + 바인딩 + uniform 설정
+     *  - 매 프레임 draw call 시퀀스 (@ref Render)
+     *  - 위 객체들의 자동 파괴 (@c UPtr 소멸 시점)
+     *
+     * @par Context 가 담당하지 *않는* 것 — 앱 전반(저변동, 보일러플레이트)
+     *  - GLFW @c init/terminate, OpenGL 컨텍스트 생성, glad 함수 로딩
+     *  - 키/마우스 입력 콜백, 프레임버퍼 리사이즈
+     *  - @c glfwSwapBuffers / @c glfwPollEvents 메인 루프
+     *  - 위 항목은 @c app/main.cpp 의 라이프 사이클 영역.
+     */
     class Context
     {
     public:
+        /**
+         * @brief Context 인스턴스 생성 + 내부 GL 자원 초기화 (셰이더 컴파일/링크/VAO 생성).
+         * @return 초기화 성공 시 @c ContextUPtr, 셰이더/프로그램 생성 실패 시 @c nullptr.
+         * @pre 호출 전 OpenGL 컨텍스트가 활성화되어 있고 glad 가 로드된 상태여야 함.
+         */
         static ContextUPtr Create();
+
+        /// @brief 매 프레임 호출 — 프레임버퍼 클리어 + draw call.
         void Render();
 
     private:
@@ -37,7 +44,6 @@ namespace SJH
         bool Init();
         ProgramUPtr mProgram;
     };
-
 }
 
-#endif // __CONTEXT_H_
+#endif // __SJH_CONTEXT_H__

@@ -14,9 +14,9 @@ namespace SJH
 
     void Context::Render()
     {
-        glClear(GL_COLOR_BUFFER_BIT); // 프레임 버퍼 클리어
+        glClear(GL_COLOR_BUFFER_BIT);
 
-        // 딸랑 점 하나 그리기.
+        // 학습용 — 점 1개만 그리기 (멀티 텍스처/사각형은 마이그레이션 예정)
         glUseProgram(mProgram->GetProgramAddr());
         glPointSize(10.0f);
         glDrawArrays(GL_POINTS, 0, 1);
@@ -24,7 +24,7 @@ namespace SJH
 
     bool Context::Init()
     {
-        // Shader 인스턴스가 unique_ptr에서 shared_ptr로 변환되었음을 유의
+        // ShaderUPtr -> ShaderPtr 암묵 변환 — Program::Create 가 shared 입력을 요구
         SJH::ShaderPtr vertexShader = SJH::Shader::CreateFromFile("./resources/shader/simple.vs", GL_VERTEX_SHADER);
         SJH::ShaderPtr fragmentShader = SJH::Shader::CreateFromFile("./resources/shader/simple.fs", GL_FRAGMENT_SHADER);
         if (!vertexShader || !fragmentShader)
@@ -36,7 +36,7 @@ namespace SJH
         if (!mProgram)
             return false;
         SPDLOG_INFO("program id: {}", mProgram->GetProgramAddr());
-        glClearColor(0.0, 0.1f, 0.2f, 0.0f); // 프레임 버퍼에 씌울 컬러 지정
+        glClearColor(0.0, 0.1f, 0.2f, 0.0f);
 
         GLuint vao = 0;
         glGenVertexArrays(1, &vao);

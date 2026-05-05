@@ -6,6 +6,7 @@
 # add_subdirectory(buffer)
 add_subdirectory(common)
 # add_subdirectory(context)
+add_subdirectory(diagnostics)
 # add_subdirectory(layout)
 # add_subdirectory(program)
 add_subdirectory(shader)

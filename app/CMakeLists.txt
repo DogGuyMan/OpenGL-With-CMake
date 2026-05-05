@@ -16,10 +16,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glad::glad
     fmt::fmt
     # 내부 모듈 (링크 시 include 경로 자동 전파)
-    # SJH::shader
+    SJH::shader
     # SJH::program
     # SJH::buffer
-    # SJH::common
+    SJH::common
     # SJH::context
     # SJH::layout
 )
@@ -31,4 +31,24 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     # SJH::* 모듈 링크 시 src/ include 경로가 INTERFACE로 자동 전파됨
 )
 
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+# ______ 빌드 후 리소스 복사 (프로젝트 루트 기준) ______
+if(EXISTS ${CMAKE_SOURCE_DIR}/resources)
+    if(WIN32)
+        # Windows: symlink 권한 이슈 → copy_directory_if_different 로 fallback
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                    "${CMAKE_SOURCE_DIR}/resources"
+                    "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
+            BYPRODUCTS "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
+            VERBATIM)
+    else()
+        # Unix: 기존 symlink 정리 후 재생성
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rm -f
+                    "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
+            COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    "${CMAKE_SOURCE_DIR}/resources"
+                    "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
+            VERBATIM)
+    endif()
+endif()

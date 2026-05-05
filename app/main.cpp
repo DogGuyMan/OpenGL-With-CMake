@@ -1,9 +1,12 @@
 #include "config.h"
-#include "input/glfw_input_utils.h"
+#include <glad/glad.h>          // glad 먼저 — 이후 GLFW 경로 안전
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
-#include <glad/glad.h>
 #include <spdlog/spdlog.h>
+#include "input/glfw_input_utils.h"
+#include "shader/shader.h"
+#include "common/common.h"
+
 
 void HandleFramebufferSizeChange(GLFWwindow* window, int width, int height)
 {
@@ -73,6 +76,10 @@ int main()
         glfwTerminate();
         return -1;
     }
+    auto vertexShader = SJH::Shader::CreateFromFile("./resources/shader/simple.vs", GL_VERTEX_SHADER);
+    auto fragmentShader = SJH::Shader::CreateFromFile("./resources/shader/simple.fs", GL_FRAGMENT_SHADER);
+    SPDLOG_INFO("vertex shader id: {}", vertexShader->Get());
+    SPDLOG_INFO("fragment shader id: {}", fragmentShader->Get());
 
     // 4. OpenGL 버젼 출력
     auto glVersion = glGetString(GL_VERSION);

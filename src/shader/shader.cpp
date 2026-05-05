@@ -1,6 +1,6 @@
 #include "shader.h"
+#include "diagnostics/gl_log.h"
 #include <memory>
-#include <spdlog/spdlog.h>
 
 namespace SJH
 {
@@ -16,6 +16,8 @@ namespace SJH
 
     Shader::~Shader()
     {
+        if(mShader != 0)
+            glDeleteShader(mShader);
     }
 
     bool Shader::TryLoadFile(const std::string &filename, GLenum shader_type)
@@ -32,17 +34,7 @@ namespace SJH
         mShader = glCreateShader(shader_type);
         glShaderSource(mShader, 1, &codePtr, &codeLength);
         glCompileShader(mShader);
-
-        int success = 0;
-        glGetShaderiv(mShader, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            char infoLog[1024];
-            glGetShaderInfoLog(mShader, 1024, nullptr, infoLog);
-            SPDLOG_ERROR("failed to compile shader: \"{}\"", filename);
-            SPDLOG_ERROR("reason: {}", infoLog);
-            return false;
-        }
-        return true;
+        bool isSuccess = diagnostics::GLObjectLog::CheckShaderCompile(mShader, filename);
+        return isSuccess;
     }
 }

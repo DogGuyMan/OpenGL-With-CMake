@@ -24,6 +24,11 @@ void HandleKeyInput(GLFWwindow* window, int key, int scancode, int action, int m
         glfwSetWindowShouldClose(window, true);
 }
 
+void Render() {
+    glClearColor(0.0, 0.1f, 0.2f, 0.0f); // 프레임 버퍼에 씌울 컬러 지정
+    glClear(GL_COLOR_BUFFER_BIT); // 프레임 버퍼 클리어
+}
+
 int main()
 {
     spdlog::info("Welcome, {}!", APP_NAME);
@@ -55,6 +60,10 @@ int main()
         glfwTerminate();
         return -1;
     }
+    // OpenGL의 철학은 세팅 함수들은 어딘가에 Contex 에다가 데아터를 저장한다.
+    // State-setting function 과 State-using function 으로 나뉘고
+    // 1. 전자 State가 OpenGL context에 저장됨
+    // 1. 후자 OpenGL context에 저장된 State를 이용
     glfwMakeContextCurrent(window);
 
     // 3. glad 를 활용한 OpenGL 함수를 로딩함. 이게 성공하면 OpenGL 함수를 앞으로 사용할 수 있게됨
@@ -73,7 +82,6 @@ int main()
     HandleFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, HandleFramebufferSizeChange);
     glfwSetKeyCallback(window, HandleKeyInput);
-    glClearColor(0.0, 0.1f, 0.2f, 0.0f);
 
     // 6. GLFW 루프 시작, 윈도우 close 버튼을 누르면 루프 종료
     spdlog::info("Start GLFW main loop");
@@ -83,9 +91,20 @@ int main()
         // TODO 윈도우에 마우스 입력이 들어왔을 때
         // TODO 윈도우에 키보드 입력이 들어왔을 때
         // TODO 콜백 수행부
-        glfwPollEvents();
-        glClear(GL_COLOR_BUFFER_BIT);
+
+        // 렌더링
+        Render();
+        // 프레임버퍼 스왑 코드 호출 "그림이 그려지는 과정이 노출되지 않도록 해줌"
+        /*
+        화면에 그림을 그리는 과정
+        1. 프레임버퍼 2개를 준비 (front / back)
+        2. back buffer에 그림 그리기
+        3. front와 back을 바꿔치기
+        4. 위의 과정을 반복
+        */
         glfwSwapBuffers(window);
+        // 유저 인풋 폴링
+        glfwPollEvents();
     }
 
     spdlog::info("Terminate GLFW");

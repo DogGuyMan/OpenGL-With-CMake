@@ -16,12 +16,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glad::glad
     fmt::fmt
     # 내부 모듈 (링크 시 include 경로 자동 전파)
-    SJH::shader
-    SJH::program
-    SJH::buffer
-    SJH::common
-    SJH::context
-    SJH::layout
+    # SJH::shader
+    # SJH::program
+    # SJH::buffer
+    # SJH::common
+    # SJH::context
+    # SJH::layout
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

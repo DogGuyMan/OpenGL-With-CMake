@@ -8,4 +8,9 @@ target_include_directories(sjhopengl_shader
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+target_link_libraries(sjhopengl_shader PUBLIC
+    SJH::common
+    glad::glad
+)
+
 target_compile_features(sjhopengl_shader PRIVATE cxx_std_17)

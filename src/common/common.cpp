@@ -1,6 +1,7 @@
 #include "common.h"
 #include <fstream>
 #include <sstream>
+#include <spdlog/spdlog.h>
 
 namespace SJH {
     std::optional<std::string> LoadTextFile(const std::string& filename) {

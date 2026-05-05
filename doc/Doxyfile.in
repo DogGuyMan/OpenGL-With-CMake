@@ -10,7 +10,7 @@ PROJECT_NUMBER         = @PROJECT_VERSION@
 PROJECT_BRIEF          = "OpenGL learning project built with CMake & vcpkg"
 
 #  입출력 경로
-INPUT                  = @DOXYGEN_INPUT_DIR@
+INPUT                  = @DOXYGEN_INPUT_DIR@ @DOXYGEN_PAGES_DIR@
 OUTPUT_DIRECTORY       = @DOXYGEN_OUTPUT_DIR@
 RECURSIVE              = YES
 
@@ -20,7 +20,7 @@ EXTRACT_PRIVATE        = NO
 EXTRACT_STATIC         = YES
 
 #  파일 패턴
-FILE_PATTERNS          = *.cpp *.h *.hpp
+FILE_PATTERNS          = *.cpp *.h *.hpp *.md
 
 #  HTML 출력
 GENERATE_HTML          = YES
@@ -35,4 +35,21 @@ QUIET                  = NO
 WARNINGS               = YES
 WARN_IF_UNDOCUMENTED   = YES
 GENERATE_TREEVIEW      = YES
-USE_MDFILE_AS_MAINPAGE = README.md
+USE_MDFILE_AS_MAINPAGE = @DOXYGEN_PAGES_DIR@/00-mainpage.md
+
+#  Graphviz 자동 다이어그램
+HAVE_DOT               = YES
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = YES
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+GRAPHICAL_HIERARCHY    = YES
+DIRECTORY_GRAPH        = YES
+
+#  마크다운 페이지 처리
+MARKDOWN_SUPPORT       = YES
+TOC_INCLUDE_HEADINGS   = 3

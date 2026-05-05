@@ -11,6 +11,7 @@ function(sjhopengl_setup_doxygen)
 
     set(DOXYGEN_INPUT_DIR  "${PROJECT_SOURCE_DIR}/src")
     set(DOXYGEN_OUTPUT_DIR "${PROJECT_SOURCE_DIR}/doc")
+    set(DOXYGEN_PAGES_DIR  "${PROJECT_SOURCE_DIR}/doc/pages")
 
     configure_file(
         "${PROJECT_SOURCE_DIR}/doc/Doxyfile.in"

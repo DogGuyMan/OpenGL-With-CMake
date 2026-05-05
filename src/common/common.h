@@ -11,9 +11,9 @@
  * @def CLASS_PTR
  * @brief 클래스 forward declaration + std 스마트 포인터 별칭을 일괄 생성하는 매크로.
  * @details 다음 3가지 typedef 를 한 번에 정의:
- *  - @c <klassName>UPtr — @c std::unique_ptr<klassName> (단독 소유)
- *  - @c <klassName>Ptr  — @c std::shared_ptr<klassName> (공유 소유)
- *  - @c <klassName>WPtr — @c std::weak_ptr<klassName>   (약한 참조)
+ *  - `<klassName>UPtr` — @c std::unique_ptr<klassName> (단독 소유)
+ *  - `<klassName>Ptr`  — @c std::shared_ptr<klassName> (공유 소유)
+ *  - `<klassName>WPtr` — @c std::weak_ptr<klassName>   (약한 참조)
  * @par 예시
  * @code
  * CLASS_PTR(Shader)  // ShaderUPtr / ShaderPtr / ShaderWPtr 자동 생성

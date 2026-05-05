@@ -1,6 +1,6 @@
 # 빌드 시스템 {#build-system}
 
-> 본 페이지는 [.claude/build-system.md](../../.claude/build-system.md) 의 핵심을 발췌. 상세 트러블슈팅은 원본 참조.
+> 본 페이지는 `.claude/build-system.md` 의 핵심을 발췌. 상세 트러블슈팅은 원본 참조.
 
 ## 한 줄 요약
 

@@ -67,4 +67,4 @@ cmake --build build_Darwin --target install-deps
 | `ninja required v1.13.2` | 구버전 ninja | `brew install ninja` |
 | glad "OpenGL header already included" | glfw3.h가 glad보다 먼저 include | `glad/glad.h` 를 가장 위에 |
 
-자세한 내용은 [.claude/build-system.md](../../.claude/build-system.md) §의존성 트러블슈팅.
+자세한 내용은 `.claude/build-system.md` §의존성 트러블슈팅.

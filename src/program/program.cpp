@@ -21,6 +21,7 @@ namespace SJH
     bool Program::TryLink(const std::vector<ShaderPtr> &shaders)
     {
         mProgramAddr = glCreateProgram();
+        // 모든 셰이더를 program 에 attach — 링크 시 셰이더 단계가 결합됨
         for (auto &shader : shaders)
             glAttachShader(mProgramAddr, shader->GetShaderAddr());
 

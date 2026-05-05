@@ -62,7 +62,7 @@ int main()
     // OpenGL의 철학은 세팅 함수들은 어딘가에 Contex 에다가 데아터를 저장한다.
     // State-setting function 과 State-using function 으로 나뉘고
     // 1. 전자 State가 OpenGL context에 저장됨
-    // 1. 후자 OpenGL context에 저장된 State를 이용
+    // 2. 후자 OpenGL context에 저장된 State를 이용
     glfwMakeContextCurrent(window);
 
     // 3. glad 를 활용한 OpenGL 함수를 로딩함. 이게 성공하면 OpenGL 함수를 앞으로 사용할 수 있게됨

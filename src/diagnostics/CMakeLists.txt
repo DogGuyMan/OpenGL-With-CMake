@@ -8,7 +8,7 @@ target_include_directories(sjhopengl_diagnostics
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# glad 는 헤더(gl_log.h)에서 GLuint/GLenum 사용 → PUBLIC
+# glad 는 헤더(gl_log.h)에서 GLuint/GLenum 사용 -> PUBLIC
 # spdlog 는 비-GL 일반 로깅에도 자유롭게 쓰이도록 PUBLIC 전파
 # (이 모듈의 책임은 GL 진단 패턴 중앙화이지 spdlog 은폐가 아님)
 target_link_libraries(sjhopengl_diagnostics

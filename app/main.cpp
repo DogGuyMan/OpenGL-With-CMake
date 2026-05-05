@@ -1,35 +1,31 @@
+#include "common/common.h"
 #include "config.h"
-#include <glad/glad.h>          // glad 먼저 — 이후 GLFW 경로 안전
+#include "context/context.h"
+#include "input/glfw_input_utils.h"
+#include "program/program.h"
+#include "shader/shader.h"
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
+#include <glad/glad.h> // glad 먼저 — 이후 GLFW 경로 안전
 #include <spdlog/spdlog.h>
-#include "input/glfw_input_utils.h"
-#include "shader/shader.h"
-#include "common/common.h"
 
-
-void HandleFramebufferSizeChange(GLFWwindow* window, int width, int height)
+void HandleFramebufferSizeChange(GLFWwindow *window, int width, int height)
 {
     SPDLOG_INFO("프레임 버퍼 사이즈가 변경됨 : ({} X {})", width, height);
     // OpenGL이 그림을 그릴 영역 지정
-    glViewport(0,0, width, height);
+    glViewport(0, 0, width, height);
 }
 
-void HandleKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)  {
+void HandleKeyInput(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
     SPDLOG_INFO("key: {} ,scancode: {} ,action: {}, mods: {}{}{}",
-        key, scancode,
-        glfw_utils::ActionToString(action),
-        glfw_utils::ModCtrl(mods),
-        glfw_utils::ModShift(mods),
-        glfw_utils::ModAlt(mods)
-    );
-    if(key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+                key, scancode,
+                glfw_utils::ActionToString(action),
+                glfw_utils::ModCtrl(mods),
+                glfw_utils::ModShift(mods),
+                glfw_utils::ModAlt(mods));
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-}
-
-void Render() {
-    glClearColor(0.0, 0.1f, 0.2f, 0.0f); // 프레임 버퍼에 씌울 컬러 지정
-    glClear(GL_COLOR_BUFFER_BIT); // 프레임 버퍼 클리어
 }
 
 int main()
@@ -76,16 +72,19 @@ int main()
         glfwTerminate();
         return -1;
     }
-    auto vertexShader = SJH::Shader::CreateFromFile("./resources/shader/simple.vs", GL_VERTEX_SHADER);
-    auto fragmentShader = SJH::Shader::CreateFromFile("./resources/shader/simple.fs", GL_FRAGMENT_SHADER);
-    SPDLOG_INFO("vertex shader id: {}", vertexShader->Get());
-    SPDLOG_INFO("fragment shader id: {}", fragmentShader->Get());
 
     // 4. OpenGL 버젼 출력
     auto glVersion = glGetString(GL_VERSION);
-    spdlog::info("OpenGL context version: {}", reinterpret_cast<const char*>(glVersion));
+    spdlog::info("OpenGL context version: {}", reinterpret_cast<const char *>(glVersion));
 
     // 5. 윈도우 유저 인풋 핸들링 바인드
+    auto context = SJH::Context::Create();
+    if (!context)
+    {
+        SPDLOG_ERROR("failed to create context");
+        glfwTerminate();
+        return -1;
+    }
     HandleFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, HandleFramebufferSizeChange);
     glfwSetKeyCallback(window, HandleKeyInput);
@@ -100,7 +99,7 @@ int main()
         // TODO 콜백 수행부
 
         // 렌더링
-        Render();
+        context->Render();
         // 프레임버퍼 스왑 코드 호출 "그림이 그려지는 과정이 노출되지 않도록 해줌"
         /*
         화면에 그림을 그리는 과정
@@ -113,6 +112,7 @@ int main()
         // 유저 인풋 폴링
         glfwPollEvents();
     }
+    context.reset();
 
     spdlog::info("Terminate GLFW");
     glfwDestroyWindow(window);

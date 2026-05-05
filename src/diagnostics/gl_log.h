@@ -27,7 +27,7 @@ namespace SJH::diagnostics
         static bool CheckProgramLink(GLuint program, std::string_view tag = {});
 
         /// @brief 현재 GL 상태(VAO/uniform/texture 바인딩 등)에서 프로그램 실행 가능성 검증.
-        /// @details 내부적으로 @c glValidateProgram 호출 → @c GL_VALIDATE_STATUS 확인.
+        /// @details 내부적으로 @c glValidateProgram 호출 -> @c GL_VALIDATE_STATUS 확인.
         ///          단순 link 성공과 별개로 "지금 이 상태에서 draw 가능한가"를 드라이버에 위임.
         /// @return 검증 성공 시 @c true (실패는 @c warn 레벨 — 치명적은 아니나 의심 신호).
         /// @warning 무거운 호출 — 매 프레임 호출 금지. 개발/디버깅 빌드의 draw 직전에만.
@@ -41,8 +41,8 @@ namespace SJH::diagnostics
     public:
         /// @brief 디버그 콜백 등록 시도 — 컨텍스트 + glad 로드 직후 **정확히 한 번** 호출.
         /// @details
-        ///  - KHR_debug 가능 → @c glDebugMessageCallback 등록 → 모든 GL 에러가 자동으로 spdlog 출력.
-        ///  - 불가능(예: macOS GL 4.1) → no-op + 안내 로그. 이 경우 @c SJH_GL_CHECK 로 보완해야 함.
+        ///  - KHR_debug 가능 -> @c glDebugMessageCallback 등록 -> 모든 GL 에러가 자동으로 spdlog 출력.
+        ///  - 불가능(예: macOS GL 4.1) -> no-op + 안내 로그. 이 경우 @c SJH_GL_CHECK 로 보완해야 함.
         /// @note 호출 위치: @c app/main.cpp 또는 @c src/context/ (컨텍스트 초기화 시점)
         static void Init();
 
@@ -55,8 +55,8 @@ namespace SJH::diagnostics
 /// @def SJH_GL_CHECK
 /// @brief GL 호출을 감싸 직후 @c glGetError 폴링으로 에러 포착.
 /// @details
-///  - @c NDEBUG 빌드 → no-op (릴리스 성능 비용 0).
-///  - 디버그 빌드 → 호출 직후 에러 큐 검사 + 위치(파일:라인) 함께 출력.
+///  - @c NDEBUG 빌드 -> no-op (릴리스 성능 비용 0).
+///  - 디버그 빌드 -> 호출 직후 에러 큐 검사 + 위치(파일:라인) 함께 출력.
 ///  - KHR_debug 콜백 미지원 환경(macOS GL 4.1 등)에서 GL 에러 추적의 **안전망**.
 /// @par 예시
 /// @code

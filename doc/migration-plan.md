@@ -1,4 +1,4 @@
-# Migration Plan — `main` → `newEnv` 단계별 구현 로드맵
+# Migration Plan — `main` -> `newEnv` 단계별 구현 로드맵
 
 > 본 문서는 `newEnv` 브랜치의 모듈 구조(`src/<module>/`, `SJH::` alias, `diagnostics` 등)로 `main` 브랜치의 OpenGL 학습 구현을 단계적으로 이식하는 계획서다.
 >
@@ -84,7 +84,7 @@ image (Phase 1-C) ─────────┤
 - [ ] [src/buffer/buffer.h](../src/buffer/buffer.h): main의 `Buffer` 클래스 이식 + `namespace SJH` 감싸기 + `CLASS_PTR(Buffer)` 적용
 - [ ] [src/buffer/buffer.cpp](../src/buffer/buffer.cpp): main 구현 이식. 주요 GL 호출:
   - `glGenBuffers` / `glBufferData` / `glBindBuffer` / `glDeleteBuffers`
-- [ ] **검토 사항**: `Init()` 메서드명 — main은 `Init()`, 컨벤션은 `Try*` prefix 권장 → `TryInit()` 권장
+- [ ] **검토 사항**: `Init()` 메서드명 — main은 `Init()`, 컨벤션은 `Try*` prefix 권장 -> `TryInit()` 권장
 - [ ] **선택**: `glBufferData` 호출을 `SJH_GL_CHECK(...)`로 감싸기 (디버그 빌드 진단 강화)
 - [ ] 빌드 검증
 
@@ -130,13 +130,13 @@ shader에 의존. 가장 큰 가치는 `diagnostics::CheckProgramLink` 적용 �
   ```
 - [ ] [src/program/program.h](../src/program/program.h): main 이식 + `namespace SJH`
 - [ ] [src/program/program.cpp](../src/program/program.cpp): main의 `Link()` 마이그레이션
-  - main의 1024 고정 버퍼 + `SPDLOG_ERROR` 검증 → **한 줄로 대체**:
+  - main의 1024 고정 버퍼 + `SPDLOG_ERROR` 검증 -> **한 줄로 대체**:
     ```cpp
     glLinkProgram(mProgram);
     return diagnostics::GLObjectLog::CheckProgramLink(mProgram, "<program tag>");
     ```
   - shader 마이그레이션과 같은 패턴 ([src/shader/shader.cpp:36](../src/shader/shader.cpp#L36) 참고)
-- [ ] **컨벤션 적용**: `Link()` → `TryLink()` 권장 (fallible)
+- [ ] **컨벤션 적용**: `Link()` -> `TryLink()` 권장 (fallible)
 - [ ] 빌드 검증
 
 ---
@@ -194,7 +194,7 @@ main은 `./shader/texture.vs`, `./image/container.jpg`, `./image/awesomeface.png
 - [ ] **선택**: 그리기 호출(`glDrawElements`)을 `SJH_GL_CHECK`로, draw 직전 디버그 빌드만 `CheckProgramValidate` 적용
 
 #### 4-4. 빌드 + 단위 검증
-- [ ] 빌드만 통과시킴 (아직 main.cpp 미통합 → 실행은 Phase 5)
+- [ ] 빌드만 통과시킴 (아직 main.cpp 미통합 -> 실행은 Phase 5)
 
 ---
 
@@ -235,10 +235,10 @@ main은 `./shader/texture.vs`, `./image/container.jpg`, `./image/awesomeface.png
 
 마일스톤 후 여유 있을 때 진행.
 
-- [ ] `Image`의 raw `uint8_t*` → RAII (`unique_ptr` + custom deleter, 또는 `vector<uint8_t>`)
+- [ ] `Image`의 raw `uint8_t*` -> RAII (`unique_ptr` + custom deleter, 또는 `vector<uint8_t>`)
 - [ ] 그리기 호출 전반에 `SJH_GL_CHECK` 적용 (디버그 빌드만)
 - [ ] `Context::Render`에서 디버그 빌드 한정 `CheckProgramValidate`
-- [ ] `common.cpp`의 `spdlog::error` 직접 사용 → 일반 로깅 facade 도입 여부 재검토 (현재는 YAGNI로 보류)
+- [ ] `common.cpp`의 `spdlog::error` 직접 사용 -> 일반 로깅 facade 도입 여부 재검토 (현재는 YAGNI로 보류)
 - [ ] (만약 `glfw` 분리 모듈로 추출 가치가 있으면) `SJH::window` 모듈로 windowing 추상화
 
 ---
@@ -279,7 +279,7 @@ Phase 6 개선 (선택)
 각 Phase 종료 시:
 
 - [ ] `cmake --build build_Darwin` 통과 (warning 없이)
-- [ ] [.claude/MEMORY.md](../.claude/MEMORY.md) 모듈 인벤토리 갱신 (placeholder → 활성)
+- [ ] [.claude/MEMORY.md](../.claude/MEMORY.md) 모듈 인벤토리 갱신 (placeholder -> 활성)
 - [ ] [.claude/architecture.md](../.claude/architecture.md) §5 모듈 인벤토리 동기화
 - [ ] (Phase 1-C 등 새 모듈 추가 시) `architecture.md`에 모듈 항목 추가
 - [ ] git commit (작업 단위로 분리, 메시지 컨벤션은 [git log](https://github.com) 참조)

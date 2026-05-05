@@ -1,8 +1,8 @@
 # Doxyfile.in — Doxygen 설정 템플릿
 # cmake/Doxygen.cmake 에서 configure_file() 로 변수가 치환됩니다.
-#   @DOXYGEN_INPUT_DIR@   → PROJECT_SOURCE_DIR/src
-#   @DOXYGEN_OUTPUT_DIR@  → PROJECT_SOURCE_DIR/doc
-#   @PROJECT_VERSION@     → CMake 프로젝트 버전
+#   @DOXYGEN_INPUT_DIR@   -> PROJECT_SOURCE_DIR/src
+#   @DOXYGEN_OUTPUT_DIR@  -> PROJECT_SOURCE_DIR/doc
+#   @PROJECT_VERSION@     -> CMake 프로젝트 버전
 
 #  프로젝트 정보
 PROJECT_NAME           = "OpenGL-With-CMake"

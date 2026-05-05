@@ -11,8 +11,8 @@ namespace SJH {
             spdlog::error("failed to open file: {}", filename);
             return {};
         }
-        std::stringstream text; // ???
-        text << fin.rdbuf(); // ???
-        return text.str(); // ???
+        std::stringstream text;
+        text << fin.rdbuf();
+        return text.str();
     }
 }

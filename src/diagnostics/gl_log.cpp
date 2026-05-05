@@ -11,9 +11,9 @@ namespace SJH::diagnostics
         std::string FetchShaderInfoLog(GLuint shader)
         {
             GLint length = 0;
+            //shader에 대한 정수형 정보를 얻어옴
             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-            if (length <= 0)
-                return {};
+            if (length <= 0) return {};
             std::string log(static_cast<size_t>(length), '\0');
             glGetShaderInfoLog(shader, length, nullptr, log.data());
             if (!log.empty() && log.back() == '\0')
@@ -25,9 +25,10 @@ namespace SJH::diagnostics
         {
             GLint length = 0;
             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-            if (length <= 0)
-                return {};
+            if (length <= 0) return {};
             std::string log(static_cast<size_t>(length), '\0');
+            // glGetProgramInfoLog(): program에 대한 로그를 얻어옴.
+            // 링크 에러 얻어내는 용도로 사용
             glGetProgramInfoLog(program, length, nullptr, log.data());
             if (!log.empty() && log.back() == '\0')
                 log.pop_back();

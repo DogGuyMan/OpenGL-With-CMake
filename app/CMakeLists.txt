@@ -1,8 +1,8 @@
 #  Main Application
 
 # cmake/Config.cmake의 WINDOW_* 변수를 헤더로 변환
-# CMAKE_CURRENT_SOURCE_DIR = app/ → app/config.h.in 정상 탐색
-# CMAKE_CURRENT_BINARY_DIR = build_Darwin/app/ → config.h 출력
+# CMAKE_CURRENT_SOURCE_DIR = app/ -> app/config.h.in 정상 탐색
+# CMAKE_CURRENT_BINARY_DIR = build_Darwin/app/ -> config.h 출력
 configure_file(config.h.in config.h)
 
 add_executable(${PROJECT_NAME}
@@ -17,10 +17,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     fmt::fmt
     # 내부 모듈 (링크 시 include 경로 자동 전파)
     SJH::shader
-    # SJH::program
+    SJH::program
     # SJH::buffer
     SJH::common
-    # SJH::context
+    SJH::context
     # SJH::layout
 )
 
@@ -34,7 +34,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ______ 빌드 후 리소스 복사 (프로젝트 루트 기준) ______
 if(EXISTS ${CMAKE_SOURCE_DIR}/resources)
     if(WIN32)
-        # Windows: symlink 권한 이슈 → copy_directory_if_different 로 fallback
+        # Windows: symlink 권한 이슈 -> copy_directory_if_different 로 fallback
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
                     "${CMAKE_SOURCE_DIR}/resources"

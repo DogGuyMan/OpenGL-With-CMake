@@ -1,4 +1,4 @@
-#include "context/context.h"
+#include "shader/shader.h"
 #include "diagnostics/gl_log.h"
 #include <memory>
 
@@ -6,11 +6,10 @@ namespace SJH
 {
     ShaderUPtr Shader::CreateFromFile(const std::string &filename, GLenum shader_type)
     {
-        // 생성자를 Private로 하였다고 해서 내부에서 호출 못하는것은 아니네?
+        // private 생성자도 클래스 자신의 static 멤버에서는 호출 가능 — 팩토리 패턴의 핵심
         auto shader = std::unique_ptr<Shader>(new Shader());
         if (!shader->TryLoadFile(filename, shader_type))
             return nullptr;
-        // UPtr를 Move 소유권 이전.
         return std::move(shader);
     }
 

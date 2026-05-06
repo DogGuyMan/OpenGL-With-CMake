@@ -53,3 +53,34 @@ target_link_libraries(test_gl_fixture PRIVATE
 )
 target_compile_features(test_gl_fixture PRIVATE cxx_std_17)
 catch_discover_tests(test_gl_fixture)
+
+#  diagnostics 모듈 — GLDebug::CheckGL* 7개 함수 동작 검증
+add_executable(test_gl_debug test_gl_debug.cpp)
+target_link_libraries(test_gl_debug PRIVATE
+    Catch2::Catch2WithMain
+    gl_test_fixture
+    SJH::diagnostics
+)
+target_compile_features(test_gl_debug PRIVATE cxx_std_17)
+catch_discover_tests(test_gl_debug)
+
+#  diagnostics 모듈 — UniformDiagnostics warn-once 트래커 smoke
+# GL context 불필요 (spdlog 만 호출).
+add_executable(test_uniform_diagnostics test_uniform_diagnostics.cpp)
+target_link_libraries(test_uniform_diagnostics PRIVATE
+    Catch2::Catch2WithMain
+    SJH::diagnostics
+)
+target_compile_features(test_uniform_diagnostics PRIVATE cxx_std_17)
+catch_discover_tests(test_uniform_diagnostics)
+
+#  program 모듈 — ProgramUniforms location 캐시 + setter 동작
+# 인라인 GLSL 컴파일/링크 → 실제 program 핸들로 ProgramUniforms 생성.
+add_executable(test_program_uniforms test_program_uniforms.cpp)
+target_link_libraries(test_program_uniforms PRIVATE
+    Catch2::Catch2WithMain
+    gl_test_fixture
+    SJH::program
+)
+target_compile_features(test_program_uniforms PRIVATE cxx_std_17)
+catch_discover_tests(test_program_uniforms)

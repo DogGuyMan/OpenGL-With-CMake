@@ -33,13 +33,13 @@ int main()
     spdlog::info("Welcome, {}!", APP_NAME);
 
     // 1. GLFW 라이브러리 초기화, 실패하면 에러 메시지 출력
-    spdlog::info("Try Initialize GLFW");
+    spdlog::info("GLFW 초기화 시도");
 
     if (!glfwInit())
     {
         const char *errorDescription = nullptr;
         glfwGetError(&errorDescription);
-        spdlog::error("Failed to initialize GLFW : {}", errorDescription);
+        spdlog::error("GLFW 초기화 실패 : {}", errorDescription);
         return -1;
     }
 
@@ -51,11 +51,11 @@ int main()
 #endif
 
     // 2. GLFW 윈도우 생성, 실패하면 에러 출력후 종료
-    spdlog::info("Create glfw window");
+    spdlog::info("GLFW 윈도우 생성");
     auto window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_NAME, nullptr, nullptr);
     if (!window)
     {
-        spdlog::error("Failed to create GLFW window");
+        spdlog::error("GLFW 윈도우 생성 실패");
         glfwTerminate();
         return -1;
     }
@@ -68,7 +68,7 @@ int main()
     // 3. glad 를 활용한 OpenGL 함수를 로딩함. 이게 성공하면 OpenGL 함수를 앞으로 사용할 수 있게됨
     if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
     {
-        spdlog::error("Failed to initialize GLAD");
+        spdlog::error("GLAD 초기화 실패");
         glfwTerminate();
         return -1;
     }
@@ -81,7 +81,7 @@ int main()
     auto context = SJH::Context::Create();
     if (!context)
     {
-        SPDLOG_ERROR("failed to create context");
+        SPDLOG_ERROR("컨텍스트 생성 실패");
         glfwTerminate();
         return -1;
     }
@@ -90,7 +90,7 @@ int main()
     glfwSetKeyCallback(window, HandleKeyInput);
 
     // 6. GLFW 루프 시작, 윈도우 close 버튼을 누르면 루프 종료
-    spdlog::info("Start GLFW main loop");
+    spdlog::info("GLFW 메인 루프 시작");
     while (!glfwWindowShouldClose(window))
     {
         // TODO 윈도우의 크기가 변경되었을 때
@@ -114,7 +114,7 @@ int main()
     }
     context.reset();
 
-    spdlog::info("Terminate GLFW");
+    spdlog::info("GLFW 종료");
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

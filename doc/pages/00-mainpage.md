@@ -82,7 +82,7 @@ digraph RenderSequence {
 | 모듈 | 클래스 | 역할 |
 |------|--------|------|
 | common | — | @c CLASS_PTR 매크로 + @ref SJH::LoadTextFile |
-| diagnostics | @ref SJH::diagnostics::GLObjectLog "GLObjectLog", @ref SJH::diagnostics::GLDebug "GLDebug" | GL 에러 로깅 일원화 |
+| diagnostics | @ref SJH::Diagnostics::GLObjectLog "GLObjectLog", @ref SJH::Diagnostics::GLDebug "GLDebug" | GL 에러 로깅 일원화 |
 | shader | @ref SJH::Shader "Shader" | 셰이더 컴파일 RAII |
 | program | @ref SJH::Program "Program" | 프로그램 링크 RAII |
 | context | @ref SJH::Context "Context" | 씬 자원 + 매 프레임 draw |

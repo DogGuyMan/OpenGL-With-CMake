@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <glad/glad.h>
 #include "common/common.h"
+#include <glad/glad.h>
 
 namespace SJH
 {
@@ -29,7 +29,7 @@ namespace SJH
          *  -# **RAII 소유권 강제** — 생성자 @c private + 반환 타입 @c UPtr 의 협력:
          *     생성자 private 으로 직접 생성 차단, @c UPtr 반환으로 호출자에게 자동 소유권 이전.
          *  -# **클래스 불변식** — 외부 노출 인스턴스는 항상 유효한 GL 핸들 보유:
-         *     팩토리 내부에서 빈 객체 생성 → @c TryLoadFile 로 GL 자원 획득 시도 →
+         *     팩토리 내부에서 빈 객체 생성 -> @c TryLoadFile 로 GL 자원 획득 시도 ->
          *     성공 시 소유권 이전, 실패 시 임시 UPtr 즉시 파괴 + @c nullptr 반환.
          * @note 컴파일 에러 로그는 @c diagnostics::GLObjectLog::CheckShaderCompile 가 출력.
          */

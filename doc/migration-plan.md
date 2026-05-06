@@ -78,7 +78,7 @@ image (Phase 1-C) ─────────┤
   ```cmake
   target_link_libraries(sjhopengl_buffer
       PUBLIC  SJH::common glad::glad
-      PRIVATE SJH::diagnostics
+      PRIVATE SJH::Diagnostics
   )
   ```
 - [ ] [src/buffer/buffer.h](../src/buffer/buffer.h): main의 `Buffer` 클래스 이식 + `namespace SJH` 감싸기 + `CLASS_PTR(Buffer)` 적용
@@ -102,7 +102,7 @@ image (Phase 1-C) ─────────┤
 - [ ] `src/image/` 디렉토리 생성
 - [ ] `src/image/CMakeLists.txt` 신설 ([architecture.md §2 template](../.claude/architecture.md))
   - `target_include_directories(... PRIVATE ${Stb_INCLUDE_DIR})` — stb는 헤더만 vcpkg에서 받음
-  - `PUBLIC SJH::common`, `PRIVATE SJH::diagnostics` (현재 image는 stb 에러를 spdlog로 출력하므로 spdlog도 따라옴)
+  - `PUBLIC SJH::common`, `PRIVATE SJH::Diagnostics` (현재 image는 stb 에러를 spdlog로 출력하므로 spdlog도 따라옴)
 - [ ] `src/image/image.h`: main의 `Image` 클래스 이식 + `namespace SJH`
 - [ ] `src/image/image.cpp`:
   - `#define STB_IMAGE_IMPLEMENTATION`은 **이 파일에만** (다중 정의 금지)
@@ -125,7 +125,7 @@ shader에 의존. 가장 큰 가치는 `diagnostics::CheckProgramLink` 적용 �
   ```cmake
   target_link_libraries(sjhopengl_program
       PUBLIC  SJH::common SJH::shader glad::glad
-      PRIVATE SJH::diagnostics
+      PRIVATE SJH::Diagnostics
   )
   ```
 - [ ] [src/program/program.h](../src/program/program.h): main 이식 + `namespace SJH`
@@ -150,7 +150,7 @@ image에 의존.
   ```cmake
   target_link_libraries(sjhopengl_texture
       PUBLIC  SJH::common SJH::image glad::glad
-      PRIVATE SJH::diagnostics
+      PRIVATE SJH::Diagnostics
   )
   ```
 - [ ] `src/texture/texture.h/cpp`: main 이식 + `namespace SJH`
@@ -170,7 +170,7 @@ image에 의존.
   target_link_libraries(sjhopengl_context
       PUBLIC  SJH::common SJH::shader SJH::program SJH::buffer
               SJH::layout SJH::image SJH::texture glad::glad
-      PRIVATE SJH::diagnostics
+      PRIVATE SJH::Diagnostics
   )
   ```
   - **주의**: `glfw`는 link 안 함 — Context는 GL 자원 관리만, 윈도우/입력은 `app/`이 담당.
@@ -206,13 +206,13 @@ main은 `./shader/texture.vs`, `./image/container.jpg`, `./image/awesomeface.png
       spdlog::spdlog glfw glad::glad fmt::fmt
       SJH::shader SJH::program SJH::buffer SJH::common
       SJH::context SJH::layout SJH::image SJH::texture
-      SJH::diagnostics    # 신규
+      SJH::Diagnostics    # 신규
   )
   ```
 - [ ] [app/main.cpp](../app/main.cpp): glad 로딩 직후 한 줄 추가
   ```cpp
   if (!gladLoadGLLoader(...)) { /*...*/ }
-  SJH::diagnostics::GLDebug::Init();   // ← 추가
+  SJH::Diagnostics::GLDebug::Init();   // ← 추가
   ```
 - [ ] 메인 루프 안의 `Render()` (현재 빈 함수)를 Context로 교체:
   ```cpp

@@ -43,6 +43,8 @@ namespace SJH
         Context() = default;
         bool Init();
         ProgramUPtr mProgram;
+        GLuint mVertexArrayObject;
+        GLuint mVertexBufferObject;
     };
 }
 

@@ -8,7 +8,7 @@ namespace gu = glfw_utils;
 // ActionToString — switch 분기 4개 검증 (PRESS / RELEASE / REPEAT / default)
 //
 // constexpr 이므로 STATIC_REQUIRE 로 컴파일 타임 검증.
-// constexpr 키워드가 떼지면 컴파일 에러 → 런타임까지 갈 필요 없음.
+// constexpr 키워드가 떼지면 컴파일 에러 -> 런타임까지 갈 필요 없음.
 // ============================================================================
 
 TEST_CASE("ActionToString maps known GLFW actions", "[glfw_utils][ActionToString]") {
@@ -28,14 +28,14 @@ TEST_CASE("ActionToString returns Unknown for invalid action", "[glfw_utils][Act
 // Mod{Ctrl,Shift,Alt} — bitmask & 연산 검증
 //
 // 각 함수의 계약: "자기 비트만 검사한다."
-// → 다른 modifier 가 함께 눌려도 영향 없어야 하고,
+// -> 다른 modifier 가 함께 눌려도 영향 없어야 하고,
 //   엉뚱한 비트만 켜져 있을 때 자기 함수는 "-" 반환해야 함.
 // ============================================================================
 
 TEST_CASE("ModCtrl detects Control bit", "[glfw_utils][Mod]") {
     STATIC_REQUIRE(gu::ModCtrl(0)                                == "-"); // 비트 없음
     STATIC_REQUIRE(gu::ModCtrl(GLFW_MOD_CONTROL)                 == "C"); // Ctrl 단독
-    STATIC_REQUIRE(gu::ModCtrl(GLFW_MOD_SHIFT)                   == "-"); // 다른 비트만 → "-"
+    STATIC_REQUIRE(gu::ModCtrl(GLFW_MOD_SHIFT)                   == "-"); // 다른 비트만 -> "-"
     STATIC_REQUIRE(gu::ModCtrl(GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) == "C"); // 다른 비트와 동시
 }
 

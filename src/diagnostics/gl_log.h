@@ -4,9 +4,11 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <initializer_list>
 #include <string_view>
+#include <vector>
 
-namespace SJH::diagnostics
+namespace SJH::Diagnostics
 {
     /// @brief GL 객체(셰이더/프로그램) 상태 쿼리 + InfoLog 일원화 헬퍼.
     /// @details 컴파일/링크/검증은 비동기 아니지만 별도 status 쿼리가 유일한 검증 수단.
@@ -33,46 +35,45 @@ namespace SJH::diagnostics
         /// @warning 무거운 호출 — 매 프레임 호출 금지. 개발/디버깅 빌드의 draw 직전에만.
         /// @note 사용 모듈: @c src/program/ 또는 renderer (디버그 빌드 한정)
         static bool CheckProgramValidate(GLuint program, std::string_view tag = {});
+
+        /// @brief 프로그램에 기대되는 uniform 들이 모두 존재하는지 정적 검증.
+        /// @details
+        ///  - 각 name 에 대해 @c glGetUniformLocation < 0 검사 -> 누락된 것을 한 번에 spdlog::warn.
+        ///  - **같은 program 핸들에 대해 최초 1회만** 실 검사. 이후 호출은 캐시된 bool 즉시 반환,
+        ///    로그 출력 없음 -> 매 draw 호출 안에 두어도 부담 0.
+        ///  - 누락은 warn 레벨 (error 아님) — 셰이더 옵티마이저가 inactive uniform 제거하는 게 정상이라서.
+        /// @return 모든 uniform 존재 시 @c true.
+        /// @note 사용 모듈: @c src/context/ 등 program 사용 시점.
+        static bool CheckExpectedUniforms(
+            GLuint program,
+            std::initializer_list<const char *> names,
+            std::string_view tag = {});
+
+        /// @brief vertex attribute 동일 — @c glGetAttribLocation < 0 검사 + program 별 1회 캐시.
+        /// @note 사용 모듈: @c src/layout/ 또는 program 사용 시점.
+        static bool CheckExpectedAttributes(
+            GLuint program,
+            std::initializer_list<const char *> names,
+            std::string_view tag = {});
+
+        /// @brief 캐시 무효화 — @c Program 소멸자에서 호출.
+        /// @details 같은 @c GLuint 핸들이 재발급될 때 stale 캐시 결과 방지.
+        ///          @c CheckExpectedUniforms / @c CheckExpectedAttributes 의 program 별 1회 캐시를 정리.
+        static void InvalidateProgramCache(GLuint program);
     };
 
     /// @brief GL 런타임 에러 통보 메커니즘 — KHR_debug 콜백 + @c glGetError 폴링 fallback.
     class GLDebug
     {
     public:
-        /// @brief 디버그 콜백 등록 시도 — 컨텍스트 + glad 로드 직후 **정확히 한 번** 호출.
-        /// @details
-        ///  - KHR_debug 가능 -> @c glDebugMessageCallback 등록 -> 모든 GL 에러가 자동으로 spdlog 출력.
-        ///  - 불가능(예: macOS GL 4.1) -> no-op + 안내 로그. 이 경우 @c SJH_GL_CHECK 로 보완해야 함.
-        /// @note 호출 위치: @c app/main.cpp 또는 @c src/context/ (컨텍스트 초기화 시점)
-        static void Init();
-
-        /// @brief @c SJH_GL_CHECK 매크로 내부 구현. **직접 호출 금지** — 매크로를 통해 사용.
-        /// @details @c glGetError 는 큐 형태라 한 번에 모두 비워야 함. 본 함수가 그 루프를 담당.
-        static bool DrainErrors(const char *expr, const char *file, int line);
+        static bool CheckGLGenVertexArrays();
+        static bool CheckGLBindVertexArray(const GLuint vao);
+        static bool CheckGLGenBuffers(const GLuint vbo);
+        static bool CheckGLBindBuffer(const GLuint vbo);
+        static bool CheckGLBufferData(const GLint data_size);
+        static bool CheckGLEnableVertexAttribArray(GLuint layout_location);
+        static bool CheckGLVertexAttribPointer(const std::vector<GLuint>&& strides);
     };
 }
-
-/// @def SJH_GL_CHECK
-/// @brief GL 호출을 감싸 직후 @c glGetError 폴링으로 에러 포착.
-/// @details
-///  - @c NDEBUG 빌드 -> no-op (릴리스 성능 비용 0).
-///  - 디버그 빌드 -> 호출 직후 에러 큐 검사 + 위치(파일:라인) 함께 출력.
-///  - KHR_debug 콜백 미지원 환경(macOS GL 4.1 등)에서 GL 에러 추적의 **안전망**.
-/// @par 예시
-/// @code
-/// SJH_GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
-/// SJH_GL_CHECK(glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
-/// @endcode
-/// @note 사용 모듈: 모든 GL 호출 모듈 — 특히 @c src/buffer/, @c src/layout/, draw 호출부.
-#ifdef NDEBUG
-    #define SJH_GL_CHECK(x) (x)
-#else
-    #define SJH_GL_CHECK(x)                                                          \
-        do                                                                           \
-        {                                                                            \
-            (x);                                                                     \
-            ::SJH::diagnostics::GLDebug::DrainErrors(#x, __FILE__, __LINE__);        \
-        } while (0)
-#endif
 
 #endif // __SJH_DIAGNOSTICS_GL_LOG_H__

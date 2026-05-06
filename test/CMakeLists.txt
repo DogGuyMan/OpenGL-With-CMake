@@ -31,3 +31,25 @@ target_include_directories(test_glfw_utils PRIVATE
 )
 target_compile_features(test_glfw_utils PRIVATE cxx_std_17)
 catch_discover_tests(test_glfw_utils)
+
+#  Phase B1 — Headless GL 컨텍스트 fixture (재사용 STATIC lib)
+# 향후 GL 상태 쿼리 테스트들이 공유하는 인프라.
+# PUBLIC link 로 glad/glfw 헤더 경로 전파 → 소비 테스트가 #include <glad/glad.h> 가능.
+add_library(gl_test_fixture STATIC support/gl_test_fixture.cpp)
+target_link_libraries(gl_test_fixture PUBLIC
+    glad::glad
+    glfw
+)
+target_include_directories(gl_test_fixture PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}   # "support/gl_test_fixture.h" 접근
+)
+target_compile_features(gl_test_fixture PRIVATE cxx_std_17)
+
+#  Phase B1 — fixture 자가검증
+add_executable(test_gl_fixture test_gl_fixture.cpp)
+target_link_libraries(test_gl_fixture PRIVATE
+    Catch2::Catch2WithMain
+    gl_test_fixture
+)
+target_compile_features(test_gl_fixture PRIVATE cxx_std_17)
+catch_discover_tests(test_gl_fixture)

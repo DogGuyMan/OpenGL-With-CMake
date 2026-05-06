@@ -26,6 +26,6 @@ namespace SJH
             glAttachShader(mProgramAddr, shader->GetShaderAddr());
 
         glLinkProgram(mProgramAddr);
-        return SJH::diagnostics::GLObjectLog::CheckProgramLink(mProgramAddr);
+        return SJH::Diagnostics::GLObjectLog::CheckProgramLink(mProgramAddr);
     }
 }

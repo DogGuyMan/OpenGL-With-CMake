@@ -1,5 +1,6 @@
 add_library(sjhopengl_program STATIC
     program.cpp
+    program_uniforms.cpp
 )
 add_library(SJH::program ALIAS sjhopengl_program)
 

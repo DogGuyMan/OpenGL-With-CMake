@@ -45,6 +45,7 @@ namespace SJH
         ProgramUPtr mProgram;
         GLuint mVertexArrayObject;
         GLuint mVertexBufferObject;
+        GLuint mElementBufferObject; // indexBuffer
     };
 }
 

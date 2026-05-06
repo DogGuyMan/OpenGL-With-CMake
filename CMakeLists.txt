@@ -1,3 +1,5 @@
+# cmake --preset debug -DVCPKG_MANIFEST_INSTALL=OFF
+
 cmake_minimum_required(VERSION 3.21)
 set(PROJECT_NAME "OpenGL-With-CMake")
 project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES CXX)

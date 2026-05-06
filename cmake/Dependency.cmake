@@ -30,6 +30,8 @@ find_package(glfw3 CONFIG REQUIRED)
 # glad: OpenGL function loader
 find_package(glad CONFIG REQUIRED)
 
+find_package(glm CONFIG REQUIRED)
+
 # stb: header-only image / utility library
 # vcpkg installs headers; use ${Stb_INCLUDE_DIR} in target_include_directories()
 find_package(Stb REQUIRED)

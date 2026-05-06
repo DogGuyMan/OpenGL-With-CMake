@@ -14,6 +14,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     spdlog::spdlog
     glfw
     glad::glad
+    glm::glm
     fmt::fmt
     # 내부 모듈 (링크 시 include 경로 자동 전파)
     SJH::shader

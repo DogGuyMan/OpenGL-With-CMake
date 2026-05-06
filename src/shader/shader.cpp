@@ -37,7 +37,7 @@ namespace SJH
 
         // 셰이더 컴파일
         glCompileShader(mShaderAddr);
-        bool isSuccess = diagnostics::GLObjectLog::CheckShaderCompile(mShaderAddr, filename);
+        bool isSuccess = Diagnostics::GLObjectLog::CheckShaderCompile(mShaderAddr, filename);
         return isSuccess;
     }
 }

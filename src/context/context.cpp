@@ -2,19 +2,19 @@
 #include "diagnostics/gl_log.h"
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
+#include <glm/glm.hpp>
 
 namespace SJH
 {
-    static std::array<float, 9> vertices = {
-        -0.5f,
-        -0.5f,
-        0.0f,
-        0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-        0.5f,
-        0.0f,
+    static std::array<glm::vec3, 6> vertices = {
+        // first triangle
+        glm::vec3(-0.5f, -0.5f, 0.0f), // bottom left
+        glm::vec3(0.5f, -0.5f, 0.0f),  // bottom right
+        glm::vec3(0.5f, 0.5f, 0.0f),   // top right
+        // second triangle
+        glm::vec3(-0.5f, -0.5f, 0.0f), // bottom left
+        glm::vec3(0.5f, 0.5f, 0.0f),   // top right
+        glm::vec3(-0.5f, 0.5f, 0.0f),   // top left
     };
 
     ContextUPtr Context::Create()
@@ -30,7 +30,7 @@ namespace SJH
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(mProgram->GetProgramAddr());
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
     bool Context::Init()
@@ -76,7 +76,7 @@ namespace SJH
             return false;
         // === 사용할 buffer object는 vertex data를 저장할 용도 ===
         // === 변경빈도(STATIC=한번 / DYNAMIC=자주 / STREAM=매프레임) x 용도(DRAW=앱-> GPU / READ=GPU -> 앱 / COPY=GPU <-> GPU) ===
-        const GLint dataSize = vertices.size() * sizeof(float);
+        const GLint dataSize = vertices.size() * sizeof(glm::vec3);
         glBufferData(GL_ARRAY_BUFFER, dataSize, vertices.data(), GL_STATIC_DRAW);
         if (!SJH::Diagnostics::GLDebug::CheckGLBufferData(dataSize))
             return false;
@@ -88,7 +88,7 @@ namespace SJH
             return false;
 
         void *positionOffset = 0;
-        GLuint positionStride = sizeof(float) * 3;
+        GLuint positionStride = sizeof(glm::vec3);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, positionStride, positionOffset);
         if (!SJH::Diagnostics::GLDebug::CheckGLVertexAttribPointer({positionStride}))
             return false;

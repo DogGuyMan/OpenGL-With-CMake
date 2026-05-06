@@ -57,10 +57,10 @@ namespace SJH
         const auto &e = Lookup(name);
         if (e.location < 0)
         {
-            diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
+            Diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
             return;
         }
-        diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT_MAT4, e.type);
+        Diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT_MAT4, e.type);
         glUniformMatrix4fv(e.location, 1, GL_FALSE, mat4);
     }
 
@@ -69,10 +69,10 @@ namespace SJH
         const auto &e = Lookup(name);
         if (e.location < 0)
         {
-            diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
+            Diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
             return;
         }
-        diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT_VEC4, e.type);
+        Diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT_VEC4, e.type);
         glUniform4fv(e.location, 1, v4);
     }
 
@@ -81,10 +81,10 @@ namespace SJH
         const auto &e = Lookup(name);
         if (e.location < 0)
         {
-            diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
+            Diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
             return;
         }
-        diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT_VEC3, e.type);
+        Diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT_VEC3, e.type);
         glUniform3fv(e.location, 1, v3);
     }
 
@@ -93,10 +93,10 @@ namespace SJH
         const auto &e = Lookup(name);
         if (e.location < 0)
         {
-            diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
+            Diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
             return;
         }
-        diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT_VEC2, e.type);
+        Diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT_VEC2, e.type);
         glUniform2fv(e.location, 1, v2);
     }
 
@@ -105,10 +105,10 @@ namespace SJH
         const auto &e = Lookup(name);
         if (e.location < 0)
         {
-            diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
+            Diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
             return;
         }
-        diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT, e.type);
+        Diagnostics::UniformDiagnostics::NotifyTypeMismatch(mProgram, name, GL_FLOAT, e.type);
         glUniform1f(e.location, v);
     }
 
@@ -117,7 +117,7 @@ namespace SJH
         const auto &e = Lookup(name);
         if (e.location < 0)
         {
-            diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
+            Diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
             return;
         }
         // GL_INT / GL_SAMPLER_2D / GL_SAMPLER_CUBE 등 모두 glUniform1i 로 설정 ->
@@ -129,7 +129,7 @@ namespace SJH
     {
         const auto &e = Lookup(name);
         if (e.location < 0)
-            diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
+            Diagnostics::UniformDiagnostics::NotifyMissing(mProgram, name);
         return e.location;
     }
 }

@@ -6,6 +6,7 @@
         "spdlog",
         "glfw3",
         "glad",
+        "glm",
         "stb",
         "catch2"
     ]

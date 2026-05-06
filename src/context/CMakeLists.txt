@@ -13,6 +13,7 @@ target_link_libraries(sjhopengl_context
             SJH::shader
             SJH::program
             glad::glad
+            glm::glm
     PRIVATE SJH::diagnostics
 )
 

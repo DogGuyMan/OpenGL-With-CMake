@@ -299,7 +299,7 @@ namespace SJH::Diagnostics
             return false;
         }
     }
-    bool GLDebug::CheckGLVertexAttribPointer(const std::vector<GLuint> &&strides)
+    bool GLDebug::CheckGLVertexAttribPointer(const std::vector<GLsizei> &&strides)
     {
         const GLenum err = glGetError();
         switch (err)

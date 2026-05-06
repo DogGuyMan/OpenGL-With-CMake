@@ -4,7 +4,8 @@
 #include "common/common.h"
 #include "program/program.h"
 #include "shader/shader.h"
-
+#include "buffer/buffer.h"
+#include "layout/vertex_layout.h"
 namespace SJH
 {
     CLASS_PTR(Context)
@@ -43,9 +44,9 @@ namespace SJH
         Context() = default;
         bool Init();
         ProgramUPtr mProgram;
-        GLuint mVertexArrayObject;
-        GLuint mVertexBufferObject;
-        GLuint mElementBufferObject; // indexBuffer
+        VertexLayoutUPtr mVertexArrayObject;
+        BufferUPtr mVertexBufferObject;
+        BufferUPtr mElementBufferObject; // indexBuffer
     };
 }
 

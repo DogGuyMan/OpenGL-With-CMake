@@ -145,36 +145,24 @@ Phase B4 진짜 시나리오 — simple.vs/.fs 로 사각형 한 장
 
 ---
 
-### Phase B1: Headless GL 컨텍스트 헬퍼
+### Phase B1: Headless GL 컨텍스트 헬퍼 ✅ 완료
 
 목적: 모든 골든 테스트가 공유할 GL fixture 만들기.
 
-- [ ] `test/support/gl_test_fixture.h` 신설
-  ```cpp
-  namespace SJH::test {
-      class GLContextFixture {
-      public:
-          GLContextFixture(int width = 256, int height = 256);
-          ~GLContextFixture();
-          GLContextFixture(const GLContextFixture&) = delete;
-          int width()  const { return mWidth; }
-          int height() const { return mHeight; }
-      private:
-          GLFWwindow* mWindow = nullptr;
-          int mWidth, mHeight;
-      };
-  }
-  ```
-- [ ] **macOS 강제 사항** (migration-plan.md §7-6 참조):
-  ```cpp
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-  ```
-- [ ] `gladLoadGLLoader` 호출 + 실패 시 `FAIL` 매크로
-- [ ] **테스트 전체에서 GLFW 1회만 init** — `Catch2` 의 `EventListenerBase` 또는 `static` 가드로 처리
+- [x] `test/support/gl_test_fixture.h/.cpp` 신설 — `SJH::test::GLContextFixture` 클래스 (forward-decl `GLFWwindow`).
+- [x] **macOS 강제 사항** 적용 (CONTEXT_VERSION 3.3 + CORE + FORWARD_COMPAT + VISIBLE=FALSE).
+- [x] `gladLoadGLLoader` 호출 + 실패 시 `throw std::runtime_error` (Catch2 가 자동 캐치).
+- [x] **테스트 전체에서 GLFW 1회만 init** — `static` 가드 + `std::atexit` 으로 처리.
+- [x] [test/test_gl_fixture.cpp](../test/test_gl_fixture.cpp) — fixture 자가검증 통과.
+
+### Phase B1.5: 모듈별 GL 상태 단위 테스트 ✅ 진행 중 (선택 옵션)
+
+Phase 1 모듈 마이그레이션과 *동시 진행* — golden image (B2~B4) 전 단계로, *모듈별 1-2 단언* 만 추가.
+
+- [x] [test/test_gl_debug.cpp](../test/test_gl_debug.cpp) — `GLDebug::CheckGL*` 7개 함수 happy path + negative (BindVAO bad / EnableVAA out-of-range / BufferData unbound).
+- [x] [test/test_uniform_diagnostics.cpp](../test/test_uniform_diagnostics.cpp) — `UniformDiagnostics` warn-once 트래커 smoke (GL context 불필요, 가장 빠름).
+- [x] [test/test_program_uniforms.cpp](../test/test_program_uniforms.cpp) — 인라인 GLSL 컴파일/링크 후 `ProgramUniforms` location 캐시 + setter 동작.
+- [x] **현재 상태**: 21/21 테스트 통과 (`ctest --test-dir build_Darwin --output-on-failure`).
 
 ---
 

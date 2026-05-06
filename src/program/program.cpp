@@ -18,6 +18,10 @@ namespace SJH
             glDeleteProgram(mProgramAddr);
     }
 
+    void Program::Use() const {
+        glUseProgram(mProgramAddr);
+    }
+
     bool Program::TryLink(const std::vector<ShaderPtr> &shaders)
     {
         mProgramAddr = glCreateProgram();

@@ -8,4 +8,13 @@ target_include_directories(sjhopengl_layout
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+target_link_libraries(sjhopengl_layout
+    PUBLIC  SJH::common
+            SJH::buffer
+            glad::glad
+            glm::glm
+    PRIVATE SJH::diagnostics
+)
+
+
 target_compile_features(sjhopengl_layout PRIVATE cxx_std_17)

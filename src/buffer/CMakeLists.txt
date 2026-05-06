@@ -11,6 +11,8 @@ target_include_directories(sjhopengl_buffer
 target_link_libraries(sjhopengl_buffer
     PUBLIC  SJH::common
             SJH::program
+            glad::glad
+            glm::glm
     PRIVATE SJH::diagnostics
 )
 

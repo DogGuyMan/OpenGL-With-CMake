@@ -117,7 +117,7 @@ namespace SJH::Diagnostics
         ///  - @c GL_INVALID_ENUM — type 부적합.
         ///  - @c GL_INVALID_OPERATION — VAO 미바인딩, 또는 non-zero offset 인데 VBO 미바인딩.
         /// @param strides 진단 로그에 출력할 stride 리스트 (호출별 stride 컨텍스트 캡처).
-        static bool CheckGLVertexAttribPointer(const std::vector<GLuint>&& strides);
+        static bool CheckGLVertexAttribPointer(const std::vector<GLsizei>&& strides);
     };
 }
 

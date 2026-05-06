@@ -1,4 +1,6 @@
 #include "context.h"
+#include "buffer/buffer.h"
+#include "layout/vertex_layout.h"
 #include "diagnostics/gl_log.h"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -14,7 +16,8 @@ namespace SJH
      *
      *********************************************************************************/
     // 엥? 교안 CW 배치네..
-    static std::array<glm::vec3, 4> vertices{
+    static std::array<glm::vec3, 4> vertices
+    {
         glm::vec3(0.5f, 0.5f, 0.0f),   // top right
         glm::vec3(0.5f, -0.5f, 0.0f),  // bottom right
         glm::vec3(-0.5f, -0.5f, 0.0f), // bottom left
@@ -37,7 +40,7 @@ namespace SJH
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(mProgram->GetProgramAddr());
+        mProgram->Use();
 
         // glPointSize(10.0f);
         // glDrawArrays(GL_POINTS, 0, 1);
@@ -72,55 +75,25 @@ namespace SJH
             3. Vertex Attribute Setting
         */
 
-        // === VAO 생성 ===
-        glGenVertexArrays(1, &mVertexArrayObject);
-        if (!SJH::Diagnostics::GLDebug::CheckGLGenVertexArrays())
-            return false;
-        // === 지금부터 사용할 VAO 설정 ===
-        glBindVertexArray(mVertexArrayObject);
-        if (!SJH::Diagnostics::GLDebug::CheckGLBindVertexArray(mVertexArrayObject))
-            return false;
+        mVertexArrayObject = VertexLayout::Create();
 
         // === buffer object를 만든다 ===
-        glGenBuffers(1, &mVertexBufferObject);
-        if (!SJH::Diagnostics::GLDebug::CheckGLGenBuffers(mVertexBufferObject))
-            return false;
-
         // === 지금부터 사용할 buffer object를 지정한다. ===
-        glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-        if (!SJH::Diagnostics::GLDebug::CheckGLBindBuffer(mVertexBufferObject))
-            return false;
         // === 사용할 buffer object는 vertex data를 저장할 용도 ===
         // === 변경빈도(STATIC=한번 / DYNAMIC=자주 / STREAM=매프레임) x 용도(DRAW=앱-> GPU / READ=GPU -> 앱 / COPY=GPU <-> GPU) ===
         const GLint buffer_size = vertices.size() * sizeof(glm::vec3);
-        spdlog::info("buffer_size : {}", buffer_size);
-        glBufferData(GL_ARRAY_BUFFER, buffer_size, vertices.data(), GL_STATIC_DRAW);
-        if (!SJH::Diagnostics::GLDebug::CheckGLBufferData(buffer_size))
-            return false;
+        mVertexBufferObject = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices.data(), buffer_size);
 
         const GLint element_size = indices.size() * sizeof(GLuint);
-        spdlog::info("element_size : {}", element_size);
-        glGenBuffers(1, &mElementBufferObject);
-        if (!SJH::Diagnostics::GLDebug::CheckGLGenBuffers(mElementBufferObject))
-            return false;
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBufferObject);
-        if (!SJH::Diagnostics::GLDebug::CheckGLBindBuffer(mElementBufferObject))
-            return false;
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, element_size, indices.data(), GL_STATIC_DRAW);
-        if (!SJH::Diagnostics::GLDebug::CheckGLBufferData(buffer_size))
-            return false;
+        mElementBufferObject = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices.data(), element_size);
 
         // === 셰이더 쪽 layout(location = 0) 인곳에 넣겠다. ===
         void *positionOffset = 0;
         GLuint positionStride = sizeof(glm::vec3);
 
-        glEnableVertexAttribArray(0);
-        if (!SJH::Diagnostics::GLDebug::CheckGLEnableVertexAttribArray(0))
+        if(!mVertexArrayObject->TrySetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0))
             return false;
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, positionStride, positionOffset);
-        if (!SJH::Diagnostics::GLDebug::CheckGLVertexAttribPointer({positionStride}))
-            return false;
         return true;
     }
 }

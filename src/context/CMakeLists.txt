@@ -11,6 +11,8 @@ target_include_directories(sjhopengl_context
 target_link_libraries(sjhopengl_context
     PUBLIC  SJH::common
             SJH::shader
+            SJH::buffer
+            SJH::layout
             SJH::program
             glad::glad
             glm::glm

@@ -84,3 +84,24 @@ target_link_libraries(test_program_uniforms PRIVATE
 )
 target_compile_features(test_program_uniforms PRIVATE cxx_std_17)
 catch_discover_tests(test_program_uniforms)
+
+#  buffer 모듈 — Buffer (VBO/EBO 통합 RAII) 검증
+add_executable(test_buffer test_buffer.cpp)
+target_link_libraries(test_buffer PRIVATE
+    Catch2::Catch2WithMain
+    gl_test_fixture
+    SJH::buffer
+)
+target_compile_features(test_buffer PRIVATE cxx_std_17)
+catch_discover_tests(test_buffer)
+
+#  layout 모듈 — VertexLayout (VAO + attribute setter) 검증
+add_executable(test_vertex_layout test_vertex_layout.cpp)
+target_link_libraries(test_vertex_layout PRIVATE
+    Catch2::Catch2WithMain
+    gl_test_fixture
+    SJH::layout
+    SJH::buffer    # TrySetAttrib 테스트가 VBO 도 바인딩
+)
+target_compile_features(test_vertex_layout PRIVATE cxx_std_17)
+catch_discover_tests(test_vertex_layout)

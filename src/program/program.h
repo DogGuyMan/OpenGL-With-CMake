@@ -35,6 +35,7 @@ namespace SJH
 
         /// @brief 내부 GL 프로그램 핸들 반환 — @c glUseProgram 호출 시 사용.
         GLuint GetProgramAddr() const { return mProgramAddr; }
+        void Use() const;
 
     private:
         Program() = default;

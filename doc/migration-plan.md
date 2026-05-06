@@ -19,13 +19,13 @@
 |---|---|---|---|
 | `common` | `LoadTextFile()`, `CLASS_PTR` 매크로 | ✅ 활성 (개선됨) | — |
 | `shader` | `CreateFromFile()`, `LoadFile()` 인라인 검증 | ✅ 활성 (`TryLoadFile` + diagnostics) | — |
-| `diagnostics` | (main에 없음) | ✅ 활성 (newEnv 신설) | — |
-| `buffer` | `CreateWithData(type, usage, data, size)`, `Bind()` | placeholder | **소** |
-| `vertex_layout` | `Create()`, `SetAttrib(...)`, `Bind()` | placeholder (`layout/`) | **소** |
-| `program` | `Create(vector<ShaderPtr>)`, `Link()` 인라인 검증, `Use()` | placeholder | **소-중** |
+| `diagnostics` | (main에 없음) | ✅ 활성 (newEnv 신설 + `GLDebug::CheckGL*` 7개 + `UniformDiagnostics`) | — |
+| `buffer` | `CreateWithData(type, usage, data, size)`, `Bind()` | 🟡 활성 (단일 클래스 — 비-템플릿. `Init`/`Bind` 에 `GLDebug::CheckGL*` 통합) | **거의 완료** |
+| `vertex_layout` | `Create()`, `SetAttrib(...)`, `Bind()` | placeholder (`layout/`) — context.cpp 에 인라인 형태로 부분 흡수 | **소** |
+| `program` | `Create(vector<ShaderPtr>)`, `Link()` 인라인 검증, `Use()` | ✅ 활성 (`Program` + `ProgramUniforms` 신규) | **거의 완료** |
 | `image` | stb_image 로드, `Create()`, `SetCheckImage()` | **모듈 부재** | **중** |
 | `texture` | `CreateFromImage()`, `SetFilter/Wrap`, mipmap | **모듈 부재** | **중** |
-| `context` | 모든 모듈 통합 + 멀티 텍스처 + uniform 바인딩 | placeholder | **대** |
+| `context` | 모든 모듈 통합 + 멀티 텍스처 + uniform 바인딩 | 🟡 활성 (VAO+VBO+EBO+Vertex Attribute + 호출별 명시 진단 switch). 텍스처/멀티 셰이더 미통합 | **대** |
 
 ### 자원 현황 갭
 | 자원 | main 경로 | newEnv 경로 | 작업 |
@@ -72,21 +72,15 @@ image (Phase 1-C) ─────────┤
 
 세 모듈 모두 서로 독립이므로 동시 진행 가능. 각 작업은 [.claude/architecture.md §7](../.claude/architecture.md) 체크리스트 따름.
 
-#### Phase 1-A: `buffer` 활성화
-- [ ] [src/CMakeLists.txt](../src/CMakeLists.txt): `# add_subdirectory(buffer)` 주석 해제
-- [ ] [src/buffer/CMakeLists.txt](../src/buffer/CMakeLists.txt): 의존성 추가
-  ```cmake
-  target_link_libraries(sjhopengl_buffer
-      PUBLIC  SJH::common glad::glad
-      PRIVATE SJH::Diagnostics
-  )
-  ```
-- [ ] [src/buffer/buffer.h](../src/buffer/buffer.h): main의 `Buffer` 클래스 이식 + `namespace SJH` 감싸기 + `CLASS_PTR(Buffer)` 적용
-- [ ] [src/buffer/buffer.cpp](../src/buffer/buffer.cpp): main 구현 이식. 주요 GL 호출:
-  - `glGenBuffers` / `glBufferData` / `glBindBuffer` / `glDeleteBuffers`
-- [ ] **검토 사항**: `Init()` 메서드명 — main은 `Init()`, 컨벤션은 `Try*` prefix 권장 -> `TryInit()` 권장
-- [ ] **선택**: `glBufferData` 호출을 `SJH_GL_CHECK(...)`로 감싸기 (디버그 빌드 진단 강화)
-- [ ] 빌드 검증
+#### Phase 1-A: `buffer` 활성화 — 🟡 진행 중
+
+- [x] [src/CMakeLists.txt](../src/CMakeLists.txt): `add_subdirectory(buffer)` 활성
+- [x] [src/buffer/CMakeLists.txt](../src/buffer/CMakeLists.txt): 의존성 추가
+- [x] [src/buffer/buffer.h](../src/buffer/buffer.h): `Buffer` 클래스 (단일, 비-템플릿) + `CLASS_PTR(Buffer)` 적용
+- [x] [src/buffer/buffer.cpp](../src/buffer/buffer.cpp): `Init()`/`Bind()` 안에 `GLDebug::CheckGLGenBuffers` / `CheckGLBindBuffer` / `CheckGLBufferData` 통합 — 매크로 대신 *명시 함수* 채택
+- [ ] **남은 결정**: `Init()` → `TryInit()` 리네임 (컨벤션 일관성)
+- [ ] **선택 미완**: 정점 데이터 / 인덱스 데이터 *타입 강제* (현재 `void*` 로 받음 — 타입 mismatch 캐치 불가, 본 프로젝트의 EBO 타입 실수 사례 발생)
+- [x] 빌드 검증 (21/21 테스트 통과)
 
 #### Phase 1-B: `layout` (vertex_layout) 활성화
 - [ ] [src/CMakeLists.txt](../src/CMakeLists.txt): `# add_subdirectory(layout)` 주석 해제
@@ -102,7 +96,7 @@ image (Phase 1-C) ─────────┤
 - [ ] `src/image/` 디렉토리 생성
 - [ ] `src/image/CMakeLists.txt` 신설 ([architecture.md §2 template](../.claude/architecture.md))
   - `target_include_directories(... PRIVATE ${Stb_INCLUDE_DIR})` — stb는 헤더만 vcpkg에서 받음
-  - `PUBLIC SJH::common`, `PRIVATE SJH::Diagnostics` (현재 image는 stb 에러를 spdlog로 출력하므로 spdlog도 따라옴)
+  - `PUBLIC SJH::common`, `PRIVATE SJH::diagnostics` (현재 image는 stb 에러를 spdlog로 출력하므로 spdlog도 따라옴)
 - [ ] `src/image/image.h`: main의 `Image` 클래스 이식 + `namespace SJH`
 - [ ] `src/image/image.cpp`:
   - `#define STB_IMAGE_IMPLEMENTATION`은 **이 파일에만** (다중 정의 금지)
@@ -125,7 +119,7 @@ shader에 의존. 가장 큰 가치는 `diagnostics::CheckProgramLink` 적용 �
   ```cmake
   target_link_libraries(sjhopengl_program
       PUBLIC  SJH::common SJH::shader glad::glad
-      PRIVATE SJH::Diagnostics
+      PRIVATE SJH::diagnostics    # CMake alias 는 소문자 (C++ namespace SJH::Diagnostics 와 별개)
   )
   ```
 - [ ] [src/program/program.h](../src/program/program.h): main 이식 + `namespace SJH`
@@ -150,7 +144,7 @@ image에 의존.
   ```cmake
   target_link_libraries(sjhopengl_texture
       PUBLIC  SJH::common SJH::image glad::glad
-      PRIVATE SJH::Diagnostics
+      PRIVATE SJH::diagnostics
   )
   ```
 - [ ] `src/texture/texture.h/cpp`: main 이식 + `namespace SJH`
@@ -170,7 +164,7 @@ image에 의존.
   target_link_libraries(sjhopengl_context
       PUBLIC  SJH::common SJH::shader SJH::program SJH::buffer
               SJH::layout SJH::image SJH::texture glad::glad
-      PRIVATE SJH::Diagnostics
+      PRIVATE SJH::diagnostics
   )
   ```
   - **주의**: `glfw`는 link 안 함 — Context는 GL 자원 관리만, 윈도우/입력은 `app/`이 담당.

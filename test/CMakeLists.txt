@@ -105,3 +105,48 @@ target_link_libraries(test_vertex_layout PRIVATE
 )
 target_compile_features(test_vertex_layout PRIVATE cxx_std_17)
 catch_discover_tests(test_vertex_layout)
+
+#  resource_management 모듈 — Texture / ResourceManagement RAII + 캐시 + sampler 계약 회귀
+#  실행 디렉토리에 ./resources/texture/container.jpg 가 있어야 케이스 RUN — POST_BUILD 로 symlink.
+add_executable(test_texture test_texture.cpp)
+target_link_libraries(test_texture PRIVATE
+    Catch2::Catch2WithMain
+    gl_test_fixture
+    SJH::resource_management
+)
+target_compile_features(test_texture PRIVATE cxx_std_17)
+catch_discover_tests(test_texture)
+
+# resources symlink (app/CMakeLists.txt 의 동일 패턴) — test_texture 가 컨테이너 이미지 접근.
+if(EXISTS ${CMAKE_SOURCE_DIR}/resources)
+    if(WIN32)
+        add_custom_command(TARGET test_texture POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                    "${CMAKE_SOURCE_DIR}/resources"
+                    "$<TARGET_FILE_DIR:test_texture>/resources"
+            BYPRODUCTS "$<TARGET_FILE_DIR:test_texture>/resources"
+            VERBATIM)
+    else()
+        add_custom_command(TARGET test_texture POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rm -f
+                    "$<TARGET_FILE_DIR:test_texture>/resources"
+            COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    "${CMAKE_SOURCE_DIR}/resources"
+                    "$<TARGET_FILE_DIR:test_texture>/resources"
+            VERBATIM)
+    endif()
+endif()
+
+#  Umbrella 타겟 — `cmake --build <dir> --target tests` 로 모든 test_* 일괄 빌드.
+# 새 테스트 추가 시 DEPENDS 목록만 갱신하면 됨.
+add_custom_target(tests DEPENDS
+    test_common
+    test_glfw_utils
+    test_gl_fixture
+    test_gl_debug
+    test_uniform_diagnostics
+    test_program_uniforms
+    test_buffer
+    test_vertex_layout
+    test_texture
+)

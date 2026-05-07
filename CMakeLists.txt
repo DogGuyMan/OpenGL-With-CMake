@@ -26,9 +26,12 @@ add_subdirectory(src)
 add_subdirectory(app)
 
 #  Tests
+# EXCLUDE_FROM_ALL: test 타겟은 default `cmake --build` (=ALL)에서 제외.
+# test_* 컴파일 에러가 app+src 빌드를 실패시키지 않도록.
+# 명시 빌드: `cmake --build <dir> --target tests` (umbrella) 또는 `--target test_buffer` 등.
 if(SJH_OPENGL_BUILD_TESTS)
     enable_testing()
-    add_subdirectory(test)
+    add_subdirectory(test EXCLUDE_FROM_ALL)
 endif()
 
 #  Documentation

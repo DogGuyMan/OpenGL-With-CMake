@@ -33,5 +33,7 @@ find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 # stb: header-only image / utility library
-# vcpkg installs headers; use ${Stb_INCLUDE_DIR} in target_include_directories()
+# vcpkg는 stb를 imported target이 아닌 변수(${Stb_INCLUDE_DIR})로만 노출.
+# 다른 의존성과의 사용 일관성을 위해 INTERFACE 타겟 stb::stb 로 래핑.
+#   소비 측: target_link_libraries(<tgt> PRIVATE stb::stb)
 find_package(Stb REQUIRED)

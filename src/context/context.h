@@ -6,6 +6,7 @@
 #include "shader/shader.h"
 #include "buffer/buffer.h"
 #include "layout/vertex_layout.h"
+#include "resource_management/resource_management.h"
 namespace SJH
 {
     CLASS_PTR(Context)
@@ -47,6 +48,7 @@ namespace SJH
         VertexLayoutUPtr mVertexArrayObject;
         BufferUPtr mVertexBufferObject;
         BufferUPtr mElementBufferObject; // indexBuffer
+        ResourceManagementUPtr mRM;
     };
 }
 

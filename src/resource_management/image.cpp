@@ -1,0 +1,68 @@
+/**
+ * @file image.cpp
+ * @brief Image 정의 — stb_image implementation 을 *이 TU 에서만* 펼친다.
+ * @note  @c STB_IMAGE_IMPLEMENTATION 매크로는 프로젝트 전체에서 정확히 한 번만 정의되어야 한다
+ *        (단일 헤더 라이브러리 규칙 — 다른 .cpp 에서 중복 정의 시 링커 duplicate symbol).
+ */
+#include "image.h"
+// stb_image 함수 본문은 *이 한 곳에서만* 펼친다. 다른 TU 에서는 일반 #include 만 (구현 매크로 X).
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#include <memory>
+#include <spdlog/spdlog.h>
+
+namespace SJH
+{
+    ImageUPtr Image::Load(const std::string &filepath, const std::string &image_name)
+    {
+        auto image = std::unique_ptr<Image>(new Image());
+        if (!image->LoadWithStb(filepath))
+            return nullptr;
+        image->mImageName = image_name;
+        return std::move(image);
+    }
+
+    Image::~Image()
+    {
+        if (mImageDataPtr != 0)
+            stbi_image_free(mImageDataPtr);
+    }
+
+    Image::Image(Image &&other) noexcept
+        :  mImageDataPtr(other.mImageDataPtr), mImageName(other.mImageName),
+            mWidth(other.mWidth), mHeight(other.mHeight), mChannelCount(other.mChannelCount)
+    {
+        other.mImageDataPtr = 0;
+    }
+
+    Image &Image::operator=(Image &&other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mImageDataPtr != 0)
+                stbi_image_free(mImageDataPtr);
+            mImageDataPtr = other.mImageDataPtr;
+            other.mImageDataPtr = 0;
+            mImageName = other.mImageName;
+            mWidth = other.mWidth;
+            mHeight = other.mHeight;
+            mChannelCount = other.mChannelCount;
+        }
+        return *this;
+    }
+
+
+    bool Image::LoadWithStb(const std::string &filepath)
+    {
+        stbi_set_flip_vertically_on_load(true);
+
+        mImageDataPtr = stbi_load(filepath.c_str(), &mWidth, &mHeight, &mChannelCount, 0);
+        if (mImageDataPtr == 0)
+        {
+            spdlog::error("이미지 로딩 실패: {}", filepath);
+            return false;
+        }
+
+        return true;
+    }
+}

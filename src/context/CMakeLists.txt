@@ -13,6 +13,7 @@ target_link_libraries(sjhopengl_context
             SJH::shader
             SJH::buffer
             SJH::layout
+            SJH::resource_management
             SJH::program
             glad::glad
             glm::glm

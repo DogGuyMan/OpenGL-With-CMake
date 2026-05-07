@@ -311,7 +311,7 @@ namespace SJH
         auto pos = glm::vec2((float)x, (float)y);
         auto deltaPos = pos - mPrevMousePos;
 
-        const float cameraRotSpeed = 0.8f;
+        const float cameraRotSpeed = -0.1f;
         mCamera.mCameraYaw -= deltaPos.x * cameraRotSpeed;
         mCamera.mCameraPitch -= deltaPos.y * cameraRotSpeed;
 
@@ -325,21 +325,37 @@ namespace SJH
         if (mCamera.mCameraPitch < -89.0f)
             mCamera.mCameraPitch = -89.0f;
 
+        const float yawRad   = glm::radians(mCamera.mCameraYaw);
+        const float pitchRad = glm::radians(mCamera.mCameraPitch);
+        mCamera.mCameraFront = glm::vec3(
+            -sinf(yawRad) * cosf(pitchRad),
+             sinf(pitchRad),
+            -cosf(yawRad) * cosf(pitchRad)
+        );
+
         mPrevMousePos = pos;
     }
 
     void Context::MouseButton(int button, int action, double x, double y)
     {
-        if (button == GLFW_MOUSE_BUTTON_RIGHT)
+        const char* btnName = (button == GLFW_MOUSE_BUTTON_LEFT)   ? "LEFT"
+                            : (button == GLFW_MOUSE_BUTTON_RIGHT)  ? "RIGHT"
+                            : (button == GLFW_MOUSE_BUTTON_MIDDLE) ? "MIDDLE" : "OTHER";
+        const char* actName = (action == GLFW_PRESS) ? "PRESS" : "RELEASE";
+        spdlog::info("[MouseButton] {} {} at ({:.1f}, {:.1f})", btnName, actName, x, y);
+
+        if (button == GLFW_MOUSE_BUTTON_LEFT)
         {
             if (action == GLFW_PRESS)
             {
                 mPrevMousePos = glm::vec2((float)x, (float)y);
                 mCamera.mCameraControl = true;
+                spdlog::info("[MouseButton] mCameraControl=true, mPrevMousePos=({:.1f},{:.1f})", x, y);
             }
             else if (action == GLFW_RELEASE)
             {
                 mCamera.mCameraControl = false;
+                spdlog::info("[MouseButton] mCameraControl=false");
             }
         }
     }
@@ -348,12 +364,12 @@ namespace SJH
     {
         float t = sinf((float)glfwGetTime()) * 0.5f + 0.5f;
 
-        // float angle = glfwGetTime() * glm::pi<float>() * 0.5f;
-        // mCamera.mCameraPitch = sinf(angle) * 10.0f;
-        // mCamera.mCameraYaw = cosf(angle) * 10.0f;
-        // mCamera.mCameraPos = glm::vec3(mCamera.mCameraPitch, 0.0f, mCamera.mCameraYaw);
-        // mCamera.mCameraFront = glm::vec3(0.0f, 0.0f, 0.0f);
-        // mCamera.mCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        mCamera.mCameraFront =
+            glm::rotate(glm::mat4(1.0f),
+                        glm::radians(mCamera.mCameraYaw), glm::vec3(0.0f, 1.0f, 0.0f)) *
+            glm::rotate(glm::mat4(1.0f),
+                        glm::radians(mCamera.mCameraPitch), glm::vec3(1.0f, 0.0f, 0.0f)) *
+            glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
 
         // 카메라: z=3 위치에서 원점을 바라봄
         auto viewMat = mCamera.GetViewMatrix();

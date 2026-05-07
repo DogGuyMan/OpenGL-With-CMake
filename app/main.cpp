@@ -10,13 +10,6 @@
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
 
-void DemoHandleFramebufferSizeChange(GLFWwindow *window, int width, int height)
-{
-    spdlog::info("프레임 버퍼 사이즈가 변경됨 : ({} X {})", width, height);
-    // OpenGL이 그림을 그릴 영역 지정
-    glViewport(0, 0, width, height);
-}
-
 void HandleKeyInput(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     spdlog::info("key: {} ,scancode: {} ,action: {}, mods: {}{}{}",
@@ -28,6 +21,25 @@ void HandleKeyInput(GLFWwindow *window, int key, int scancode, int action, int m
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
+
+void HandleFramebufferSizeChange(GLFWwindow* window, int width, int height) {
+    SPDLOG_INFO("framebuffer size changed: ({} x {})", width, height);
+    auto context = (SJH::Context*)glfwGetWindowUserPointer(window);
+    context->Reshape(width, height);
+}
+
+void HandleCursorPos(GLFWwindow* window, double x, double y) {
+    auto context = (SJH::Context*)glfwGetWindowUserPointer(window);
+    context->MouseMove(x, y);
+}
+
+void HandleMouseButton(GLFWwindow* window, int button, int action, int modifier) {
+    auto context = (SJH::Context*)glfwGetWindowUserPointer(window);
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    context->MouseButton(button, action, x, y);
+}
+
 
 int main()
 {
@@ -87,14 +99,12 @@ int main()
         return -1;
     }
 
-    // glfwSetWindowUserPointer(window, context.get());
-
-    DemoHandleFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    glfwSetFramebufferSizeCallback(window, DemoHandleFramebufferSizeChange);
-    // glfwSetKeyCallback(window, HandleKeyInput);
-    // glfwSetCursorPosCallback(window, HandleCursorPos);
-    // glfwSetMouseButtonCallback(window, HandleMouseButton);
+    glfwSetWindowUserPointer(window, context.get());
+    HandleFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glfwSetFramebufferSizeCallback(window, HandleFramebufferSizeChange);
+    glfwSetKeyCallback(window, HandleKeyInput);
+    glfwSetCursorPosCallback(window, HandleCursorPos);
+    glfwSetMouseButtonCallback(window, HandleMouseButton);
 
     // 6. GLFW 루프 시작, 윈도우 close 버튼을 누르면 루프 종료
     spdlog::info("GLFW 메인 루프 시작");
@@ -106,7 +116,7 @@ int main()
         // TODO 콜백 수행부
 
         // 렌더링
-        // context->ProcessInput(window);
+        context->ProcessInput(window);
         context->Render();
         // 프레임버퍼 스왑 코드 호출 "그림이 그려지는 과정이 노출되지 않도록 해줌"
         /*

@@ -12,7 +12,7 @@ namespace SJH
     public:
         glm::vec3 mCameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
         glm::vec3 mCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-        glm::vec3 mCameraUp = glm::vec3(0.0f, 1.0f, 1.0f);
+        glm::vec3 mCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
         bool mCameraControl{false};
         float mCameraPitch{0.0f};
@@ -28,16 +28,11 @@ namespace SJH
             return glm::lookAt(mCameraPos, mCameraPos + mCameraFront, mCameraUp);
         }
 
-        glm::mat4 GetProjMatrix() const
-        {
-            return glm::perspective(Fov, Aspect, NearPlane, FarPlane);
-        }
-
         glm::mat4 GetProjMatrix(float width, float height) const
         {
-            return glm::perspective(glm::radians(45.0f),
-                                    width / height, 0.01f, 20.0f);
+            return glm::perspective(glm::radians(Fov), width / height, NearPlane, FarPlane);
         }
+
     };
 } // namespace Engine::Camera
 

@@ -25,7 +25,6 @@ namespace SJH
      */
     class Image
     {
-        friend class ResourceManagement;
 
     public:
         /**
@@ -34,7 +33,8 @@ namespace SJH
          * @param image_name 캐시 키로 사용할 논리 이름 (파일명과 별개).
          * @return 성공 시 @c ImageUPtr, 실패 시 @c nullptr.
          */
-        static ImageUPtr Load(const std::string &filepath, const std::string &image_name);
+        static ImageUPtr Load(const std::string &image_name, const std::string &filepath);
+        static ImageUPtr Create(const std::string &image_name, int width, int height, int channelCount = 4);
 
         /// @brief stb_image 가 할당한 픽셀 버퍼를 @c stbi_image_free 로 해제.
         ~Image();
@@ -52,9 +52,11 @@ namespace SJH
         int GetHeight() const { return mHeight; }
         /// @brief 픽셀 채널 수 (1=R, 2=RG, 3=RGB, 4=RGBA).
         int GetChannelCount() const { return mChannelCount; }
+        void SetCheckImage(int gridX, int gridY);
 
     private:
         bool LoadWithStb(const std::string &filepath);
+        bool Allocate(int width, int height, int channelCount);
         Image() = default;
         std::string mImageName;
         int mWidth{0};

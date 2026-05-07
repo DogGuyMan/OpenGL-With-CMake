@@ -42,7 +42,7 @@ namespace SJH
          * @param image_name 캐시 키 (논리 이름 — 파일명과 별개).
          * @return 캐시되었거나 새로 로드된 @c Image* (소유권 X). 실패 시 @c nullptr.
          */
-        Image *LoadImage(const std::string &filepath, const std::string &image_name);
+        Image *LoadImage(const std::string &image_name, const std::string &filepath);
 
         /**
          * @brief 이름으로 캐시된 텍스처 *조회* (생성 안 함).

@@ -20,13 +20,13 @@ namespace SJH
         Clear();
     }
 
-    Image *ResourceManagement::LoadImage(const std::string &filepath, const std::string &image_name)
+    Image *ResourceManagement::LoadImage(const std::string &image_name, const std::string &filepath)
     {
         auto it = images.find(image_name);
         if (it != images.end())
             return it->second.get();
 
-        auto image = Image::Load(filepath, image_name);
+        auto image = Image::Load(image_name, filepath);
         if (image == nullptr)
             return nullptr;
 

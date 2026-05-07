@@ -74,9 +74,29 @@ namespace SJH
         static float time = 0.0f;
         float t = sinf(time) * 0.5f + 0.5f;
 
+        // 1. 바인드 하는곳
+        {
+            mVertexArrayObject->Bind();
+            // auto texturePtr = mRM->LoadTextureWithName("container");
+            {
+                // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
+                glActiveTexture(GL_TEXTURE0);
+                auto texturePtr = mRM->LoadTextureWithName("checkerboard");
+                // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
+                texturePtr->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
+            }
+            {
+                // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
+                glActiveTexture(GL_TEXTURE1);
+                // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
+                auto texturePtr = mRM->LoadTextureWithName("awesomeface");
+                texturePtr->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
+            }
+        }
+
+        // 2. Use Program
         mProgram->Use();
 
-        mVertexArrayObject->Bind();
         // glUniform* 은 현재 use 중인 프로그램에만 적용 — Use() 선행 필수.
 
         // glPointSize(10.0f);
@@ -85,18 +105,23 @@ namespace SJH
         // VBO 만으로 그렸을때
         // glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        // VBO + EBO 협력으로 그렸을때.
+        // 3. Uniform 전달
         glUniform4f(glGetUniformLocation(mProgram->GetProgramAddr(), "baseColor"),
                     t * t,
                     2.0f * t * (1.0f - t),
                     (1.0f - t) * (1.0f - t),
                     1.0f);
 
-        glActiveTexture(GL_TEXTURE0);
-        auto texturePtr = mRM->LoadTextureWithName("container");
-        texturePtr->Bind();
-        glUniform1i(glGetUniformLocation(mProgram->GetProgramAddr(), "tex"), 0);
+        for (int i = 0; i < 2; i++)
+        {
+            std::string texuniform = "tex" + std::to_string(i);
+            // glGetUniformLocation() 함수로 shader 내의 sampler2D uniform 핸들을 얻어옴
+            auto loc = glGetUniformLocation(mProgram->GetProgramAddr(), texuniform.c_str());
+            // glUniform1i() 함수로 sampler2D uniform에 텍스처 슬롯 인덱스를 입력
+            glUniform1i(loc, i);
+        }
 
+        // VBO + EBO 협력으로 그렸을때.
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         time += 0.016f;
@@ -150,15 +175,33 @@ namespace SJH
         if (!mVertexArrayObject->TrySetAttrib(2, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, sizeof(GLfloat) * 6))
             return false;
 
-        auto imagePtr = mRM->LoadImage("./resources/texture/container.jpg", "container");
-        if (imagePtr == nullptr)
+        auto imagePtr1 = mRM->LoadImage("container", "./resources/texture/container.jpg");
+        if (imagePtr1 == nullptr)
             return false;
         spdlog::info("ImageName \'{}\': {}x{}, {} channels",
-                     imagePtr->GetImageName(),
-                     imagePtr->GetWidth(),
-                     imagePtr->GetHeight(),
-                     imagePtr->GetChannelCount());
-        auto texturePtr = mRM->LoadTextureFromImage(imagePtr);
+                     imagePtr1->GetImageName(),
+                     imagePtr1->GetWidth(),
+                     imagePtr1->GetHeight(),
+                     imagePtr1->GetChannelCount());
+
+        auto imagePtr2 = mRM->LoadImage("awesomeface", "./resources/texture/awesomeface.png");
+        if (imagePtr2 == nullptr)
+            return false;
+        spdlog::info("ImageName \'{}\': {}x{}, {} channels",
+                     imagePtr2->GetImageName(),
+                     imagePtr2->GetWidth(),
+                     imagePtr2->GetHeight(),
+                     imagePtr2->GetChannelCount());
+
+        auto checkerImgPtr = Image::Create("checkerboard", 512, 512);
+        checkerImgPtr->SetCheckImage(16, 16);
+
+        mRM->LoadTextureFromImage(imagePtr1);
+        mRM->LoadTextureFromImage(imagePtr2);
+        mRM->LoadTextureFromImage(checkerImgPtr.get());
+
+        auto texturePtr = mRM->LoadTextureWithName("awesomeface");
+
         glActiveTexture(GL_TEXTURE0);
         texturePtr->Bind();
         mProgram->Use();

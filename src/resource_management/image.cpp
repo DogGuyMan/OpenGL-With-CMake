@@ -13,7 +13,16 @@
 
 namespace SJH
 {
-    ImageUPtr Image::Load(const std::string &filepath, const std::string &image_name)
+    ImageUPtr Image::Create(const std::string &image_name, int width, int height, int channelCount)
+    {
+        auto image = ImageUPtr(new Image());
+        if (!image->Allocate(width, height, channelCount))
+            return nullptr;
+        image->mImageName = image_name;
+        return std::move(image);
+    }
+
+    ImageUPtr Image::Load(const std::string &image_name, const std::string &filepath)
     {
         auto image = std::unique_ptr<Image>(new Image());
         if (!image->LoadWithStb(filepath))
@@ -29,8 +38,8 @@ namespace SJH
     }
 
     Image::Image(Image &&other) noexcept
-        :  mImageDataPtr(other.mImageDataPtr), mImageName(other.mImageName),
-            mWidth(other.mWidth), mHeight(other.mHeight), mChannelCount(other.mChannelCount)
+        : mImageDataPtr(other.mImageDataPtr), mImageName(other.mImageName),
+          mWidth(other.mWidth), mHeight(other.mHeight), mChannelCount(other.mChannelCount)
     {
         other.mImageDataPtr = 0;
     }
@@ -51,7 +60,6 @@ namespace SJH
         return *this;
     }
 
-
     bool Image::LoadWithStb(const std::string &filepath)
     {
         stbi_set_flip_vertically_on_load(true);
@@ -64,5 +72,31 @@ namespace SJH
         }
 
         return true;
+    }
+
+    bool Image::Allocate(int width, int height, int channelCount)
+    {
+        mWidth = width;
+        mHeight = height;
+        mChannelCount = channelCount;
+        mImageDataPtr = (GLubyte *)malloc(mWidth * mHeight * mChannelCount);
+        return mImageDataPtr ? true : false;
+    }
+
+    void Image::SetCheckImage(int gridX, int gridY)
+    {
+        for (int j = 0; j < mHeight; j++)
+        {
+            for (int i = 0; i < mWidth; i++)
+            {
+                int pos = (j * mWidth + i) * mChannelCount;
+                bool even = ((i / gridX) + (j / gridY)) % 2 == 0;
+                uint8_t value = even ? 255 : 0;
+                for (int k = 0; k < mChannelCount; k++)
+                    mImageDataPtr[pos + k] = value;
+                if (mChannelCount > 3)
+                    mImageDataPtr[3] = 255;
+            }
+        }
     }
 }

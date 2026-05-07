@@ -68,7 +68,7 @@ namespace SJH
         glGenTextures(1, &mTextureID);
         // bind and set default filter and wrap option
         Bind();
-        SetFilter(GL_LINEAR, GL_LINEAR);
+        SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
         SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     }
 
@@ -94,5 +94,6 @@ namespace SJH
                      image->GetWidth(), image->GetHeight(), 0,
                      format, GL_UNSIGNED_BYTE,
                      image->GetDataPtr());
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
 }

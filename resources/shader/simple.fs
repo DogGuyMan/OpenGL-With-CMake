@@ -1,7 +1,8 @@
 #version 330 core
 
 uniform vec4 baseColor;
-uniform sampler2D tex;
+uniform sampler2D tex0;
+uniform sampler2D tex1;
 
 in vec4 vertexColor;
 in vec2 texCoord;
@@ -10,7 +11,11 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 void main() {
-    fragColor = texture(tex, texCoord);
-    fragColor = fragColor * vertexColor;
-    fragColor = fragColor * baseColor;
+    vec4 tex0Color = texture(tex0, texCoord);
+    vec4 tex1Color = texture(tex1, texCoord);
+
+    float w = smoothstep(0.2, 0.8, texCoord.x);
+    fragColor = mix(tex0Color, tex1Color, w);
+
+    fragColor = baseColor * vertexColor * fragColor;
 }

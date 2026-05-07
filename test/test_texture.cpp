@@ -56,7 +56,7 @@ TEST_CASE("Image::Load — 정상 경로에서 dimensions/data 유효", "[image]
 {
     if (!SampleImageAvailable()) SKIP("샘플 이미지 없음: " << kSampleImage);
 
-    auto image = SJH::Image::Load(kSampleImage.string(), kImageName);
+    auto image = SJH::Image::Load(kImageName, kSampleImage.string());
     REQUIRE(image != nullptr);
     REQUIRE(image->GetWidth()       > 0);
     REQUIRE(image->GetHeight()      > 0);
@@ -81,7 +81,7 @@ TEST_CASE("Texture::CreateTexture — Image 로부터 GL 텍스처 생성, ID �
     if (!SampleImageAvailable()) SKIP("샘플 이미지 없음");
     SJH::test::GLContextFixture ctx;
 
-    auto image = SJH::Image::Load(kSampleImage.string(), kImageName);
+    auto image = SJH::Image::Load(kImageName, kSampleImage.string());
     REQUIRE(image != nullptr);
 
     auto texture = SJH::Texture::CreateTexture(image.get());
@@ -95,7 +95,7 @@ TEST_CASE("Texture::Bind — GL_TEXTURE_BINDING_2D 가 인스턴스 핸들을 �
     if (!SampleImageAvailable()) SKIP("샘플 이미지 없음");
     SJH::test::GLContextFixture ctx;
 
-    auto image   = SJH::Image::Load(kSampleImage.string(), kImageName);
+    auto image   = SJH::Image::Load(kImageName, kSampleImage.string());
     auto texture = SJH::Texture::CreateTexture(image.get());
     REQUIRE(texture->GetTextureID() != 0);
 
@@ -131,7 +131,7 @@ TEST_CASE("Texture::operator= (move) — source 의 핸들이 0 으로 비워져
     if (!SampleImageAvailable()) SKIP("샘플 이미지 없음");
     SJH::test::GLContextFixture ctx;
 
-    auto image = SJH::Image::Load(kSampleImage.string(), kImageName);
+    auto image = SJH::Image::Load(kImageName, kSampleImage.string());
     auto t1    = SJH::Texture::CreateTexture(image.get());
     auto t2    = SJH::Texture::CreateTexture(image.get());
 
@@ -175,8 +175,8 @@ TEST_CASE("ResourceManagement::LoadImage — 같은 image_name 캐시 히트", "
     auto rm = SJH::ResourceManagement::CreateRM();
     REQUIRE(rm != nullptr);
 
-    auto* first  = rm->LoadImage(kSampleImage.string(), kImageName);
-    auto* second = rm->LoadImage(kSampleImage.string(), kImageName);
+    auto* first  = rm->LoadImage(kImageName, kSampleImage.string());
+    auto* second = rm->LoadImage(kImageName, kSampleImage.string());
 
     REQUIRE(first  != nullptr);
     REQUIRE(second != nullptr);
@@ -202,7 +202,7 @@ TEST_CASE("ResourceManagement::LoadTextureFromImage — 같은 Image 두 번 →
     auto rm = SJH::ResourceManagement::CreateRM();
     REQUIRE(rm != nullptr);
 
-    auto* image = rm->LoadImage(kSampleImage.string(), kImageName);
+    auto* image = rm->LoadImage(kImageName, kSampleImage.string());
     REQUIRE(image != nullptr);
 
     auto* tex1 = rm->LoadTextureFromImage(image);
@@ -227,7 +227,7 @@ TEST_CASE("ResourceManagement::LoadTextureWithName — 미로드 미스 / 로드
     REQUIRE(rm->LoadTextureWithName(kImageName) == nullptr);
 
     // 텍스처 로드 후 같은 이름으로 lookup — 히트.
-    auto* image = rm->LoadImage(kSampleImage.string(), kImageName);
+    auto* image = rm->LoadImage(kImageName, kSampleImage.string());
     REQUIRE(image != nullptr);
     auto* tex = rm->LoadTextureFromImage(image);
     REQUIRE(tex != nullptr);
@@ -253,7 +253,7 @@ TEST_CASE("ResourceManagement::Clear — 두 캐시 모두 비움 (lookup 미스
     auto rm = SJH::ResourceManagement::CreateRM();
     REQUIRE(rm != nullptr);
 
-    auto* image = rm->LoadImage(kSampleImage.string(), kImageName);
+    auto* image = rm->LoadImage(kImageName, kSampleImage.string());
     REQUIRE(image != nullptr);
     REQUIRE(rm->LoadTextureFromImage(image) != nullptr);
 
@@ -266,7 +266,7 @@ TEST_CASE("ResourceManagement::Clear — 두 캐시 모두 비움 (lookup 미스
     REQUIRE(rm->LoadTextureWithName(kImageName) == nullptr);
 
     // 재로드 가능 — 정상 동작 복귀.
-    auto* image2 = rm->LoadImage(kSampleImage.string(), kImageName);
+    auto* image2 = rm->LoadImage(kImageName, kSampleImage.string());
     REQUIRE(image2 != nullptr);
     REQUIRE(rm->LoadTextureFromImage(image2) != nullptr);
 }

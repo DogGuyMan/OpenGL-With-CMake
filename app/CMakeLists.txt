@@ -17,12 +17,15 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm
     fmt::fmt
     # 내부 모듈 (링크 시 include 경로 자동 전파)
-    SJH::shader
-    SJH::program
-    # SJH::buffer
+    SJH::buffer
+    SJH::object
     SJH::common
     SJH::context
-    # SJH::layout
+    SJH::diagnostics
+    SJH::layout
+    SJH::program
+    SJH::shader
+    SJH::resource_management
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

@@ -17,6 +17,7 @@ target_link_libraries(sjhopengl_context
             SJH::program
             glad::glad
             glm::glm
+            glfw
     PRIVATE SJH::diagnostics
 )
 

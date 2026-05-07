@@ -2,10 +2,6 @@
 #include "buffer/buffer.h"
 #include "diagnostics/gl_log.h"
 #include "layout/vertex_layout.h"
-#include <glad/glad.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <spdlog/spdlog.h>
 
 namespace SJH
@@ -19,46 +15,258 @@ namespace SJH
      *********************************************************************************/
     // 엥? 교안 CW 배치네..
     float vertices[] = {
-    -0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
-    0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
-    0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
+        -0.5f,
+        -0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        0.0f,
+        0.5f,
+        -0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        0.0f,
+        0.5f,
+        0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        1.0f,
+        -0.5f,
+        0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        1.0f,
 
-    -0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
-    0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
-    0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
+        -0.5f,
+        -0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        0.0f,
+        0.5f,
+        -0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        0.0f,
+        0.5f,
+        0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        1.0f,
+        -0.5f,
+        0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        1.0f,
 
-    -0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
+        -0.5f,
+        0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        0.0f,
+        -0.5f,
+        0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        1.0f,
+        -0.5f,
+        -0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        1.0f,
+        -0.5f,
+        -0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        0.0f,
 
-    0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
-    0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
-    0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
+        0.5f,
+        0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        0.0f,
+        0.5f,
+        0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        0.0f,
 
-    -0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
-    0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
+        -0.5f,
+        -0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        0.0f,
+        -0.5f,
+        -0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        0.0f,
 
-    -0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
-    0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
-    0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
+        -0.5f,
+        0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        1.0f,
+        0.5f,
+        0.5f,
+        -0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        1.0f,
+        0.5f,
+        0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        1.0f,
+        0.0f,
+        -0.5f,
+        0.5f,
+        0.5f,
+        1.0,
+        1.0,
+        1.0,
+        0.0f,
+        0.0f,
     };
 
     // ! ⭐️ 제발 인덱스 버퍼는 GLuint로 두자 ⭐️
     uint32_t indices[] = {
-    0,  2,  1,  2,  0,  3,
-    4,  5,  6,  6,  7,  4,
-    8,  9, 10, 10, 11,  8,
-    12, 14, 13, 14, 12, 15,
-    16, 17, 18, 18, 19, 16,
-    20, 22, 21, 22, 20, 23,
+        0,
+        2,
+        1,
+        2,
+        0,
+        3,
+        4,
+        5,
+        6,
+        6,
+        7,
+        4,
+        8,
+        9,
+        10,
+        10,
+        11,
+        8,
+        12,
+        14,
+        13,
+        14,
+        12,
+        15,
+        16,
+        17,
+        18,
+        18,
+        19,
+        16,
+        20,
+        22,
+        21,
+        22,
+        20,
+        23,
     };
+
+    std::vector<glm::vec3> cubePositions = {
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(2.0f, 5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f, 3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f, 2.0f, -2.5f),
+        glm::vec3(1.5f, 0.2f, -1.5f),
+        glm::vec3(-1.3f, 1.0f, -1.5f),
+    };
+
     ContextUPtr Context::Create()
     {
         auto context = ContextUPtr(new Context());
@@ -66,105 +274,130 @@ namespace SJH
             return nullptr;
         return std::move(context);
     }
+    void Context::ProcessInput(GLFWwindow *window)
+    {
+        if (!mCamera.mCameraControl)
+            return;
+        const float cameraSpeed = 0.05f;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            mCamera.mCameraPos += cameraSpeed * mCamera.mCameraFront;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            mCamera.mCameraPos -= cameraSpeed * mCamera.mCameraFront;
+
+        auto cameraRight = glm::normalize(glm::cross(mCamera.mCameraUp, -mCamera.mCameraFront));
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            mCamera.mCameraPos += cameraSpeed * cameraRight;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            mCamera.mCameraPos -= cameraSpeed * cameraRight;
+
+        auto cameraUp = glm::normalize(glm::cross(-mCamera.mCameraFront, cameraRight));
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+            mCamera.mCameraPos += cameraSpeed * cameraUp;
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+            mCamera.mCameraPos -= cameraSpeed * cameraUp;
+    }
+
+    void Context::Reshape(int width, int height)
+    {
+        mWidth = width;
+        mHeight = height;
+        glViewport(0, 0, mWidth, mHeight);
+    }
+
+    void Context::MouseMove(double x, double y)
+    {
+        if (!mCamera.mCameraControl)
+            return;
+        auto pos = glm::vec2((float)x, (float)y);
+        auto deltaPos = pos - mPrevMousePos;
+
+        const float cameraRotSpeed = 0.8f;
+        mCamera.mCameraYaw -= deltaPos.x * cameraRotSpeed;
+        mCamera.mCameraPitch -= deltaPos.y * cameraRotSpeed;
+
+        if (mCamera.mCameraYaw < 0.0f)
+            mCamera.mCameraYaw += 360.0f;
+        if (mCamera.mCameraYaw > 360.0f)
+            mCamera.mCameraYaw -= 360.0f;
+
+        if (mCamera.mCameraPitch > 89.0f)
+            mCamera.mCameraPitch = 89.0f;
+        if (mCamera.mCameraPitch < -89.0f)
+            mCamera.mCameraPitch = -89.0f;
+
+        mPrevMousePos = pos;
+    }
+
+    void Context::MouseButton(int button, int action, double x, double y)
+    {
+        if (button == GLFW_MOUSE_BUTTON_RIGHT)
+        {
+            if (action == GLFW_PRESS)
+            {
+                mPrevMousePos = glm::vec2((float)x, (float)y);
+                mCamera.mCameraControl = true;
+            }
+            else if (action == GLFW_RELEASE)
+            {
+                mCamera.mCameraControl = false;
+            }
+        }
+    }
 
     void Context::Render()
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
+        float t = sinf((float)glfwGetTime()) * 0.5f + 0.5f;
 
-        static float time = 0.0f;
-        float t = sinf(time) * 0.5f + 0.5f;
-
-        auto trans = glm::translate(glm::mat4(1.0f), glm::vec3(cos(time), sin(time), 0.0f) * 0.5f);
-        // 단위행렬 기준 z축으로 90도만큼 회전하는 행렬
-        auto rot = glm::rotate(glm::mat4(1.0f),
-                               glm::radians(90.0f) * time, glm::vec3(1.0f, 0.0f, 0.0f));
-        // 단위행렬 기준 모든 축에 대해 3배율 확대하는 행렬
-        auto scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
-
-        auto transformMat = trans * rot * scale;
+        // float angle = glfwGetTime() * glm::pi<float>() * 0.5f;
+        // mCamera.mCameraPitch = sinf(angle) * 10.0f;
+        // mCamera.mCameraYaw = cosf(angle) * 10.0f;
+        // mCamera.mCameraPos = glm::vec3(mCamera.mCameraPitch, 0.0f, mCamera.mCameraYaw);
+        // mCamera.mCameraFront = glm::vec3(0.0f, 0.0f, 0.0f);
+        // mCamera.mCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
         // 카메라: z=3 위치에서 원점을 바라봄
-        auto viewMat = glm::lookAt(
-            glm::vec3(0.0f, 0.0f, 3.0f), // eye
-            glm::vec3(0.0f, 0.0f, 0.0f), // center
-            glm::vec3(0.0f, 1.0f, 0.0f)  // up
-        );
-        // 원근 투영: 45도 FOV, 4:3 종횡비, near=0.1 far=100
-        auto projMat = glm::perspective(
-            glm::radians(45.0f),
-            4.0f / 3.0f,
-            0.1f, 100.0f);
-
-        // 1. 바인드 하는곳
-        {
-            mVertexArrayObject->Bind();
-            // auto texturePtr = mRM->LoadTextureWithName("container");
-            {
-                // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
-                glActiveTexture(GL_TEXTURE0);
-                auto texturePtr = mRM->LoadTextureWithName("checkerboard");
-                // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
-                texturePtr->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
-            }
-            {
-                // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
-                glActiveTexture(GL_TEXTURE1);
-                // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
-                auto texturePtr = mRM->LoadTextureWithName("awesomeface");
-                texturePtr->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
-            }
-        }
-
-        // 2. Use Program
-        mProgram->Use();
-
-        // glUniform* 은 현재 use 중인 프로그램에만 적용 — Use() 선행 필수.
-
-        // glPointSize(10.0f);
-        // glDrawArrays(GL_POINTS, 0, 1);
-
-        // VBO 만으로 그렸을때
-        // glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        // 3. Uniform 전달
-        auto transformLoc = glGetUniformLocation(mProgram->GetProgramAddr(), "modelMat");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformMat));
-        auto viewLoc = glGetUniformLocation(mProgram->GetProgramAddr(), "viewMat");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMat));
-        auto projLoc = glGetUniformLocation(mProgram->GetProgramAddr(), "projMat");
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMat));
+        auto viewMat = mCamera.GetViewMatrix();
+        auto projMat = mCamera.GetProjMatrix(mWidth, mHeight);
 
         glm::vec4 baseColor(t * t, 2.0f * t * (1.0f - t), (1.0f - t) * (1.0f - t), 1.0f);
 
-        auto baseColorLoc = glGetUniformLocation(mProgram->GetProgramAddr(), "baseColor");
-        glUniform4fv(baseColorLoc, 1, glm::value_ptr(baseColor));
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
-        for (int i = 0; i < 2; i++)
+        // 2. Use Program
+        mProgram->Use();
+        mVertexArrayObject->Bind();
+
+        // 3. Uniform 전달
+        for (size_t i = 0; i < cubePositions.size(); i++)
         {
-            std::string texuniform = "tex" + std::to_string(i);
-            // glGetUniformLocation() 함수로 shader 내의 sampler2D uniform 핸들을 얻어옴
-            auto loc = glGetUniformLocation(mProgram->GetProgramAddr(), texuniform.c_str());
-            // glUniform1i() 함수로 sampler2D uniform에 텍스처 슬롯 인덱스를 입력
-            glUniform1i(loc, i);
+            auto &pos = cubePositions[i];
+            auto modelMat = glm::translate(glm::mat4(1.0f), pos);
+            modelMat = glm::rotate(modelMat,
+                                   glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i),
+                                   glm::vec3(1.0f, 0.5f, 0.0f));
+            auto transformMat = projMat * viewMat * modelMat;
+            Uniforms::SetMat4(*mProgram.get(), "transformMat", glm::value_ptr(transformMat));
+            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::value_ptr(baseColor));
+            // VBO + EBO 협력으로 그렸을때.
+            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         }
 
-        // VBO + EBO 협력으로 그렸을때.
-        // {
-        //     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        // }
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-        time += 0.016f;
+        glPointSize(50.0f);
+        glDrawArrays(GL_POINTS, 0, 1);
     }
 
     bool Context::Init()
     {
         // ShaderUPtr -> ShaderPtr 암묵 변환 — Program::Create 가 shared 입력을 요구
-        ShaderPtr vertexShader = Shader::CreateFromFile("./resources/shader/simple.vs", GL_VERTEX_SHADER);
-        ShaderPtr fragmentShader = Shader::CreateFromFile("./resources/shader/simple.fs", GL_FRAGMENT_SHADER);
+        ShaderPtr vertexShader = Shader::CreateFromFile(
+            "./resources/shader/simple.vs", GL_VERTEX_SHADER);
+        ShaderPtr fragmentShader = Shader::CreateFromFile(
+            "./resources/shader/simple.fs", GL_FRAGMENT_SHADER);
+
         if (!vertexShader || !fragmentShader)
             return false;
+
         spdlog::info("vertex shader id: {}", vertexShader->GetShaderAddr());
         spdlog::info("fragment shader id: {}", fragmentShader->GetShaderAddr());
 
@@ -184,6 +417,7 @@ namespace SJH
         */
 
         mVertexArrayObject = VertexLayout::Create();
+        mVertexArrayObject->Bind();
 
         // === buffer object를 만든다 ===
         // === 지금부터 사용할 buffer object를 지정한다. ===
@@ -211,11 +445,11 @@ namespace SJH
 
         mVertexBufferObject = Buffer::CreateWithData(
             GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-            vertices, sizeof(float) * 196);
+            vertices, sizeof(vertices));
 
         mElementBufferObject = Buffer::CreateWithData(
             GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
-            indices, sizeof(uint32_t) * 36);
+            indices, sizeof(indices));
 
         mVertexArrayObject->TrySetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
         mVertexArrayObject->TrySetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, sizeof(float) * 3);
@@ -248,10 +482,33 @@ namespace SJH
 
         auto texturePtr = mRM->LoadTextureWithName("awesomeface");
 
-        glActiveTexture(GL_TEXTURE0);
-        texturePtr->Bind();
+        {
+            // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
+            glActiveTexture(GL_TEXTURE0);
+            // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
+            mRM->LoadTextureWithName("checkerboard")
+                ->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
+        }
+        {
+            // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
+            glActiveTexture(GL_TEXTURE1);
+            // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
+            mRM->LoadTextureWithName("awesomeface")
+                ->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
+        }
+
         mProgram->Use();
-        glUniform1i(glGetUniformLocation(mProgram->GetProgramAddr(), "tex"), 0);
+
+        for (int i = 0; i < 2; i++)
+        {
+            std::string texuniform = "tex" + std::to_string(i);
+            // glGetUniformLocation() 함수로 shader 내의 sampler2D uniform 핸들을 얻어옴
+            //      auto loc = glGetUniformLocation(mProgram->GetProgramAddr(), texuniform.c_str());
+            // glUniform1i() 함수로 sampler2D uniform에 텍스처 슬롯 인덱스를 입력
+            //      glUniform1i(loc, i);
+            Uniforms::SetInt(*mProgram.get(), texuniform.c_str(), i);
+        }
+
         return true;
     }
 }

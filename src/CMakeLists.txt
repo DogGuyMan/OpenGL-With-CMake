@@ -4,6 +4,7 @@
 # 모듈 간 명시적 의존성: 각 모듈 CMakeLists.txt에 target_link_libraries 추가.
 
 add_subdirectory(buffer)
+add_subdirectory(object)
 add_subdirectory(common)
 add_subdirectory(context)
 add_subdirectory(diagnostics)

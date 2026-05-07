@@ -1,12 +1,18 @@
 #ifndef __SJH_CONTEXT_H__
 #define __SJH_CONTEXT_H__
 
-#include "common/common.h"
-#include "program/program.h"
-#include "shader/shader.h"
 #include "buffer/buffer.h"
+#include "common/common.h"
 #include "layout/vertex_layout.h"
+#include "object/camera.h"
+#include "program/program.h"
 #include "resource_management/resource_management.h"
+#include "shader/shader.h"
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <GLFW/glfw3.h>
 namespace SJH
 {
     CLASS_PTR(Context)
@@ -40,15 +46,28 @@ namespace SJH
 
         /// @brief 매 프레임 호출 — 프레임버퍼 클리어 + draw call.
         void Render();
+        void ProcessInput(GLFWwindow *window);
+        void Reshape(int width, int height);
+        void MouseMove(double x, double y);
+        void MouseButton(int button, int action, double x, double y);
 
     private:
         Context() = default;
         bool Init();
         ProgramUPtr mProgram;
+
         VertexLayoutUPtr mVertexArrayObject;
         BufferUPtr mVertexBufferObject;
         BufferUPtr mElementBufferObject; // indexBuffer
+
         ResourceManagementUPtr mRM;
+
+        Camera mCamera;
+
+        int mWidth{640};
+        int mHeight{480};
+
+        glm::vec2 mPrevMousePos { glm::vec2(0.0f) };
     };
 }
 

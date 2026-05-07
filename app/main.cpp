@@ -1,15 +1,16 @@
 #include "common/common.h"
 #include "config.h"
 #include "context/context.h"
+#include "object/camera.h"
 #include "input/glfw_input_utils.h"
 #include "program/program.h"
 #include "shader/shader.h"
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
-#include <glad/glad.h> // glad 먼저 — 이후 GLFW 경로 안전
+#include <glad/glad.h>
 #include <spdlog/spdlog.h>
 
-void HandleFramebufferSizeChange(GLFWwindow *window, int width, int height)
+void DemoHandleFramebufferSizeChange(GLFWwindow *window, int width, int height)
 {
     spdlog::info("프레임 버퍼 사이즈가 변경됨 : ({} X {})", width, height);
     // OpenGL이 그림을 그릴 영역 지정
@@ -19,11 +20,11 @@ void HandleFramebufferSizeChange(GLFWwindow *window, int width, int height)
 void HandleKeyInput(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     spdlog::info("key: {} ,scancode: {} ,action: {}, mods: {}{}{}",
-                key, scancode,
-                glfw_utils::ActionToString(action),
-                glfw_utils::ModCtrl(mods),
-                glfw_utils::ModShift(mods),
-                glfw_utils::ModAlt(mods));
+                 key, scancode,
+                 glfw_utils::ActionToString(action),
+                 glfw_utils::ModCtrl(mods),
+                 glfw_utils::ModShift(mods),
+                 glfw_utils::ModAlt(mods));
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
@@ -85,9 +86,15 @@ int main()
         glfwTerminate();
         return -1;
     }
-    HandleFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glfwSetFramebufferSizeCallback(window, HandleFramebufferSizeChange);
-    glfwSetKeyCallback(window, HandleKeyInput);
+
+    // glfwSetWindowUserPointer(window, context.get());
+
+    DemoHandleFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    glfwSetFramebufferSizeCallback(window, DemoHandleFramebufferSizeChange);
+    // glfwSetKeyCallback(window, HandleKeyInput);
+    // glfwSetCursorPosCallback(window, HandleCursorPos);
+    // glfwSetMouseButtonCallback(window, HandleMouseButton);
 
     // 6. GLFW 루프 시작, 윈도우 close 버튼을 누르면 루프 종료
     spdlog::info("GLFW 메인 루프 시작");
@@ -99,6 +106,7 @@ int main()
         // TODO 콜백 수행부
 
         // 렌더링
+        // context->ProcessInput(window);
         context->Render();
         // 프레임버퍼 스왑 코드 호출 "그림이 그려지는 과정이 노출되지 않도록 해줌"
         /*

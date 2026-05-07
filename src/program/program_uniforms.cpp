@@ -17,10 +17,9 @@ namespace SJH::Uniforms
         // friend 권한은 호출 진입점 (BuildCache / Set* / Get) 에서만 가지므로,
         // 내부 헬퍼는 인자로 캐시 ref 를 받아 같은 컴파일 단위 안에서 재사용.
         // 부수효과 없음 (warn 등 진단은 진입점이 위임).
-        const UniformEntry &
-        LookupOrInsert(GLuint program,
-                       std::unordered_map<std::string, UniformEntry> &cache,
-                       const char *name)
+        const UniformEntry & LookupOrInsert(GLuint program,
+                        std::unordered_map<std::string, UniformEntry> &cache,
+                        const char *name)
         {
             const auto it = cache.find(name);
             if (it != cache.end())

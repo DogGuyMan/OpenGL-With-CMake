@@ -7,6 +7,8 @@ vcpkg_installed/
 ########### Doxygen ###########
 doc/html/
 doc/latex/
+docs/*
+docs
 
 ###########  FILES  ############
 *.pptx

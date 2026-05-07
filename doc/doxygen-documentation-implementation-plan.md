@@ -1,8 +1,13 @@
 # Doxygen 문서화 구현 계획
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+>
+> **진행 상태 (2026-05-08 갱신):**
+> - Phase 1~6 ✅ 완료 (커밋 `d34c507` ~ `503df50`).
+> - Phase 5 의 `buffer` / `layout` / `resource_management` placeholder 처리는 이후 세 모듈이 실제 활성화되며 의미가 변경됨 — 각 헤더 자체에 정상 Doxygen 주석 작성됨.
+> - **Phase 7 🚧 진행 중** — `src/object/camera.h` + `src/context/context.h` 의 입력 위임 메서드 docstring 추가. 본 문서 끝부분(§Phase 7) 참조.
 
-**Goal:** [doc/doxygen-documentation-plan.md](doxygen-documentation-plan.md) 의 6개 Phase를 실행하여 `cmake --build build_Darwin --target doxygen` 으로 모듈 API + 다이어그램 + 빌드 가이드를 포함한 HTML 문서를 생성한다.
+**Goal:** [doc/doxygen-documentation-plan.md](doxygen-documentation-plan.md) 의 6개 Phase 를 실행하여 `cmake --build build_Darwin --target doxygen` 으로 모듈 API + 다이어그램 + 빌드 가이드를 포함한 HTML 문서를 생성한다. Phase 7 에서 신규 모듈/메서드의 Doxygen 보강.
 
 **Architecture:** Phase 1~5 는 `src/<module>/<file>.h` 에 표준 Doxygen 주석을 추가하고 `.cpp` 의 비-자명한 인라인 주석만 정리. Phase 6 은 `doc/Doxyfile.in` 에 Graphviz/페이지 옵션 추가 + `doc/pages/` 마크다운으로 메인페이지·빌드가이드·의존성 문서를 작성하고 `\dot ... \enddot` 디렉티브로 레이어/시퀀스 다이어그램을 임베드.
 
@@ -1116,3 +1121,107 @@ EOF
 - [x] **Phase 검토 게이트**: 각 Phase 끝에 `🔒 REVIEW GATE` 명시.
 - [x] **Doxyfile 변경 항목**: 스펙 §6 표의 모든 키가 Task 6.2 에 포함됨.
 - [x] **다이어그램 도구**: A(자동 graphviz) + B(수동 \dot 블록 — PlantUML 대신 graphviz 통일로 의존성 단순화) 병행 채택.
+
+---
+
+## Phase 7: `object/camera` + `context` 입력 위임 메서드
+
+**의존성:** Phase 4 (context 모듈 본체 Doxygen) 완료 + glm 의존성 도입 + 카메라 모듈 구현 완료 전제.
+
+**배경:** Phase 4 작성 시점의 `context.h` 는 `Render` / `Init` 두 메서드만 가진 단순 형태. 이후 다음이 추가됨 (커밋 `3696136` 카메라 리팩토링까지 반영):
+- `src/object/camera.h` — POD-like Camera 상태. m-prefix 통일: `mPos` / `mTarget` / `mCamUp`, 회전 `mEulerYaw` / `mEulerPitch`, 입력 플래그 `mIsCamControl`, 투영 `mFov` / `mAspect` / `mNearPlane` / `mFarPlane`.
+- Camera 메서드: `GetFront()` (Yaw→Pitch 회전식), `GetForwardViewMatrix()` / `GetLookAtViewMatrix()` (모드 분리), `GetProjMatrix()` (인자 없음 — `mAspect` 멤버 사용), `SetAspect(w,h)` (height==0 가드).
+- `Context::ProcessInput` (W/A/S/D/Q/E 키 → 카메라 위치 이동, 매 프레임 `GetFront()` 1회 캐싱).
+- `Context::Reshape` (framebuffer 콜백 → `glViewport` + width/height 갱신 + `mCamera.SetAspect`).
+- `Context::MouseMove` (cursor 콜백 → `mEulerYaw/Pitch` 갱신, clamp/wrap. front 직접 갱신 X).
+- `Context::MouseButton` (좌클릭 → `mCamera.mIsCamControl` 토글, `mPrevMousePos` 초기화).
+- 추가 멤버: `mCamera`, `mWidth`, `mHeight`, `mPrevMousePos`, `mVertexArrayObject`, `mVertexBufferObject`, `mElementBufferObject`, `mRM`.
+- `app/main.cpp` — `glfwSetWindowUserPointer(window, ctx.get())` 로 Context 주입, `Handle*` 콜백이 `glfwGetWindowUserPointer` 캐스팅으로 역참조 후 `Context::*` 위임.
+
+### Task 7.1: `src/object/camera.h` 에 Doxygen 주석 추가
+
+**Files:**
+- Modify: `src/object/camera.h` (전체 교체)
+
+- [x] **Step 7.1.1: 클래스 docstring + 멤버별 1줄 주석 + 메서드 brief/return/note 추가**
+
+핵심 사항:
+- 클래스 docstring 의 *책임 / 비-책임 / 좌표계 가정 / 명명 컨벤션* 4블록 — `gl_log.h` 톤과 일치.
+- `mIsCamControl` / `mEulerPitch` / `mEulerYaw` 등 입력으로 변경되는 필드는 *누가 갱신하는지* (`Context::*`) 를 명시.
+- `mAspect` 는 `SetAspect(w,h)` 가 갱신, `GetProjMatrix()` 가 멤버 직접 사용 (인자 없음).
+- `GetFront()` 의 회전 순서 (Yaw 먼저 → Pitch 적용) 를 *FPS 카메라 표준* 으로 명시.
+- `GetForwardViewMatrix()` 와 `GetLookAtViewMatrix()` 는 *동시 사용 금지* — 모드 추적 안 함이 호출자 책임임을 표기 (모드 enum 도입 예정).
+- `SetAspect` 의 `height==0` 가드 (윈도우 최소화 등) 동작을 docstring 에 명시.
+
+### Task 7.2: `src/context/context.h` 에 신규 메서드/멤버 Doxygen 추가
+
+**Files:**
+- Modify: `src/context/context.h` (전체 교체)
+
+- [x] **Step 7.2.1: 클래스 docstring 의 책임 표 갱신**
+
+추가 책임 항목:
+- 카메라 상태 보관 + 입력 → 카메라 갱신 위임 (@ref Camera).
+- (비-책임) 키/마우스 *콜백 등록*은 `app/main.cpp` 가 GLFW 에 등록 → @ref ProcessInput / @ref MouseMove / @ref MouseButton 으로 위임.
+- (비-책임) framebuffer 리사이즈 콜백 → @ref Reshape 위임.
+
+- [x] **Step 7.2.2: 입력 위임 메서드 4개 docstring**
+
+| 메서드 | 핵심 docstring 항목 |
+|--------|--------------------|
+| `ProcessInput(window)` | 키 매핑 표 (W/S/A/D/Q/E) + `mCamera.mIsCamControl` true 시에만 동작. 매 프레임 `GetFront()` 1회 캐싱. |
+| `Reshape(width, height)` | framebuffer_size_callback 위임 진입점. `glViewport` 호출 + `mCamera.SetAspect` 호출 명시. |
+| `MouseMove(x, y)` | `mEulerYaw/Pitch` 갱신 공식 + pitch `[-89, 89]` 클램프 + yaw `[0, 360)` wrap. front 직접 갱신은 제거됨 (`GetFront()` 가 매번 재계산). |
+| `MouseButton(button, action, x, y)` | 좌클릭 PRESS/RELEASE 의 `mCamera.mIsCamControl` 토글 + `mPrevMousePos` 초기화. |
+
+각 메서드 docstring 끝에 `@note GLFW <콜백명> 에서 위임받는 진입점.` 추가.
+
+- [x] **Step 7.2.3: private 멤버별 1줄 주석**
+
+`mProgram`, `mVertexArrayObject`, `mVertexBufferObject`, `mElementBufferObject`, `mRM`, `mCamera`, `mWidth`, `mHeight`, `mPrevMousePos` 각각 *역할 + 누가 갱신하는지* 1줄.
+
+### Task 7.3: 빌드 검증
+
+- [x] **Step 7.3.1: 빌드 통과 확인**
+
+Run: `cmake --build build_Darwin --target sjhopengl_context 2>&1 | tail -10`
+Expected: `Built target sjhopengl_context` 출력 (에러 없음).
+
+- [ ] **Step 7.3.2: Doxygen 빌드 + 결과 확인**
+
+Run: `cmake --build build_Darwin --target doxygen 2>&1 | grep -E "warning|error" | wc -l`
+Expected: Phase 6 베이스라인 대비 증가하지 않음 (신규 멤버 누락 경고 0).
+
+Run: `open doc/html/classSJH_1_1Camera.html`
+확인:
+- "책임 / 비-책임 / 좌표계 가정" 3블록이 보이는가?
+- 멤버 변수들의 단위(degree 등) 가 명시되는가?
+
+Run: `open doc/html/classSJH_1_1Context.html`
+확인:
+- 입력 위임 메서드 4개 (ProcessInput / Reshape / MouseMove / MouseButton) 가 모두 표시되는가?
+- 각 메서드의 `@note GLFW ... 콜백에서 위임받는 진입점` 이 표시되는가?
+- collaboration graph 에 `Camera` 가 멤버로 보이는가?
+
+### Task 7.4: Phase 7 커밋
+
+- [ ] **Step 7.4.1: 커밋**
+
+```bash
+git add src/object/camera.h src/context/context.h doc/doxygen-documentation-plan.md doc/doxygen-documentation-implementation-plan.md
+git commit -m "$(cat <<'EOF'
+[doc] : Phase 7 — object/camera + context 입력 위임 doxygen
+
+- src/object/camera.h: Camera 책임/비-책임/좌표계 가정 + 멤버 docstring
+- src/context/context.h: ProcessInput/Reshape/MouseMove/MouseButton 위임 메서드 + 추가 멤버 docstring
+- doc/doxygen-documentation-{plan,implementation-plan}.md: Phase 7 추가, Phase 1~6 완료 표시
+EOF
+)"
+```
+
+### 🔒 REVIEW GATE 7 — Phase 7 완료
+
+사용자에게 보여줄 것:
+- `classSJH_1_1Camera.html` 클래스 페이지 (책임/비-책임 블록).
+- `classSJH_1_1Context.html` 의 입력 위임 메서드 섹션.
+- Doxygen 경고 변화량 (Phase 6 → Phase 7).

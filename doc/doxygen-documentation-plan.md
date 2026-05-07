@@ -3,6 +3,8 @@
 > 본 문서는 `newEnv` 브랜치 src/ 모듈에 Doxygen 주석을 단계적으로 추가하고, 빌드 시스템·다이어그램을 포함한 통합 문서를 산출하는 계획서다.
 >
 > **목표**: `cmake --build build_Darwin --target doxygen` 실행 시 모듈 API + 클래스 다이어그램 + 의존성 그래프 + 빌드 시스템 가이드를 포함한 HTML 문서가 `doc/html/` 에 생성되어야 한다.
+>
+> **진행 상태 (2026-05-08 기준)**: Phase 1~6 완료. 이후 `buffer` / `layout` / `resource_management` 가 placeholder 에서 실제 활성 모듈로 승격되며 자체적으로 Doxygen 주석을 보유. 신규 `object` 모듈(`camera.h`) 및 `context` 의 입력 위임 메서드(@c ProcessInput / @c MouseMove / @c MouseButton / @c Reshape) 는 **Phase 7** 에서 추가.
 
 ## 1. 산출물
 
@@ -30,20 +32,24 @@
 3. 사용자 검토 → 톤·내용 OK 시 적용
 4. 다음 Phase
 
-| Phase | 모듈 | 의존 | 비고 |
-|-------|------|------|------|
-| **1** | `common` + `diagnostics` 검토 | (없음) | `CLASS_PTR` 매크로 톤 합의가 핵심. diagnostics는 이미 완성, 검토만. |
-| **2** | `shader` | common, diagnostics | 팩토리 패턴(`CreateFromFile`) 한글 블록 코멘트 → Doxygen 변환 |
-| **3** | `program` | shader | shader와 유사 (벡터 입력 차이) |
-| **4** | `context` | program | "Context 책임 분담" 설계 철학 보존 + 변환 |
-| **5** | placeholder 모듈 | — | `buffer` / `layout` / `resource_management` 짧은 placeholder 주석 |
-| **6** | 다이어그램 + 페이지 | — | Doxyfile 갱신 (HAVE_DOT 등) + `\page` 메인 + PlantUML |
+| Phase | 모듈 | 의존 | 상태 | 비고 |
+|-------|------|------|------|------|
+| **1** | `common` + `diagnostics` 검토 | (없음) | ✅ 완료 | `CLASS_PTR` 매크로 톤 합의가 핵심. diagnostics는 이미 완성, 검토만. |
+| **2** | `shader` | common, diagnostics | ✅ 완료 | 팩토리 패턴(`CreateFromFile`) 한글 블록 코멘트 → Doxygen 변환 |
+| **3** | `program` | shader | ✅ 완료 | shader와 유사 (벡터 입력 차이). `ProgramUniforms` 도 같은 모듈에 포함. |
+| **4** | `context` | program | ✅ 완료 | "Context 책임 분담" 설계 철학 보존 + 변환. 입력/카메라 추가는 Phase 7 에서. |
+| **5** | placeholder 모듈 | — | ⚠️ 의미 변화 | 본래 `buffer` / `layout` / `resource_management` placeholder 주석. **이후 모두 실제 활성 모듈로 승격** — Doxygen 주석은 각 헤더 자체에 작성됨 (Phase 7 의 §부록 참조). |
+| **6** | 다이어그램 + 페이지 | — | ✅ 완료 | Doxyfile 갱신 (HAVE_DOT 등) + `\page` 메인 + PlantUML |
+| **7** | `object/camera` + `context` 입력 위임 | program, glm | 🚧 진행 중 | Camera POD-like 상태 + Context 의 GLFW 콜백 위임 메서드들 Doxygen 작성. |
 
-## 4. 비활성 모듈 처리 정책
+## 4. 비활성 모듈 처리 정책 (Phase 5 시점) — 현재는 *역사적 항목*
 
-- `buffer`, `layout`, `resource_management` 는 `src/CMakeLists.txt` 에서 `add_subdirectory` 주석 처리됨
-- Doxygen `EXTRACT_ALL=YES` 이므로 빈 namespace도 출력 → 짧은 placeholder 주석 추가하여 "의도된 빈 상태" 명시
-- 향후 마이그레이션 시 [migration-plan.md](migration-plan.md) 참조 한 줄 포함
+> **현재 (2026-05-08):** 본 항목은 Phase 5 작성 당시의 정책. 이후 세 모듈 모두 활성화되었고
+> 자체 헤더에 정상 Doxygen 주석을 보유한다. Phase 7 표의 `객체/모듈` 항목 참조.
+
+- (당시) `buffer`, `layout`, `resource_management` 는 `src/CMakeLists.txt` 에서 `add_subdirectory` 주석 처리됨
+- (당시) Doxygen `EXTRACT_ALL=YES` 이므로 빈 namespace도 출력 → 짧은 placeholder 주석 추가하여 "의도된 빈 상태" 명시
+- (현재) 세 모듈 모두 실제 구현 + Doxygen 주석 보유. placeholder 헤더 의미 자체 소멸.
 
 ## 5. 다이어그램 전략 (A + B 병행)
 
@@ -110,3 +116,34 @@ doc/
 - 영문 번역 — 한국어 단일
 - README.md 갱신 — 별도 작업
 - CI 통합 — 별도 작업
+
+## 10. Phase 7 — 신규 추가 모듈 처리 (2026-05-08~)
+
+### 10.1 트리거 — 무엇이 새로 들어왔는가
+
+> 본 표는 **커밋 `3696136` (카메라 리팩토링)** 까지 반영. 이전 작성분의 옛 이름(`mCameraPos`, `mCameraFront`, `mCameraControl` 등)은 모두 새 m-prefix 명명규약으로 갱신.
+
+| 신규 항목 | 위치 | 비고 |
+|----------|------|------|
+| `Camera` 클래스 | `src/object/camera.h` | POD-like 상태 컨테이너. `glm::vec3 mPos / mTarget / mCamUp` + `mEulerYaw / mEulerPitch` + `mFov / mAspect / mNearPlane / mFarPlane` + `mIsCamControl`. |
+| `Camera` 메서드 | 동상 | `GetFront()` (Yaw→Pitch 회전식 front 산출), `GetForwardViewMatrix()` / `GetLookAtViewMatrix()` 분리, `GetProjMatrix()` (인자 없음 — `mAspect` 멤버 사용), `SetAspect(w,h)` (height==0 가드 내장). |
+| `Context::ProcessInput` | `src/context/context.h` | GLFW 키 폴링 → 카메라 위치 이동 (W/A/S/D/Q/E). 매 프레임 `GetFront()` 1회 캐싱 후 재사용. |
+| `Context::Reshape` | 동상 | framebuffer_size_callback 위임 — width/height 갱신 + `glViewport` + `mCamera.SetAspect`. |
+| `Context::MouseMove` | 동상 | cursor_pos_callback 위임 — `mEulerYaw/Pitch` 갱신 + clamp/wrap. front 직접 갱신은 제거 (`GetFront()` 게터가 매번 재계산). |
+| `Context::MouseButton` | 동상 | mouse_button_callback 위임 — `mCamera.mIsCamControl` 토글. |
+| `Context` 추가 멤버 | 동상 | `mCamera` / `mWidth` / `mHeight` / `mPrevMousePos` + 기존 `mProgram` / `mVertexArrayObject` / `mVertexBufferObject` / `mElementBufferObject` / `mRM` 의 추가 노출. |
+| `app/main.cpp` 콜백 위임 | `app/main.cpp` | `glfwSetWindowUserPointer(window, ctx.get())` 로 Context 주입 → `Handle*` 콜백이 `glfwGetWindowUserPointer` 로 역참조하여 `Context::*` 메서드에 위임. |
+
+### 10.2 작성 원칙
+
+- **Camera 는 상태 컨테이너 — 책임/비-책임 명시**: 입력 처리 자체는 Context 의 책임이며 Camera 는 *데이터*만 보관함을 헤더 클래스 docstring 에 명시.
+- **Context 입력 메서드는 GLFW 콜백 위임 진입점**: 각 메서드 docstring 에 *어느 GLFW 콜백 에서 위임받는지* 를 `@note` 로 표기.
+- **단위 표기**: yaw/pitch 의 *degree*, fov 의 *degree* 등 단위를 명시 (헤드리스 테스트 시 모호성 제거).
+
+### 10.3 부록 — `buffer` / `layout` / `resource_management` 의 *역설계 검수*
+
+세 모듈은 Phase 5 placeholder 시점 이후 실제로 구현되며 자체적으로 Doxygen 주석을 작성받았다.
+주석 톤은 본 계획의 §2 와 일치하므로 추가 변환 필요 없음. 점검 항목은 다음 한 가지뿐:
+
+- placeholder 정책 시점의 잔존 주석 (예: "Placeholder 모듈 — VBO/EBO RAII 래퍼 구현 예정")
+  이 남아 있는지 확인. 발견 시 즉시 제거 (현재 세 헤더 모두 정상 docstring 보유).

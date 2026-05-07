@@ -5,10 +5,9 @@
  *        (단일 헤더 라이브러리 규칙 — 다른 .cpp 에서 중복 정의 시 링커 duplicate symbol).
  */
 #include "image.h"
-// stb_image 함수 본문은 *이 한 곳에서만* 펼친다. 다른 TU 에서는 일반 #include 만 (구현 매크로 X).
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include <memory>
 #include <spdlog/spdlog.h>
 
 namespace SJH
@@ -83,6 +82,7 @@ namespace SJH
         return mImageDataPtr ? true : false;
     }
 
+    // 이 내용은 나중에 자유함수로 빼자.
     void Image::SetCheckImage(int gridX, int gridY)
     {
         for (int j = 0; j < mHeight; j++)

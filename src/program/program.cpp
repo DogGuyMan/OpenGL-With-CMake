@@ -1,5 +1,7 @@
 #include "program/program.h"
+#include "program/program_uniforms.h"
 #include "diagnostics/gl_log.h"
+#include "diagnostics/uniform_diagnostics.h"
 
 namespace SJH
 {
@@ -17,7 +19,12 @@ namespace SJH
     Program::~Program()
     {
         if (mProgramAddr != 0)
+        {
+            // GL ID 가 다른 프로그램에 재할당될 가능성 -> 외부 캐시 항목 먼저 제거.
+            Uniforms::Forget(mProgramAddr);
+            Diagnostics::UniformDiagnostics::Invalidate(mProgramAddr);
             glDeleteProgram(mProgramAddr);
+        }
     }
 
     void Program::Use() const {

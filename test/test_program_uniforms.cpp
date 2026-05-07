@@ -3,8 +3,8 @@
  * @brief @c SJH::Uniforms 자유 함수 family 의 location 캐시 + setter 동작 검증.
  *
  * @details
- *  - 인라인 GLSL 셰이더를 @c Shader::CreateFromSource 로 컴파일 → @c Program::Create 로 link.
- *  - link 직후 @c Program::Create 가 자동으로 @c Uniforms::BuildCache 호출 → 즉시 사용 가능.
+ *  - 인라인 GLSL 셰이더를 @c Shader::CreateFromSource 로 컴파일 -> @c Program::Create 로 link.
+ *  - link 직후 @c Program::Create 가 자동으로 @c Uniforms::BuildCache 호출 -> 즉시 사용 가능.
  *  - 활성 uniform location 조회 / 미존재 uniform 핸들링 / setter crash 없음 검증.
  */
 

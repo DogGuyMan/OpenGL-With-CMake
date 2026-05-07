@@ -24,16 +24,19 @@ void HandleKeyInput(GLFWwindow *window, int key, int scancode, int action, int m
 
 void HandleFramebufferSizeChange(GLFWwindow* window, int width, int height) {
     SPDLOG_INFO("framebuffer size changed: ({} x {})", width, height);
+    // glfwSetWindowUserPointer 에 세팅했던것을 가져오는것
     auto context = (SJH::Context*)glfwGetWindowUserPointer(window);
     context->Reshape(width, height);
 }
 
 void HandleCursorPos(GLFWwindow* window, double x, double y) {
+    // glfwSetWindowUserPointer 에 세팅했던것을 가져오는것
     auto context = (SJH::Context*)glfwGetWindowUserPointer(window);
     context->MouseMove(x, y);
 }
 
 void HandleMouseButton(GLFWwindow* window, int button, int action, int modifier) {
+    // glfwSetWindowUserPointer 에 세팅했던것을 가져오는것
     auto context = (SJH::Context*)glfwGetWindowUserPointer(window);
     double x, y;
     glfwGetCursorPos(window, &x, &y);
@@ -99,7 +102,12 @@ int main()
         return -1;
     }
 
+    // context를 Global(전역) 변수로 둘 수 없으니..
+    // glfw 컨텍스트에 캡슐되어 있는 임의 사용 메모리 공간에
+    // 유저가 사용할 데이터를 주입(?) 할때 사용
+    // 나중에 가져올때는 캐스팅을 통해 가져온다.
     glfwSetWindowUserPointer(window, context.get());
+
     HandleFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, HandleFramebufferSizeChange);
     glfwSetKeyCallback(window, HandleKeyInput);

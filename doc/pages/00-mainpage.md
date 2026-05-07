@@ -21,10 +21,19 @@ digraph LayerArchitecture {
     Context;
   }
 
-  subgraph cluster_modules {
-    label="GL 모듈";
+  subgraph cluster_gl {
+    label="GL 자원 / 셰이더";
     style=dashed;
     Program; Shader;
+    Buffer [label="Buffer\n(VBO/EBO)"];
+    VertexLayout [label="VertexLayout\n(VAO)"];
+    ResourceManagement [label="ResourceManagement\n(Image/Texture)"];
+  }
+
+  subgraph cluster_objects {
+    label="씬 객체";
+    style=dashed;
+    Camera;
   }
 
   subgraph cluster_base {
@@ -36,24 +45,53 @@ digraph LayerArchitecture {
   subgraph cluster_external {
     label="외부 (vcpkg)";
     style=filled; fillcolor="#f0f0f0";
-    glfw; glad; spdlog; fmt;
+    glfw; glad; spdlog; fmt; glm; stb;
   }
 
   main -> Context;
+  main -> spdlog;
+  main -> glfw;
+  main -> glad;
+
   Context -> Program;
   Context -> Shader;
+  Context -> Buffer;
+  Context -> VertexLayout;
+  Context -> ResourceManagement;
+  Context -> Camera;
+  Context -> Diagnostics;
+  Context -> glm;
+  Context -> glad;
+
   Program -> Shader;
+  Program -> Diagnostics;
+  Program -> Common;
+  Program -> glad;
+
   Shader -> Common;
   Shader -> Diagnostics;
-  Program -> Diagnostics;
-  Context -> Diagnostics;
+  Shader -> glad;
+
+  Buffer -> Common;
+  Buffer -> Diagnostics;
+  Buffer -> glad;
+
+  VertexLayout -> Common;
+  VertexLayout -> Diagnostics;
+  VertexLayout -> glad;
+
+  ResourceManagement -> Common;
+  ResourceManagement -> Diagnostics;
+  ResourceManagement -> glad;
+  ResourceManagement -> glm;
+  ResourceManagement -> stb;
+
+  Camera -> glm;
+
   Common -> spdlog;
   Diagnostics -> spdlog;
+  Diagnostics -> fmt;
   Diagnostics -> glad;
-  Shader -> glad;
-  Program -> glad;
-  Context -> glad;
-  main -> glfw;
 }
 \enddot
 
@@ -65,12 +103,107 @@ digraph RenderSequence {
   node [shape=box, fontname="Helvetica"];
   Start [label="main()", shape=ellipse];
   init [label="GLFW init\n+ glad load"];
-  ctx [label="Context::Create()\n→ shaders → program → VAO"];
-  loop [label="while (!shouldClose)\n  Context::Render()\n  swapBuffers", shape=box, style="rounded,filled", fillcolor="#fff7d6"];
+  ctx [label="Context::Create()\n→ Shader → Program\n→ VAO → VBO/EBO\n→ Image → Texture"];
+  uptr [label="glfwSetWindowUserPointer(window, ctx)\n(콜백에서 Context 역참조용)"];
+  callbacks [label="GLFW callbacks 등록\n(framebuffer / key / cursor / mouse)"];
+  loop [label="while (!shouldClose)\n  ProcessInput()\n  Render()\n   swapBuffers + pollEvents",
+        shape=box, style="rounded,filled", fillcolor="#fff7d6"];
   term [label="GLFW terminate", shape=ellipse];
-  Start -> init -> ctx -> loop -> term;
+  Start -> init -> ctx -> uptr -> callbacks -> loop -> term;
 }
 \enddot
+
+## 입력 → 카메라 위임 흐름 (Phase 7, 커밋 `3696136` 반영)
+
+\dot
+digraph InputDelegation {
+  rankdir=LR;
+  node [shape=box, fontname="Helvetica"];
+
+  user    [label="사용자 입력", shape=ellipse, style=filled, fillcolor="#fff7d6"];
+  glfw    [label="GLFW 콜백\n(main.cpp Handle*)", style=filled, fillcolor="#e8f0ff"];
+  uptr    [label="glfwGetWindowUserPointer()\n→ SJH::Context*", shape=note, style=filled, fillcolor="#fff3e0"];
+  context [label="Context 위임 메서드\nProcessInput / MouseMove\nMouseButton / Reshape", style=filled, fillcolor="#e8f5e9"];
+  camera  [label="Camera 상태\nmPos / mEulerYaw / mEulerPitch\nmIsCamControl / mAspect", style=filled, fillcolor="#fce4ec"];
+
+  user -> glfw [label="키 / 마우스 / 리사이즈"];
+  glfw -> uptr [label="콜백 진입 시 캐스팅"];
+  uptr -> context;
+  context -> camera [label="mPos += speed*GetFront()\nmEulerYaw/Pitch ±= delta\nmIsCamControl 토글\nSetAspect(w,h)"];
+  camera -> context [label="GetForwardViewMatrix()\nGetProjMatrix()\nGetFront()", style=dashed];
+}
+\enddot
+
+## 클래스 의존 그래프 (전 프로젝트 통합)
+
+> 모듈 단위가 아닌 *클래스* 단위로 본 의존 관계.
+> 자동 collaboration graph 는 클래스 페이지마다 따로 생성되지만,
+> 본 그래프는 *전체 프로젝트* 를 한 화면에 보여 줘 새 멤버를 어디 끼워야 할지 한눈에 잡기 위한 것.
+
+\dot
+digraph ClassDependencyGraph {
+  rankdir=BT;
+  compound=true;
+  node [shape=box, style=rounded, fontname="Helvetica"];
+
+  // 정적 진단 헬퍼 (인스턴스 없음, 모두 static)
+  subgraph cluster_diag {
+    label="Diagnostics (static-only)"; style=dashed; color="#aaaaaa";
+    GLObjectLog; GLDebug; UniformDiagnostics;
+  }
+
+  // 자원 / 데이터
+  subgraph cluster_resource {
+    label="Resource"; style=dashed; color="#aaaaaa";
+    Image; Texture; ResourceManagement;
+  }
+
+  // GL 객체 RAII
+  subgraph cluster_gl {
+    label="GL Object RAII"; style=dashed; color="#aaaaaa";
+    Shader; Program; Buffer; VertexLayout;
+  }
+
+  // 씬
+  subgraph cluster_scene {
+    label="Scene"; style=dashed; color="#aaaaaa";
+    Camera; Context;
+  }
+
+  // 소유 관계 (실선) — 멤버로 보유, 수명 결합
+  Context -> Program            [label="UPtr"];
+  Context -> VertexLayout       [label="UPtr"];
+  Context -> Buffer             [label="UPtr ×2\n(VBO + EBO)"];
+  Context -> ResourceManagement [label="UPtr"];
+  Context -> Camera             [label="value"];
+
+  ResourceManagement -> Image   [label="map<name, UPtr>"];
+  ResourceManagement -> Texture [label="map<name, UPtr>"];
+
+  // 입력 의존 (긴 점선) — 멤버 X, 팩토리 인자
+  edge [style=dashed, color="#5b6b80"];
+  Program -> Shader  [label="vector<ShaderPtr>\n(Create 인자)"];
+  Texture -> Image   [label="Image*\n(CreateTexture 인자)"];
+
+  // 정적 진단 사용 (짧은 점선) — 인스턴스 X
+  edge [style=dotted, color="#9aa6b8", fontcolor="#9aa6b8"];
+  Shader       -> GLObjectLog;
+  Program      -> GLObjectLog;
+  Program      -> UniformDiagnostics;
+  Buffer       -> GLDebug;
+  VertexLayout -> GLDebug;
+}
+\enddot
+
+**범례**
+
+| 선 | 의미 |
+|---|---|
+| 실선 | *소유* — 멤버 변수로 보유. 부모 소멸 시 자식도 소멸 (`UPtr` / value 멤버). |
+| 긴 점선 | *입력 의존* — 팩토리/생성자 인자. 수명 결합 없음. |
+| 짧은 점선 | *정적 호출* — 인스턴스 없이 free/static 함수만 사용. |
+
+> 갱신 방법: 새 클래스를 추가했거나 멤버 구성이 바뀌면 `.claude/skills/doxygen-class-graph/` 의 절차를 따른다.
 
 ## 추가 페이지
 
@@ -82,7 +215,11 @@ digraph RenderSequence {
 | 모듈 | 클래스 | 역할 |
 |------|--------|------|
 | common | — | @c CLASS_PTR 매크로 + @ref SJH::LoadTextFile |
-| diagnostics | @ref SJH::Diagnostics::GLObjectLog "GLObjectLog", @ref SJH::Diagnostics::GLDebug "GLDebug" | GL 에러 로깅 일원화 |
+| diagnostics | @ref SJH::Diagnostics::GLObjectLog "GLObjectLog", @ref SJH::Diagnostics::GLDebug "GLDebug", @ref SJH::Diagnostics::UniformDiagnostics "UniformDiagnostics" | GL 에러 로깅 + uniform warn-once 일원화 |
 | shader | @ref SJH::Shader "Shader" | 셰이더 컴파일 RAII |
-| program | @ref SJH::Program "Program" | 프로그램 링크 RAII |
-| context | @ref SJH::Context "Context" | 씬 자원 + 매 프레임 draw |
+| program | @ref SJH::Program "Program" + `SJH::Uniforms::*` 자유 함수 | 프로그램 링크 RAII + uniform setter (캐시 친구 함수) |
+| buffer | @ref SJH::Buffer "Buffer" | VBO/EBO RAII (`glGenBuffers` ~ `glDeleteBuffers`) |
+| layout | @ref SJH::VertexLayout "VertexLayout" | VAO + `glVertexAttribPointer` 진단 통합 |
+| resource_management | @ref SJH::ResourceManagement "ResourceManagement", @ref SJH::Image "Image", @ref SJH::Texture "Texture" | 이미지/텍스처 lifecycle 중앙 관리 |
+| object | @ref SJH::Camera "Camera" | 카메라 상태 + view/projection 행렬 산출 |
+| context | @ref SJH::Context "Context" | 씬 자원 + 매 프레임 draw + GLFW 콜백 위임 진입점 |

@@ -21,16 +21,18 @@ namespace SJH
      * @brief 한 씬(scene)의 OpenGL 자원과 매 프레임 draw call 시퀀스를 캡슐화하는 클래스.
      *
      * @par 책임 분담 — Context 가 담당하는 것 (Scene-specific, 고변동)
-     *  - VBO/EBO 생성 (Buffer)              — @c GL_ARRAY_BUFFER / @c GL_ELEMENT_ARRAY_BUFFER
-     *  - VAO + Vertex Attribute (VertexLayout) — @c glGenVertexArrays + @c glVertexAttribPointer
+     *  - VBO/EBO 생성 (@ref Buffer)              — @c GL_ARRAY_BUFFER / @c GL_ELEMENT_ARRAY_BUFFER
+     *  - VAO + Vertex Attribute (@ref VertexLayout) — @c glGenVertexArrays + @c glVertexAttribPointer
      *  - 셰이더/프로그램 (@ref Shader / @ref Program)
-     *  - 텍스처 로드 + 바인딩 + uniform 설정
+     *  - 텍스처 로드 + 바인딩 + uniform 설정 (@ref ResourceManagement)
+     *  - 카메라 상태 보관 + 입력 → 카메라 갱신 위임 (@ref Camera)
      *  - 매 프레임 draw call 시퀀스 (@ref Render)
      *  - 위 객체들의 자동 파괴 (@c UPtr 소멸 시점)
      *
      * @par Context 가 담당하지 *않는* 것 — 앱 전반(저변동, 보일러플레이트)
      *  - GLFW @c init/terminate, OpenGL 컨텍스트 생성, glad 함수 로딩
-     *  - 키/마우스 입력 콜백, 프레임버퍼 리사이즈
+     *  - 키/마우스 입력 콜백 등록 (콜백 자체는 @c app/main.cpp 가 GLFW 에 등록 → @ref ProcessInput / @ref MouseMove / @ref MouseButton 으로 위임)
+     *  - 프레임버퍼 리사이즈 콜백 (콜백은 main 이 받고 @ref Reshape 위임)
      *  - @c glfwSwapBuffers / @c glfwPollEvents 메인 루프
      *  - 위 항목은 @c app/main.cpp 의 라이프 사이클 영역.
      */
@@ -38,35 +40,89 @@ namespace SJH
     {
     public:
         /**
-         * @brief Context 인스턴스 생성 + 내부 GL 자원 초기화 (셰이더 컴파일/링크/VAO 생성).
-         * @return 초기화 성공 시 @c ContextUPtr, 셰이더/프로그램 생성 실패 시 @c nullptr.
+         * @brief Context 인스턴스 생성 + 내부 GL 자원 초기화 (셰이더 컴파일/링크/VAO/VBO/EBO/텍스처).
+         * @return 초기화 성공 시 @c ContextUPtr, 셰이더/프로그램/이미지 로드 실패 시 @c nullptr.
          * @pre 호출 전 OpenGL 컨텍스트가 활성화되어 있고 glad 가 로드된 상태여야 함.
          */
         static ContextUPtr Create();
 
-        /// @brief 매 프레임 호출 — 프레임버퍼 클리어 + draw call.
+        /// @brief 매 프레임 호출 — depth/color buffer 클리어 + 큐브 instance draw + view/projection uniform 갱신.
         void Render();
+
+        /**
+         * @brief 키보드 입력 폴링 → 카메라 위치 이동.
+         * @param window 폴링 대상 GLFW 윈도우 (키 상태 조회용).
+         * @details 매핑:
+         *  - @c W / @c S — front 방향 +/-
+         *  - @c A / @c D — right 방향 +/- (front × up 외적)
+         *  - @c Q / @c E — up 방향 +/- (right × front 외적)
+         *  @c mCamera.mIsCamControl 이 @c true 일 때만 동작.
+         * @note 호출자(@c app/main.cpp 메인 루프) 가 매 프레임 직접 호출.
+         */
         void ProcessInput(GLFWwindow *window);
+
+        /**
+         * @brief 프레임버퍼 리사이즈 처리 — 내부 width/height 갱신 + @c glViewport 호출.
+         * @param width  새 프레임버퍼 너비 (픽셀).
+         * @param height 새 프레임버퍼 높이 (픽셀).
+         * @note GLFW @c framebuffer_size_callback 에서 위임받는 진입점.
+         */
         void Reshape(int width, int height);
+
+        /**
+         * @brief 마우스 이동 → 카메라 yaw/pitch 회전 갱신.
+         * @param x,y 현재 커서 위치 (스크린 좌표).
+         * @details 이전 위치(@c mPrevMousePos)와의 델타로 회전 각도 계산:
+         *  - yaw   ← @c -deltaX * 0.1
+         *  - pitch ← @c -deltaY * 0.1
+         *  pitch 는 @c [-89, 89] 로 클램프 (gimbal lock 회피), yaw 는 @c [0, 360) 으로 wrap.
+         *  @c mCamera.mIsCamControl 이 @c true 일 때만 갱신.
+         * @note GLFW @c cursor_pos_callback 에서 위임받는 진입점.
+         */
         void MouseMove(double x, double y);
+
+        /**
+         * @brief 마우스 버튼 이벤트 → 카메라 회전 모드 토글.
+         * @param button GLFW 버튼 코드 (@c GLFW_MOUSE_BUTTON_LEFT 등).
+         * @param action @c GLFW_PRESS / @c GLFW_RELEASE.
+         * @param x,y    이벤트 발생 시 커서 위치.
+         * @details 좌클릭 PRESS 시 @c IsCamControl=true + @c mPrevMousePos 갱신,
+         *          RELEASE 시 @c IsCamControl=false. 즉 드래그 중에만 카메라 회전.
+         * @note GLFW @c mouse_button_callback 에서 위임받는 진입점.
+         */
         void MouseButton(int button, int action, double x, double y);
 
     private:
         Context() = default;
+
+        /// @brief 셰이더/프로그램/VAO/VBO/EBO/텍스처를 일괄 초기화. @ref Create 내부에서 한 번만 호출.
         bool Init();
+
+        /// @brief 컴파일·링크된 셰이더 프로그램. 매 @ref Render 에서 @c Use().
         ProgramUPtr mProgram;
 
+        /// @brief Vertex Array Object — vertex attribute layout(위치/색상/UV) 보관.
         VertexLayoutUPtr mVertexArrayObject;
-        BufferUPtr mVertexBufferObject;
-        BufferUPtr mElementBufferObject; // indexBuffer
 
+        /// @brief Vertex Buffer Object — 큐브 정점 데이터(@c GL_ARRAY_BUFFER).
+        BufferUPtr mVertexBufferObject;
+
+        /// @brief Element Buffer Object — 인덱스 버퍼(@c GL_ELEMENT_ARRAY_BUFFER). 36개 인덱스로 12 삼각형 = 큐브 6면.
+        BufferUPtr mElementBufferObject;
+
+        /// @brief 이미지 → 텍스처 로딩/이름 기반 조회를 담당하는 리소스 관리자.
         ResourceManagementUPtr mRM;
 
+        /// @brief 카메라 상태(POD-like). View/Projection 행렬 산출 + 입력 메서드들이 직접 갱신.
         Camera mCamera;
 
+        /// @brief 현재 프레임버퍼 너비. @ref Reshape 가 갱신, @ref Render 가 projection 행렬 산출에 사용.
         int mWidth{640};
+
+        /// @brief 현재 프레임버퍼 높이.
         int mHeight{480};
 
+        /// @brief 직전 프레임 마우스 위치 — 회전 델타 계산용. @ref MouseButton(LEFT, PRESS) 에서 초기화.
         glm::vec2 mPrevMousePos { glm::vec2(0.0f) };
     };
 }

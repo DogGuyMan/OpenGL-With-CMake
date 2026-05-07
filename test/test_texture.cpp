@@ -146,7 +146,7 @@ TEST_CASE("Texture::operator= (move) — source 의 핸들이 0 으로 비워져
     // 이동 후 sink 는 source 의 ID 를 이어받아야 함.
     REQUIRE(t1->GetTextureID() == t2_originalId);
     // 이동의 의무 — source 는 핸들 0 으로 비워져야 함.
-    // 비워지지 않으면 t2 소멸자가 t1 의 텍스처를 다시 delete → silent corruption.
+    // 비워지지 않으면 t2 소멸자가 t1 의 텍스처를 다시 delete -> silent corruption.
     REQUIRE(t2->GetTextureID() == 0);
 }
 
@@ -158,7 +158,7 @@ TEST_CASE("Texture::operator= (move) — source 의 핸들이 0 으로 비워져
  * @brief 회귀 가드 — @c CreateRM 이 *빈* unique_ptr 을 반환해선 안 됨.
  *
  * @details 흔한 실수: @c std::unique_ptr<RM>() (default ctor) 으로 빈 포인터를 만들면
- *  반환값은 항상 nullptr → 모든 호출자에서 즉시 null deref. 본 테스트는 단 한 줄로 그 회귀를 잡음.
+ *  반환값은 항상 nullptr -> 모든 호출자에서 즉시 null deref. 본 테스트는 단 한 줄로 그 회귀를 잡음.
  */
 TEST_CASE("ResourceManagement::CreateRM — 유효한 인스턴스 반환",
           "[rm][regression]")
@@ -193,7 +193,7 @@ TEST_CASE("ResourceManagement::LoadImage — 미존재 경로는 nullptr", "[rm]
     REQUIRE(image == nullptr);
 }
 
-TEST_CASE("ResourceManagement::LoadTextureFromImage — 같은 Image 두 번 → 캐시 히트",
+TEST_CASE("ResourceManagement::LoadTextureFromImage — 같은 Image 두 번 -> 캐시 히트",
           "[rm][texture][gl]")
 {
     if (!SampleImageAvailable()) SKIP("샘플 이미지 없음");
@@ -210,7 +210,7 @@ TEST_CASE("ResourceManagement::LoadTextureFromImage — 같은 Image 두 번 →
 
     REQUIRE(tex1 != nullptr);
     REQUIRE(tex2 != nullptr);
-    REQUIRE(tex1 == tex2);   // 캐시 키 = image_name → 동일 인스턴스
+    REQUIRE(tex1 == tex2);   // 캐시 키 = image_name -> 동일 인스턴스
     REQUIRE(tex1->GetTextureID() == tex2->GetTextureID());
 }
 
@@ -242,7 +242,7 @@ TEST_CASE("ResourceManagement::LoadTextureWithName — 미로드 미스 / 로드
  * @note *주소 비교* 로 "다른 객체" 를 단언하지 않는 것이 정석:
  *  Clear 후 새 emplace 시 allocator 가 freelist 의 *같은 슬롯* 을 재사용해 raw 포인터가
  *  우연히 동일해질 수 있음. dangling-pointer-reuse 함정 — 단언이 *조용히 통과* 해 회귀를 놓침.
- *  Clear 의 진짜 계약은 "캐시 항목이 사라진다" → @c LoadTextureWithName 이 미스를 반환.
+ *  Clear 의 진짜 계약은 "캐시 항목이 사라진다" -> @c LoadTextureWithName 이 미스를 반환.
  */
 TEST_CASE("ResourceManagement::Clear — 두 캐시 모두 비움 (lookup 미스로 검증)",
           "[rm][texture][gl]")

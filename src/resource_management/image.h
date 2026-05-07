@@ -8,9 +8,13 @@
  *          @c Texture 가 본 컨테이너를 입력으로 받아 GL 텍스처 객체로 업로드한다.
  */
 
+#include <memory>
+#include <string>
 #include "common/common.h"
 #include <glad/glad.h>
-#include <string>
+// 주의: @c stb_image.h 의 *함수 본문* 은 헤더에서 펼치지 않는다 (헤더에서 매크로 정의 시
+//       Image.h 를 include 하는 모든 TU 에서 정의가 중복 → linker duplicate symbols).
+//       @c #define STB_IMAGE_IMPLEMENTATION 은 image.cpp 에서만 1회.
 
 namespace SJH
 {
@@ -41,15 +45,17 @@ namespace SJH
 
         Image(const Image &) = delete;              ///< 픽셀 버퍼 단일 소유 — 복사 금지.
         Image &operator=(const Image &) = delete;
-        Image(Image &&) noexcept;                   ///< @c noexcept 이동 — STL 컨테이너 재배치 안전.
+        Image(Image &&) noexcept;                   /// noexcept 이동 — STL 컨테이너 재배치 안전.
         Image &operator=(Image &&) noexcept;
 
         /// @brief 디코드된 raw 픽셀 포인터. 소유권 X — Image 수명 동안만 유효.
         const GLubyte *GetDataPtr() const { return mImageDataPtr; }
+
         /// @brief 캐시 키 / 디버그용 논리 이름.
         std::string GetImageName() const { return mImageName; }
         int GetWidth() const { return mWidth; }
         int GetHeight() const { return mHeight; }
+
         /// @brief 픽셀 채널 수 (1=R, 2=RG, 3=RGB, 4=RGBA).
         int GetChannelCount() const { return mChannelCount; }
         void SetCheckImage(int gridX, int gridY);

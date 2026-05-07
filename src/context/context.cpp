@@ -4,6 +4,8 @@
 #include "layout/vertex_layout.h"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <spdlog/spdlog.h>
 
 namespace SJH
@@ -74,6 +76,29 @@ namespace SJH
         static float time = 0.0f;
         float t = sinf(time) * 0.5f + 0.5f;
 
+        auto trans = glm::translate(glm::mat4(1.0f), glm::vec3(cos(time), sin(time), 0.0f) * 0.5f);
+        // 단위행렬 기준 z축으로 90도만큼 회전하는 행렬
+        auto rot = glm::rotate(glm::mat4(1.0f),
+                               glm::radians(90.0f) * time, glm::vec3(1.0f, 0.0f, 0.0f));
+        // 단위행렬 기준 모든 축에 대해 3배율 확대하는 행렬
+        auto scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
+
+        auto transformMat = trans * rot * scale;
+
+        // 카메라: z=3 위치에서 원점을 바라봄
+        auto viewMat = glm::lookAt(
+            glm::vec3(0.0f, 0.0f, 3.0f),  // eye
+            glm::vec3(0.0f, 0.0f, 0.0f),  // center
+            glm::vec3(0.0f, 1.0f, 0.0f)   // up
+        );
+        // 원근 투영: 45도 FOV, 4:3 종횡비, near=0.1 far=100
+        auto projMat = glm::perspective(
+            glm::radians(45.0f),
+            4.0f / 3.0f,
+            0.1f, 100.0f
+        );
+
+
         // 1. 바인드 하는곳
         {
             mVertexArrayObject->Bind();
@@ -105,12 +130,19 @@ namespace SJH
         // VBO 만으로 그렸을때
         // glDrawArrays(GL_TRIANGLES, 0, 6);
 
+
         // 3. Uniform 전달
-        glUniform4f(glGetUniformLocation(mProgram->GetProgramAddr(), "baseColor"),
-                    t * t,
-                    2.0f * t * (1.0f - t),
-                    (1.0f - t) * (1.0f - t),
-                    1.0f);
+        auto transformLoc = glGetUniformLocation(mProgram->GetProgramAddr(), "modelMat");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformMat));
+        auto viewLoc = glGetUniformLocation(mProgram->GetProgramAddr(), "viewMat");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMat));
+        auto projLoc = glGetUniformLocation(mProgram->GetProgramAddr(), "projMat");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMat));
+
+        glm::vec4 baseColor(t * t, 2.0f * t * (1.0f - t), (1.0f - t) * (1.0f - t), 1.0f);
+
+        auto baseColorLoc = glGetUniformLocation(mProgram->GetProgramAddr(), "baseColor");
+        glUniform4fv(baseColorLoc, 1, glm::value_ptr(baseColor));
 
         for (int i = 0; i < 2; i++)
         {

@@ -35,6 +35,16 @@ namespace SJH
          */
         static ShaderUPtr CreateFromFile(const std::string &filename, GLenum shader_type);
 
+        /**
+         * @brief 인라인 소스 문자열에서 직접 컴파일 후 @c Shader 인스턴스 생성.
+         * @param source        GLSL 소스 코드 (`#version` 디렉티브 포함 권장).
+         * @param shader_type   GL 셰이더 타입.
+         * @return 성공 시 @c ShaderUPtr, 컴파일 실패 시 @c nullptr.
+         * @details 파일 I/O 우회 — 테스트의 인라인 GLSL 또는 *런타임 생성 셰이더* 용도.
+         *          @c CreateFromFile 과 같은 팩토리 불변식 보장 (외부 노출 인스턴스는 컴파일 완료).
+         */
+        static ShaderUPtr CreateFromSource(const std::string &source, GLenum shader_type);
+
         /// @brief @c glDeleteShader 호출 (핸들이 0 이 아닐 때만).
         ~Shader();
 

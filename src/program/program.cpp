@@ -9,7 +9,9 @@ namespace SJH
         if (!program->TryLink(shaders))
             return nullptr;
 
-        return std::move(program);
+        // link 성공 직후 uniform 캐시 eager build — 호출자는 즉시 Uniforms::Set* 호출 가능.
+        Uniforms::BuildCache(*program);
+        return program;
     }
 
     Program::~Program()

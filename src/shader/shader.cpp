@@ -10,7 +10,24 @@ namespace SJH
         auto shader = std::unique_ptr<Shader>(new Shader());
         if (!shader->TryLoadFile(filename, shader_type))
             return nullptr;
-        return std::move(shader);
+        return shader;
+    }
+
+    ShaderUPtr Shader::CreateFromSource(const std::string &source, GLenum shader_type)
+    {
+        auto shader = std::unique_ptr<Shader>(new Shader());
+
+        const char *codePtr   = source.c_str();
+        const GLint codeLength = static_cast<GLint>(source.length());
+
+        shader->mShaderAddr = glCreateShader(shader_type);
+        glShaderSource(shader->mShaderAddr, 1, &codePtr, &codeLength);
+        glCompileShader(shader->mShaderAddr);
+
+        // 인라인 소스라 파일 경로 tag 없음 — 진단은 빈 tag 로 호출 (default 메시지).
+        if (!Diagnostics::GLObjectLog::CheckShaderCompile(shader->mShaderAddr, ""))
+            return nullptr;
+        return shader;
     }
 
     Shader::~Shader()

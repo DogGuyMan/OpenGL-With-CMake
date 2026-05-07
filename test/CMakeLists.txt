@@ -74,13 +74,14 @@ target_link_libraries(test_uniform_diagnostics PRIVATE
 target_compile_features(test_uniform_diagnostics PRIVATE cxx_std_17)
 catch_discover_tests(test_uniform_diagnostics)
 
-#  program 모듈 — ProgramUniforms location 캐시 + setter 동작
-# 인라인 GLSL 컴파일/링크 → 실제 program 핸들로 ProgramUniforms 생성.
+#  program 모듈 — Uniforms 자유 함수 family 의 location 캐시 + setter 동작
+# 인라인 GLSL → Shader::CreateFromSource → Program::Create → Uniforms::Set*/Get 검증.
 add_executable(test_program_uniforms test_program_uniforms.cpp)
 target_link_libraries(test_program_uniforms PRIVATE
     Catch2::Catch2WithMain
     gl_test_fixture
     SJH::program
+    SJH::shader      # Shader::CreateFromSource — 인라인 GLSL 컴파일
 )
 target_compile_features(test_program_uniforms PRIVATE cxx_std_17)
 catch_discover_tests(test_program_uniforms)

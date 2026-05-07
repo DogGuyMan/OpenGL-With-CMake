@@ -18,49 +18,47 @@ namespace SJH
      *
      *********************************************************************************/
     // 엥? 교안 CW 배치네..
-    static std::array<GLfloat, 32> vertices{
+    float vertices[] = {
+    -0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
+    0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
+    0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
 
-        0.5f,
-        0.5f,
-        0.0f, // top right
-        1.0f,
-        0.0f,
-        0.0f, // red
-        1.0f,
-        1.0f,
+    -0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
+    0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
+    0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
 
-        0.5f,
-        -0.5f,
-        0.0f, // bottom right
-        0.0f,
-        1.0f,
-        0.0f, // green
-        1.0f,
-        0.0f,
+    -0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
 
-        -0.5f,
-        -0.5f,
-        0.0f, // bottom left
-        0.0f,
-        0.0f,
-        1.0f, // blue
-        0.0f,
-        0.0f,
+    0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
+    0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
+    0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
 
-        -0.5f,
-        0.5f,
-        0.0f, // top left
-        1.0f,
-        1.0f,
-        0.0f, // yellow
-        0.0f,
-        1.0f,
+    -0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
+    0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
+
+    -0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 0.0f, 1.0f,
+    0.5f,  0.5f, -0.5f, 1.0, 1.0, 1.0, 1.0f, 1.0f,
+    0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f, 1.0, 1.0, 1.0, 0.0f, 0.0f,
     };
 
     // ! ⭐️ 제발 인덱스 버퍼는 GLuint로 두자 ⭐️
-    static std::array<GLuint, 6> indices = {
-        0, 1, 3, 1, 2, 3};
-
+    uint32_t indices[] = {
+    0,  2,  1,  2,  0,  3,
+    4,  5,  6,  6,  7,  4,
+    8,  9, 10, 10, 11,  8,
+    12, 14, 13, 14, 12, 15,
+    16, 17, 18, 18, 19, 16,
+    20, 22, 21, 22, 20, 23,
+    };
     ContextUPtr Context::Create()
     {
         auto context = ContextUPtr(new Context());
@@ -71,7 +69,8 @@ namespace SJH
 
     void Context::Render()
     {
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
         static float time = 0.0f;
         float t = sinf(time) * 0.5f + 0.5f;
@@ -87,17 +86,15 @@ namespace SJH
 
         // 카메라: z=3 위치에서 원점을 바라봄
         auto viewMat = glm::lookAt(
-            glm::vec3(0.0f, 0.0f, 3.0f),  // eye
-            glm::vec3(0.0f, 0.0f, 0.0f),  // center
-            glm::vec3(0.0f, 1.0f, 0.0f)   // up
+            glm::vec3(0.0f, 0.0f, 3.0f), // eye
+            glm::vec3(0.0f, 0.0f, 0.0f), // center
+            glm::vec3(0.0f, 1.0f, 0.0f)  // up
         );
         // 원근 투영: 45도 FOV, 4:3 종횡비, near=0.1 far=100
         auto projMat = glm::perspective(
             glm::radians(45.0f),
             4.0f / 3.0f,
-            0.1f, 100.0f
-        );
-
+            0.1f, 100.0f);
 
         // 1. 바인드 하는곳
         {
@@ -130,7 +127,6 @@ namespace SJH
         // VBO 만으로 그렸을때
         // glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
         // 3. Uniform 전달
         auto transformLoc = glGetUniformLocation(mProgram->GetProgramAddr(), "modelMat");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformMat));
@@ -154,7 +150,10 @@ namespace SJH
         }
 
         // VBO + EBO 협력으로 그렸을때.
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        // {
+        //     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        // }
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
         time += 0.016f;
     }
@@ -166,13 +165,13 @@ namespace SJH
         ShaderPtr fragmentShader = Shader::CreateFromFile("./resources/shader/simple.fs", GL_FRAGMENT_SHADER);
         if (!vertexShader || !fragmentShader)
             return false;
-        SPDLOG_INFO("vertex shader id: {}", vertexShader->GetShaderAddr());
-        SPDLOG_INFO("fragment shader id: {}", fragmentShader->GetShaderAddr());
+        spdlog::info("vertex shader id: {}", vertexShader->GetShaderAddr());
+        spdlog::info("fragment shader id: {}", fragmentShader->GetShaderAddr());
 
         mProgram = Program::Create({vertexShader, fragmentShader});
         if (!mProgram)
             return false;
-        SPDLOG_INFO("program id: {}", mProgram->GetProgramAddr());
+        spdlog::info("program id: {}", mProgram->GetProgramAddr());
         glClearColor(0.0, 0.1f, 0.2f, 0.0f);
 
         mRM = ResourceManagement::CreateRM();
@@ -190,22 +189,37 @@ namespace SJH
         // === 지금부터 사용할 buffer object를 지정한다. ===
         // === 사용할 buffer object는 vertex data를 저장할 용도 ===
         // === 변경빈도(STATIC=한번 / DYNAMIC=자주 / STREAM=매프레임) x 용도(DRAW=앱-> GPU / READ=GPU -> 앱 / COPY=GPU <-> GPU) ===
-        const GLint buffer_size = vertices.size() * sizeof(GLfloat);
-        mVertexBufferObject = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices.data(), buffer_size);
 
-        const GLint element_size = indices.size() * sizeof(GLuint);
-        mElementBufferObject = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices.data(), element_size);
+        // {
+        //     const GLint buffer_size = vertices.size() * sizeof(GLfloat);
+        //     mVertexBufferObject = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices.data(), buffer_size);
 
-        // === 셰이더 쪽 layout(location = 0) 인곳에 넣겠다. ===
-        void *positionOffset = 0;
-        // GLuint positionStride = sizeof(glm::vec3);
+        //     const GLint element_size = indices.size() * sizeof(GLuint);
+        //     mElementBufferObject = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices.data(), element_size);
 
-        if (!mVertexArrayObject->TrySetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, 0))
-            return false;
-        if (!mVertexArrayObject->TrySetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, sizeof(GLfloat) * 3))
-            return false;
-        if (!mVertexArrayObject->TrySetAttrib(2, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, sizeof(GLfloat) * 6))
-            return false;
+        //     // === 셰이더 쪽 layout(location = 0) 인곳에 넣겠다. ===
+        //     void *positionOffset = 0;
+        //     // GLuint positionStride = sizeof(glm::vec3);
+
+        //     if (!mVertexArrayObject->TrySetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, 0))
+        //         return false;
+        //     if (!mVertexArrayObject->TrySetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, sizeof(GLfloat) * 3))
+        //         return false;
+        //     if (!mVertexArrayObject->TrySetAttrib(2, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, sizeof(GLfloat) * 6))
+        //         return false;
+        // }
+
+        mVertexBufferObject = Buffer::CreateWithData(
+            GL_ARRAY_BUFFER, GL_STATIC_DRAW,
+            vertices, sizeof(float) * 196);
+
+        mElementBufferObject = Buffer::CreateWithData(
+            GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
+            indices, sizeof(uint32_t) * 36);
+
+        mVertexArrayObject->TrySetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
+        mVertexArrayObject->TrySetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, sizeof(float) * 3);
+        mVertexArrayObject->TrySetAttrib(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, sizeof(float) * 6);
 
         auto imagePtr1 = mRM->LoadImage("container", "./resources/texture/container.jpg");
         if (imagePtr1 == nullptr)

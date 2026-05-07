@@ -11,14 +11,14 @@
 
 void HandleFramebufferSizeChange(GLFWwindow *window, int width, int height)
 {
-    SPDLOG_INFO("프레임 버퍼 사이즈가 변경됨 : ({} X {})", width, height);
+    spdlog::info("프레임 버퍼 사이즈가 변경됨 : ({} X {})", width, height);
     // OpenGL이 그림을 그릴 영역 지정
     glViewport(0, 0, width, height);
 }
 
 void HandleKeyInput(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    SPDLOG_INFO("key: {} ,scancode: {} ,action: {}, mods: {}{}{}",
+    spdlog::info("key: {} ,scancode: {} ,action: {}, mods: {}{}{}",
                 key, scancode,
                 glfw_utils::ActionToString(action),
                 glfw_utils::ModCtrl(mods),

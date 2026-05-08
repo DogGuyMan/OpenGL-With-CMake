@@ -8,11 +8,11 @@
 #include "program/program.h"
 #include "resource_management/resource_management.h"
 #include "shader/shader.h"
+#include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <GLFW/glfw3.h>
 namespace SJH
 {
     CLASS_PTR(Context)
@@ -113,7 +113,6 @@ namespace SJH
         /// @brief 이미지 → 텍스처 로딩/이름 기반 조회를 담당하는 리소스 관리자.
         ResourceManagementUPtr mRM;
 
-
         /// @brief 현재 프레임버퍼 너비. @ref Reshape 가 갱신, @ref Render 가 projection 행렬 산출에 사용.
         int mWidth{640};
 
@@ -121,15 +120,20 @@ namespace SJH
         int mHeight{480};
 
         /// @brief 직전 프레임 마우스 위치 — 회전 델타 계산용. @ref MouseButton(LEFT, PRESS) 에서 초기화.
-        glm::vec2 mPrevMousePos { glm::vec2(0.0f) };
+        glm::vec2 mPrevMousePos{glm::vec2(0.0f)};
 
         /// @brief 카메라 상태(POD-like). View/Projection 행렬 산출 + 입력 메서드들이 직접 갱신.
         Camera mCamera;
 
         // clear color
-        glm::vec4 mClearColor {glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
+        glm::vec4 mClearColor{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
 
         // Light
+        bool mAnimation{true};
+        glm::vec3 mLightPos{glm::vec3(3.0f, 3.0f, 3.0f)};
+        glm::vec3 mLightColor{glm::vec3(1.0f, 1.0f, 1.0f)};
+        glm::vec3 mObjectColor{glm::vec3(1.0f, 0.5f, 0.0f)};
+        float mAmbientStrength{0.1f};
     };
 }
 

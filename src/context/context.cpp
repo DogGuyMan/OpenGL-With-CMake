@@ -170,6 +170,14 @@ namespace SJH
     {
         if (ImGui::Begin("ui window"))
         {
+            if (ImGui::CollapsingHeader("light", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::DragFloat3("light pos", glm::value_ptr(mLightPos), 0.01f);
+                ImGui::ColorEdit3("light color", glm::value_ptr(mLightColor));
+                ImGui::ColorEdit3("object color", glm::value_ptr(mObjectColor));
+                ImGui::SliderFloat("ambient strength", &mAmbientStrength, 0.0f, 1.0f);
+            }
+            ImGui::Checkbox("animation", &mAnimation);
             // 함수 하나가 UI component 하나에 대응
             // 리턴 값이 true인 경우 해당 UI가 조작되었음을 의미
             // UI 조작 이벤트에 대한 액션 로직을 if으로 작성할 수 있음
@@ -196,7 +204,7 @@ namespace SJH
         auto viewMat = mCamera.GetForwardViewMatrix();
         auto projMat = mCamera.GetProjMatrix(); // mAspect 멤버 사용 (Reshape 에서 갱신)
 
-        glm::vec4 baseColor(t * t, 2.0f * t * (1.0f - t), (1.0f - t) * (1.0f - t), 1.0f);
+        // glm::vec4 baseColor(t * t, 2.0f * t * (1.0f - t), (1.0f - t) * (1.0f - t), 1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
@@ -204,19 +212,42 @@ namespace SJH
         // 2. Use Program
         mProgram->Use();
         mVertexArrayObject->Bind();
-
-        // 3. Uniform 전달
-        for (size_t i = 0; i < cubePositions.size(); i++)
         {
-            auto &pos = cubePositions[i];
-            auto modelMat = glm::translate(glm::mat4(1.0f), pos);
-            modelMat = glm::rotate(modelMat,
-                                   glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i),
-                                   glm::vec3(1.0f, 0.5f, 0.0f));
-            auto transformMat = projMat * viewMat * modelMat;
-            Uniforms::SetMat4(*mProgram.get(), "transformMat", glm::value_ptr(transformMat));
-            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::value_ptr(baseColor));
-            // VBO + EBO 협력으로 그렸을때.
+            // 이거 없으면 안되더라..
+            Uniforms::SetVec3(*mProgram.get(), "lightColor", glm::value_ptr(mLightColor));
+            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::value_ptr(glm::vec4(1.0f, 0.5f, 0.0f, 1.0f)));
+            Uniforms::SetFloat(*mProgram.get(), "ambientStrength", mAmbientStrength);
+            Uniforms::SetVec3(*mProgram.get(), "lightPos", glm::value_ptr(mLightPos));
+
+            // 3. Uniform 전달
+            for (size_t i = 0; i < cubePositions.size(); i++)
+            {
+                auto &pos = cubePositions[i];
+                auto modelMat = glm::translate(glm::mat4(1.0f), pos);
+                auto angle = glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i);
+                modelMat = glm::rotate(modelMat,
+                                       mAnimation ? angle : 0.0f,
+                                       glm::vec3(1.0f, 0.5f, 0.0f));
+                auto transformMat = projMat * viewMat * modelMat;
+                Uniforms::SetMat4(*mProgram.get(), "transformMat", glm::value_ptr(transformMat));
+                Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", glm::value_ptr(modelMat));
+                // VBO + EBO 협력으로 그렸을때.
+                glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+            }
+        }
+
+        mProgram->Use();
+        mVertexArrayObject->Bind();
+        {
+            glm::mat4 lightModelTransform =
+                glm::translate(glm::mat4(1.0), mLightPos) *
+                glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
+            Uniforms::SetVec3(*mProgram.get(),"lightPos", glm::value_ptr(mLightPos));
+            Uniforms::SetVec3(*mProgram.get(),"lightColor", glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
+            Uniforms::SetVec4(*mProgram.get(),"baseColor",  glm::value_ptr(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)));
+            Uniforms::SetFloat(*mProgram.get(),"ambientStrength", 1.0f);
+            Uniforms::SetMat4(*mProgram.get(),"transformMat", glm::value_ptr(projMat * viewMat * lightModelTransform));
+            Uniforms::SetMat4(*mProgram.get(),"modelTransformMat", glm::value_ptr(lightModelTransform));
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         }
 

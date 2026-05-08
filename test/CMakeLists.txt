@@ -45,6 +45,35 @@ target_include_directories(gl_test_fixture PUBLIC
 )
 target_compile_features(gl_test_fixture PRIVATE cxx_std_17)
 
+#  Task 3 — spdlog 출력 캡처 RAII (재사용 STATIC lib)
+# GL context 불필요. spdlog 의존만.
+# 사용처: test_uniform_diagnostics.cpp (Task 4), test_gl_state_log.cpp (Task 5).
+# 자세한 설계는 doc/testplan/2026-05-07-gl-state-and-test-quality-design.md §2.4 참조.
+add_library(spdlog_capture STATIC support/spdlog_capture.cpp)
+target_link_libraries(spdlog_capture PUBLIC
+    spdlog::spdlog
+)
+target_include_directories(spdlog_capture PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}   # "support/spdlog_capture.h" 접근
+)
+target_compile_features(spdlog_capture PRIVATE cxx_std_17)
+
+#  Task 6 — GL state snapshot wrapper + Diff (재사용 STATIC lib)
+# SJH::diagnostics PUBLIC link → 소비 테스트가 GLStateFields/SymbolicName 자동 가시.
+# 사용처: test_gl_state_snapshot.cpp (Task 6) + 향후 다른 테스트가 GLStateSnapshot/Diff 활용.
+add_library(gl_state_snapshot STATIC support/gl_state_snapshot.cpp)
+target_link_libraries(gl_state_snapshot PUBLIC
+    SJH::diagnostics
+    glad::glad
+)
+target_link_libraries(gl_state_snapshot PRIVATE
+    fmt::fmt
+)
+target_include_directories(gl_state_snapshot PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}   # "support/gl_state_snapshot.h" 접근
+)
+target_compile_features(gl_state_snapshot PRIVATE cxx_std_17)
+
 #  Phase B1 — fixture 자가검증
 add_executable(test_gl_fixture test_gl_fixture.cpp)
 target_link_libraries(test_gl_fixture PRIVATE
@@ -64,12 +93,13 @@ target_link_libraries(test_gl_debug PRIVATE
 target_compile_features(test_gl_debug PRIVATE cxx_std_17)
 catch_discover_tests(test_gl_debug)
 
-#  diagnostics 모듈 — UniformDiagnostics warn-once 트래커 smoke
-# GL context 불필요 (spdlog 만 호출).
+#  diagnostics 모듈 — UniformDiagnostics warn-once 트래커 (Task 4: 행동 단언)
+# GL context 불필요 (spdlog 만 호출). SpdlogCapture로 로그 출력 행동 단언.
 add_executable(test_uniform_diagnostics test_uniform_diagnostics.cpp)
 target_link_libraries(test_uniform_diagnostics PRIVATE
     Catch2::Catch2WithMain
     SJH::diagnostics
+    spdlog_capture
 )
 target_compile_features(test_uniform_diagnostics PRIVATE cxx_std_17)
 catch_discover_tests(test_uniform_diagnostics)
@@ -138,6 +168,29 @@ target_link_libraries(test_gl_state_capture PRIVATE
 target_compile_features(test_gl_state_capture PRIVATE cxx_std_17)
 catch_discover_tests(test_gl_state_capture)
 
+#  diagnostics 모듈 — GLStateLog::Dump + EnableAutoOnError + FieldsToString (Task 5)
+# spdlog_capture로 출력 단언, GL context는 일부 케이스만 필요.
+add_executable(test_gl_state_log test_gl_state_log.cpp)
+target_link_libraries(test_gl_state_log PRIVATE
+    Catch2::Catch2WithMain
+    gl_test_fixture
+    spdlog_capture
+    SJH::diagnostics
+)
+target_compile_features(test_gl_state_log PRIVATE cxx_std_17)
+catch_discover_tests(test_gl_state_log)
+
+#  test/support — GLStateSnapshot wrapper + Diff (Task 6)
+# 대부분 GL context 불필요 — struct 직접 구성으로 path 강제. 일부 Capture sanity는 GL ctx.
+add_executable(test_gl_state_snapshot test_gl_state_snapshot.cpp)
+target_link_libraries(test_gl_state_snapshot PRIVATE
+    Catch2::Catch2WithMain
+    gl_state_snapshot
+    gl_test_fixture
+)
+target_compile_features(test_gl_state_snapshot PRIVATE cxx_std_17)
+catch_discover_tests(test_gl_state_snapshot)
+
 # resources symlink (app/CMakeLists.txt 의 동일 패턴) — test_texture 가 컨테이너 이미지 접근.
 if(EXISTS ${CMAKE_SOURCE_DIR}/resources)
     if(WIN32)
@@ -166,9 +219,25 @@ add_custom_target(tests DEPENDS
     test_gl_fixture
     test_gl_debug
     test_uniform_diagnostics
-    test_gl_state_fields  # 추가
+    test_gl_state_fields    # Task 1
+    test_gl_state_capture   # Task 2
+    test_gl_state_log       # Task 5
+    test_gl_state_snapshot  # Task 6
     test_program_uniforms
     test_buffer
     test_vertex_layout
     test_texture
 )
+
+#  Task 7 — Test smell linter (R1-R4 정적 검사, warn-only)
+# 본 ctest entry는 항상 PASS — warning은 stdout으로만, 빌드/머지 차단 X.
+# 자세한 규칙은 doc/testplan/2026-05-07-gl-state-and-test-quality-design.md §6.1 참조.
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND)
+    add_test(NAME test_smells
+        COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_SOURCE_DIR}/scripts/check_test_smells.py
+                ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    set_tests_properties(test_smells PROPERTIES LABELS "lint")
+endif()

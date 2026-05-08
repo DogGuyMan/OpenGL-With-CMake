@@ -1,4 +1,0 @@
-glBindBuffer()
-glBindVertexArray()
-glBindTexture()
-glBindFramebuffer()

@@ -14,9 +14,255 @@
 
 ---
 
-## Implementation Notes — 실측으로 발견된 함정 (Task 1-2 후 반영)
+## Implementation Notes — Plan 결함 누적 + 강화 (Task 1-7 진행 중 발견)
 
-> 본 plan을 Task 1-2 시점에 따라가던 중 발견된 *plan 자체의 결함* 수정 사항. Task 3 이후엔 본 섹션 따라 진행.
+> 본 plan을 Task 1-7 시점에 따라가던 중 발견된 결함 14개를 카테고리별로 정리. Task 8-9 이후 진행 시 *Pre-flight checklist* (§N0)를 먼저 체크. **각 결함마다 Task 번호 명시 — plan 신뢰도 추적용**.
+
+### N0. Pre-flight Checklist (각 Task 시작 시 확인)
+
+Task 1-7에서 *반복 발생*한 함정을 사전 차단:
+
+```
+□ CMakeLists.txt 편집 후 → cmake --build … --target tests (ALL 아님)
+□ 새 test executable 추가 시 → tests umbrella DEPENDS 목록에도 추가
+□ ctest 필터는 -R "<시나리오 이름 substring>" (태그 substring 아님)
+□ 신규 코드/케이스가 STATIC_REQUIRE 사용 시 → smell linter regex 갱신 확인
+□ macOS GL 3.3 core profile 가정 검증 (Retina, VAO=0 driver-dependent 등)
+□ Catch2 매크로(SECTION, REQUIRE_THROWS) 사용 시 → linter regex에 포함됐는지 확인
+□ 캡처 시점에 process-wide static 상태 누설 가능성 (UniformDiagnostics 등)
+□ Test program 핸들이 다른 테스트와 충돌하는지 (전역 static 사용 시)
+```
+
+---
+
+### 카테고리 A — CMake / 빌드 시스템 함정
+
+#### N1 [Task 1, 2, 3, 5, 6]: `cmake --build build_Darwin -j`만으로는 신규 add_executable이 ALL에 안 잡힘
+
+**증상**: `[100%] Built target OpenGL-With-CMake` 만 나오고 신규 testexe는 컴파일조차 안 됨. ctest는 placeholder `test_xxx_NOT_BUILT-XXXX` 만 봄.
+
+**원인**: 본 프로젝트의 ALL 타겟이 *기존 캐시된 타겟 목록*만 빌드. 새 add_executable이 ALL에 자동 편입 안 되는 CMake 캐시 동작.
+
+**해결 — 빌드 명령은 두 패턴 중 하나**:
+```bash
+# 패턴 A (권장): tests 우산 — 모든 테스트 포함
+cmake --build build_Darwin -j --target tests
+# 패턴 B: 특정 테스트만
+cmake --build build_Darwin -j --target test_<name>
+```
+
+**적용 완료**: plan의 모든 build 명령에 `--target tests` 명시 (13곳).
+
+#### N5 [Task 5, 6]: incremental build cache가 stale binary 유발
+
+**증상**: 헤더 변경 후 `cmake --build` 했는데 옛 동작이 그대로. `_NOT_BUILT-` placeholder가 ctest에 잔존.
+
+**원인**: CMake가 일부 변경(특히 test 시나리오 이름 변경)을 의존성 추적 못함. `touch`나 `cmake --preset debug` 재실행 필요.
+
+**해결 — 의심 시**:
+```bash
+touch <변경한 .cpp 파일>          # mtime 갱신 → 강제 recompile
+# 또는
+cmake --preset debug               # 재구성으로 의존성 그래프 갱신
+```
+
+**보강**: 사용자 [auto memory edit-tool-mtime-stale-binary](memory/) 정책과 정렬 — *동작 불일치 시 빌드 신선도 의심 우선*.
+
+#### N6 [Task 2, 5, 6]: Tests umbrella DEPENDS 목록 누락 누적
+
+**증상**: 신규 test_gl_state_capture / test_gl_state_log / test_gl_state_snapshot 추가 시 plan에 *"umbrella에 추가"* 명시했으나 사용자가 매번 확인 필요.
+
+**원인**: 각 Task의 CMake 수정 단계가 *executable 등록*과 *umbrella 등록*을 별개 step으로 분리하지 않음.
+
+**해결 — Pre-flight checklist에 명시 + Task 마지막 step에서 umbrella 확인 강제**.
+
+---
+
+### 카테고리 B — macOS GL 3.3 core profile 한계 (plan의 가정 오류)
+
+#### N7 [Task 2]: macOS Retina HiDPI → viewport 직접 비교 깨짐
+
+**증상**: `REQUIRE(f.viewport[2] == 256)` FAIL — actual 512.
+
+**원인**: GLFW logical 256×256 → physical framebuffer 512×512 (HiDPI 2x scaling). plan은 logical 좌표 가정.
+
+**해결 — plan 패턴 변경**: 절대값 비교 대신 *capture가 actual GL 상태를 반영*하는 형식:
+```cpp
+GLint actual_vp[4] = {};
+glGetIntegerv(GL_VIEWPORT, actual_vp);
+auto f = CaptureGLState();
+REQUIRE(f.viewport[2] == actual_vp[2]);  // 자체 일관성 검증
+REQUIRE(f.viewport[2] > 0);              // sanity
+```
+
+#### N8 [Task 2]: VAO=0 상태에서 attribute query는 driver-dependent
+
+**증상**: `REQUIRE(a.size == 4)` FAIL — actual 0. (plan은 GL spec default 4 가정)
+
+**원인**: macOS GL 3.3 core profile은 default VAO=0이 valid 하지 않음 → `glGetVertexAttribiv` 반환값이 driver-dependent.
+
+**해결**: VAO=0 케이스에서는 `enabled == false`만 안전 invariant. 다른 필드의 spec default 검증은 *VAO 바인딩 후* 별도 케이스로 분리.
+
+#### N9 [Task 2]: GL_FLOAT 타입의 normalized 플래그는 driver-dependent
+
+**증상**: `glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, ...)` 후 capture에서 `normalized = false`.
+
+**원인**: GL spec — "GL_FLOAT 타입에서는 normalized 플래그 ignored". Apple 구현은 false 반환.
+
+**해결**: normalized 검증은 정수 타입 (`GL_UNSIGNED_BYTE`, `GL_INT` 등)으로만. GL_FLOAT 케이스에서는 normalized 단언 X.
+
+---
+
+### 카테고리 C — ctest / Catch2 인터페이스 함정
+
+#### N2 [Task 1]: `-R` 정규식은 *태그*가 아니라 *Catch2 시나리오 이름* 매치
+
+**증상**: `-R "state_fields"` (태그 substring) → `No tests were found!!!`.
+
+**원인**: `catch_discover_tests`는 TEST_CASE 첫 번째 인자(시나리오 이름)을 ctest 이름으로 등록. 두 번째 인자(태그)는 ctest -R로 매치 안 됨.
+
+**해결**: 시나리오 이름의 substring 사용 (5곳 수정):
+
+| Task | 정규식 |
+|---|---|
+| 1 | `-R "SymbolicName"` |
+| 2 | `-R "CaptureGLState\|fresh fixture"` |
+| 4 | `-R "UniformDiagnostics"` |
+| 5 | `-R "GLStateLog\|FieldsToString"` |
+| 6 | `-R "Diff\|ToString\|snapshot"` |
+
+또는 *전체 실행*: `ctest --test-dir build_Darwin --output-on-failure`.
+
+#### N10 [Task 7]: smell linter regex가 `STATIC_REQUIRE`/`STATIC_CHECK` 누락 → false positive
+
+**증상**: `test_glfw_utils.cpp` (constexpr STATIC_REQUIRE 사용)에 R1 false positive 6건.
+
+**원인**: plan의 `ASSERT_RE`가 일반 `REQUIRE`/`CHECK`만 처리. compile-time 단언 매크로 누락.
+
+**해결**: regex에 `STATIC_REQUIRE(?:_FALSE)?|STATIC_CHECK(?:_FALSE)?` 추가.
+
+**교훈**: 새 Catch2 매크로 도입 시 linter regex 갱신 의무. Pre-flight checklist에 명시.
+
+---
+
+### 카테고리 D — Plan code 자체의 잘못된 가정
+
+#### N3 [Task 2]: Stub 상태 "Expected: FAIL" 설명이 부정확
+
+**증상**: Task 2 Step 3에서 5개 중 3 PASS / 2 FAIL (plan은 "결정성만 PASS, 나머지 FAIL" 모호 설명).
+
+**원인**: stub `CaptureGLState() { return {}; }`은 *아무 GL 호출도 안 함* → 부수효과 0 검증과 GL_NO_ERROR 검증이 *우연히* 통과.
+
+**해결 — Task 2 Step 3에 정확한 표 박음**:
+
+| 시나리오 | stub 결과 | 이유 |
+|---|---|---|
+| "결정성 — byte-equal" | **PASS** | 둘 다 default 반환 |
+| "부수효과 0" | **PASS** ⚠️ | GL 호출 안 함 (우연) |
+| "후 GL_NO_ERROR" | **PASS** ⚠️ | 동일 (우연) |
+| "fresh fixture default" | **FAIL** | viewport mismatch |
+| "VAO 바인딩 후 반영" | **FAIL** | f.vao=0, 실제 vao=1+ |
+
+**교훈**: stub이 *우연히 통과시킨* 케이스는 *진짜 회귀 감지력이 약한* 케이스라는 신호. Task 9 사보타지 드릴이 추적용.
+
+#### N11 [Task 5]: SymbolicName 사전에 vertex attribute type enum 9개 누락
+
+**증상**: `attrib[0]: vec3 0x1406, ...` (GL_FLOAT의 hex로 출력).
+
+**원인**: audit 트랙 A 추가 시 `attribute_layouts.type` 필드 추가했지만, 그 값을 `SymbolicName`이 처리하도록 사전 확장은 빼먹음. plan 자체의 누락.
+
+**해결**: SymbolicName에 9개 추가 — `GL_BYTE`, `GL_UNSIGNED_BYTE`, `GL_SHORT`, `GL_UNSIGNED_SHORT`, `GL_INT`, `GL_UNSIGNED_INT`, `GL_FLOAT`, `GL_DOUBLE`, `GL_HALF_FLOAT`. 사전 28 → **37개**.
+
+**교훈**: 새 enum field 추가 시 SymbolicName 사전 *체크리스트*가 동시에 갱신 필요. 한 곳에 박혀있는 enum이 다른 곳에서 raw hex로 새는지 확인.
+
+---
+
+### 카테고리 E — Audit 미흡 (외부 통증 분석 누락)
+
+#### N4 [Task 2 시점에 흡수]: BugReport + STUDY_NOTE 통증 5개 중 1.5개만 cover
+
+**증상**: 사용자가 audit 요청 → 11 카테고리 50+ 패턴 중 현재 plan은 attribute layout / uniform 값 누락 / shader version 등 중요 카테고리 미커버.
+
+**원인**: 본 plan의 spec 단계에서 BugReport.md / STUDY_NOTE.md 분석을 충분히 하지 않음.
+
+**해결 — 3 트랙 분류**:
+- **트랙 A (현재 plan 흡수)**: vertex attribute layout (카테고리 C) → GLStateFields::attribute_layouts 추가
+- **트랙 B (Task 5/6/9에 영향)**: FieldsToString·Diff·사보타지 드릴 갱신
+- **트랙 C (sibling spec 후보)**: shader, camera, uniform setter, C++ lifecycle, visual regression
+
+**적용 완료**: [bug-coverage-audit.md](bug-coverage-audit.md) 작성 + Task 1-2 자동 확장 + Task 5/6 audit 출력 흡수.
+
+---
+
+### 카테고리 F — Test 격리 / 결정성
+
+#### N12 [Task 4]: Process-wide static 상태가 테스트 간 누설
+
+**증상**: `UniformDiagnostics::warnedMissing/warnedTypeMismatch`가 `unordered_map` 전역 static. 같은 program 핸들을 여러 테스트가 쓰면 *후속 테스트에서 warn-once 잘못 동작*.
+
+**원인**: plan은 단순 `using SJH::Diagnostics::UniformDiagnostics;` 만 명시. 전역 static의 cross-test contamination 미인식.
+
+**해결 — Task 4 modified plan**:
+1. 각 TEST_CASE 시작/종료 시 `Invalidate(handle)` 호출 (정리)
+2. 테스트별 *unique* program 핸들 사용 (충돌 회피): 42→142, 99→199, 7→207
+
+**교훈**: 전역 static을 사용하는 production 모듈을 테스트할 때는 *fixture 또는 RAII 정리 메커니즘* 필요. Catch2의 `--order rand` 옵션 사용 시 더 중요.
+
+#### N13 [Task 4]: Test program 핸들 충돌
+
+**증상**: 기존 SUCCEED-only는 단언 없으니 충돌 무관. 행동 단언 도입 후 *test 1의 NotifyMissing(42)이 test 2의 NotifyMissing(42) silent로 만듦*.
+
+**원인**: N12와 동일 — plan의 핸들 선택이 충돌 회피 미고려.
+
+**해결 — 위와 동일 (unique 핸들 사용)**.
+
+---
+
+### 카테고리 G — 정책 / 워크플로우
+
+#### N14 [Task 3-7 진행 중]: Phase-implementation-mode + 명시 권한 부여 패턴
+
+**관찰**: 사용자 [auto memory phase-implementation-mode](memory/) 정책 ("Claude는 명시 요청 시 review/문제 발견만") + Task별 *"자동 진행해"* 권한 부여 = 하이브리드 워크플로우.
+
+**해결 — plan의 commit 정책**:
+- Plan이 권장 commit 메시지 박음, 단 *commit은 사용자 명시 요청 시에만 실행*.
+- "stage" 단계까지만 자동, `git commit` 자동 X.
+
+**교훈**: 정책 일반론 vs 그 자리 권한 부여를 구분. 사용자가 *"자동 진행"* 명시할 때마다 그 Task 한정으로 phase-mode override.
+
+---
+
+### 결함 → Task 매핑 표
+
+| Task | 발견된 결함 | 결과 |
+|---|---|---|
+| 1 | N1, N2 | -R / build target 정상화 |
+| 2 | N1, N3, N6, N7, N8, N9, N4 audit 흡수 | macOS 환경 적응 + audit 트랙 A 흡수 |
+| 3 | (없음 — STATIC lib만) | 깔끔 |
+| 4 | N12, N13 | 전역 static 누설 / handle 충돌 해소 |
+| 5 | N1, N5, N6, N11 | SymbolicName 사전 + umbrella 보강 |
+| 6 | N1, N5, N6 | umbrella 보강 |
+| 7 | N10 | STATIC_REQUIRE regex 보강 |
+
+**총 14 결함 / 7 카테고리 / 0 회귀** — 모든 결함이 plan에 흡수됨, 86/86 PASS 유지.
+
+---
+
+### audit 트랙 C (sibling spec 후보 — Task 9 완료 후 작성)
+
+본 plan 외에 BugReport + STUDY_NOTE 패턴 중 *다른 도구가 필요한* 카테고리:
+
+| 후보 spec | 잡는 카테고리 | 우선순위 |
+|---|---|---|
+| `2026-05-?-shader-source-static-checks-design.md` | A1 (GLSL #version), J (셰이더 내용) | 中 |
+| `2026-05-?-camera-math-unit-tests-design.md` | G (Camera/Matrix) | 高 |
+| `2026-05-?-uniform-setter-instrumentation-design.md` | D4/D5 (setter 호출 자체 검증) | 高 |
+| `2026-05-?-cpp-lifecycle-clang-tidy-design.md` | F (C++ lifecycle) | 中 |
+| `2026-05-?-visual-regression-track-b-design.md` | K (기하), J 시맨틱 | 高 |
+
+상세는 [bug-coverage-audit.md §3](bug-coverage-audit.md) 참조.
+
+
 
 ### N1: `cmake --build build_Darwin -j`만으로는 신규 테스트 executable이 안 빌드됨
 
@@ -1761,6 +2007,7 @@ git commit -m "test: drill record for CaptureGLState (sabotage 1/3)"
 | unknown enum → 사전 첫 entry 반환 (default fallback이 "GL_NEVER" 같은 식) | src/diagnostics/gl_state_fields.cpp SymbolicName의 hex fallback | test_gl_state_fields.cpp "미적중 → hex fallback" — `"0xDEAD"` 단언 깨짐 | (실측) | YYYY-MM-DD |
 | 결과 lowercase (`"gl_less"`) | snprintf 또는 case의 string lit 손상 | "사전 적중" — `Equals("GL_LESS")` 정확 매칭 깨짐 | (실측) | YYYY-MM-DD |
 | 사전에서 `case GL_LESS: return "GL_LESS";` 라인 삭제 | src/diagnostics/gl_state_fields.cpp | "사전 적중" + "depth_func 모든 8개" 둘 다 깨짐 | (실측) | YYYY-MM-DD |
+| **(N11 from §Implementation Notes)** vertex type case 삭제 (`case GL_FLOAT: return "GL_FLOAT";`) | src/diagnostics/gl_state_fields.cpp SymbolicName | test_gl_state_log.cpp "FieldsToString — attribute enabled 시 ..." → `0x1406` 출력으로 hex fallback. attribute layout 출력에서 type이 hex로 새는지 검증. | (실측) | YYYY-MM-DD |
 
 ## 결과 노트
 
@@ -1783,6 +2030,28 @@ git commit -m "test: drill record for CaptureGLState (sabotage 1/3)"
 ## 결과 노트
 
 (드릴 실행 후)
+```
+
+- [ ] **Step 5b: 컴포넌트 표 5 (신규) — `doc/test-quality-drill/smell_linter.md`**
+
+본 컴포넌트는 plan 후속 발견 (N10) 결과로 추가. smell linter 자체의 회귀 감지력 검증.
+
+```markdown
+# Sabotage Drill — Test Smell Linter (check_test_smells.py)
+
+> [메인 문서로](../test-quality-drill.md)
+
+| 사보타지 | 적용 위치 | 예상 잡는 케이스 / 절차 | 실제 | 드릴 날짜 |
+|---|---|---|---|---|
+| **(N10)** ASSERT_RE에서 `STATIC_REQUIRE\|STATIC_CHECK` alternation 삭제 | scripts/check_test_smells.py ASSERT_RE | `python3 scripts/check_test_smells.py test/` → test_glfw_utils.cpp에 R1 false positive 6건 발생 | (실측) | YYYY-MM-DD |
+| ASSERT_RE의 `REQUIRE` alternation 삭제 (가장 흔한 매크로 미감지) | 동상 | `python3 scripts/check_test_smells.py test/` → 거의 모든 테스트가 R1 false positive | (실측) | YYYY-MM-DD |
+| TEST_CASE_RE의 tag capture를 누락 (두 번째 인자 무시) | 동상 | 모든 TEST_CASE가 R3 (tag 누락)으로 false positive 생성 | (실측) | YYYY-MM-DD |
+
+## 결과 노트
+
+(드릴 실행 후)
+
+본 표는 *linter 자체의 회귀 감지*용. smell linter 코드를 수정할 때마다 본 드릴로 false positive 폭증이 없는지 검증.
 ```
 
 - [ ] **Step 6: stage**

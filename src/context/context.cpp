@@ -1,6 +1,7 @@
 #include "context.h"
 #include "buffer/buffer.h"
 #include "diagnostics/gl_log.h"
+#include "diagnostics/gl_state_log.h"   // Task 5 — Init() 끝에 1회 상태 덤프
 #include "layout/vertex_layout.h"
 #include "program/program_uniforms.h" // program.h 가 더 이상 transitive 제공 안 함
 #include <imgui.h>
@@ -364,6 +365,11 @@ namespace SJH
             //      glUniform1i(loc, i);
             Uniforms::SetInt(*mProgram.get(), texuniform.c_str(), i);
         }
+
+        // Init 끝 — VAO/VBO/EBO/program/textures 모두 설정 완료 시점의 *온전한 GL 상태* 1회 덤프.
+        // Render() 안에서 의도치 않은 상태 변화가 의심되면 본 baseline과 비교 가능.
+        // (매 프레임 호출 금지 — glGet* stall. Init() 1회 한정.)
+        Diagnostics::GLStateLog::Dump("Context::Init done");
 
         return true;
     }

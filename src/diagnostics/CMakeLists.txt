@@ -2,6 +2,7 @@ add_library(sjhopengl_diagnostics STATIC
     gl_log.cpp
     uniform_diagnostics.cpp
     gl_state_fields.cpp
+    gl_state_log.cpp
 )
 add_library(SJH::diagnostics ALIAS sjhopengl_diagnostics)
 

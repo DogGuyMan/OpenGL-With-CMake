@@ -43,6 +43,10 @@ namespace SJH
     void VertexLayout::Init()
     {
         glGenVertexArrays(1, &mVertexArrayObject);
+        // 누락 진단 적용 — buffer.cpp가 Gen/Bind/BufferData 모두 체크하는 것과 일관성 맞춤.
+        // n=1 고정이라 GL_INVALID_VALUE 발생할 일 거의 없지만, 다른 GLDebug 호출과의 *대칭성*이 더 큰 가치
+        // (smell linter가 호출 누락을 체크하기 어려운 영역에서 *눈으로 보이는 일관성*이 핵심).
+        Diagnostics::GLDebug::CheckGLGenVertexArrays();
         Bind();
     }
 

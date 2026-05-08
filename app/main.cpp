@@ -1,6 +1,7 @@
 #include "common/common.h"
 #include "config.h"
 #include "context/context.h"
+#include "diagnostics/gl_state_log.h"  // Task 5 도구 — 시작 시 GL 상태 1회 덤프 + auto-error 정책
 #include "input/glfw_input_utils.h"
 #include "object/camera.h"
 #include "program/program.h"
@@ -121,6 +122,15 @@ int main()
     // 4. OpenGL 버젼 출력
     auto glVersion = glGetString(GL_VERSION);
     spdlog::info("OpenGL context version: {}", reinterpret_cast<const char *>(glVersion));
+
+    // 4.1 시작 시점 GL 상태 1회 덤프 (Task 5 도구)
+    //     디버그 시 "초기 상태가 spec default와 일치하는지" 빠르게 확인 가능.
+    SJH::Diagnostics::GLStateLog::Dump("startup");
+
+    // 4.2 KHR_debug 콜백 자동 Dump 활성화 시도.
+    //     macOS GL 3.3 core profile은 KHR_debug 미지원 → 1회 warn 후 no-op (의도된 동작).
+    //     Windows/Linux/llvmpipe에서는 GL 에러 발생 시 자동 Dump.
+    SJH::Diagnostics::GLStateLog::EnableAutoOnError(true);
 
     auto imguiContext = ImGui::CreateContext();
     ImGui::SetCurrentContext(imguiContext);

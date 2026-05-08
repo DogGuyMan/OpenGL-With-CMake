@@ -9,6 +9,29 @@
 
 namespace SJH::Diagnostics
 {
+    /// 한 vertex attribute slot의 layout 상태. (audit 트랙 A 추가 — 카테고리 C 커버)
+    /// @details 현재 바인딩된 VAO의 slot당 설정. VAO=0일 때는 모두 default.
+    ///          @c glGetVertexAttribiv 로 조회하므로 부수효과 0.
+    /// @note    잡는 회귀: vec3 attribute에 size=2 설정(C2), stride 잘못 계산(C1),
+    ///          glEnableVertexAttribArray 누락(C4), wrong VBO binding(C3 등).
+    struct VertexAttribInfo
+    {
+        bool    enabled{false};         ///< GL_VERTEX_ATTRIB_ARRAY_ENABLED
+        GLint   size{4};                ///< GL_VERTEX_ATTRIB_ARRAY_SIZE (1, 2, 3, 4) — default 4
+        GLenum  type{GL_FLOAT};         ///< GL_VERTEX_ATTRIB_ARRAY_TYPE — default GL_FLOAT
+        bool    normalized{false};      ///< GL_VERTEX_ATTRIB_ARRAY_NORMALIZED
+        GLsizei stride{0};              ///< GL_VERTEX_ATTRIB_ARRAY_STRIDE
+        GLuint  buffer_binding{0};      ///< GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING (어느 VBO에서 오는지)
+
+        bool operator==(const VertexAttribInfo& o) const noexcept
+        {
+            return enabled == o.enabled && size == o.size && type == o.type
+                && normalized == o.normalized && stride == o.stride
+                && buffer_binding == o.buffer_binding;
+        }
+        bool operator!=(const VertexAttribInfo& o) const noexcept { return !(*this == o); }
+    };
+
     /// 한 시점의 GL 상태 스냅샷. log + snapshot 양쪽이 공유.
     struct GLStateFields
     {
@@ -42,6 +65,10 @@ namespace SJH::Diagnostics
 
         std::array<bool, 4> color_write_mask{true, true, true, true};
         std::array<GLfloat, 4> clear_color{0, 0, 0, 0};
+
+        /// Vertex Attribute layout per slot — GL 3.3 spec 상한 16.
+        /// (audit 트랙 A 추가 — bug-coverage-audit.md 카테고리 C 대응)
+        std::array<VertexAttribInfo, 16> attribute_layouts{};
     };
 
     /// 현재 GL 상태 캡처. 부수효과 0 (active_texture 저장→유닛 순회→복원).

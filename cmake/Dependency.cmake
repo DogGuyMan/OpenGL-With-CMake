@@ -37,3 +37,11 @@ find_package(glm CONFIG REQUIRED)
 # 다른 의존성과의 사용 일관성을 위해 INTERFACE 타겟 stb::stb 로 래핑.
 #   소비 측: target_link_libraries(<tgt> PRIVATE stb::stb)
 find_package(Stb REQUIRED)
+
+# Dear ImGui (with GLFW + OpenGL3 backends via vcpkg features)
+find_package(imgui CONFIG REQUIRED)
+# 타겟: imgui::imgui — backend 소스 포함된 단일 STATIC 라이브러리
+
+# ImGuizmo: 3D 변환 기즈모 (translation/rotation/scale) — imgui 의존
+find_package(imguizmo CONFIG REQUIRED)
+# 타겟: imguizmo::imguizmo — imgui::imgui 를 PUBLIC 으로 끌어오므로 imgui 별도 링크 불필요

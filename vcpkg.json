@@ -8,6 +8,14 @@
         "glad",
         "glm",
         "stb",
-        "catch2"
+        "catch2",
+        {
+            "name": "imgui",
+            "features": [
+                "glfw-binding",
+                "opengl3-binding"
+            ]
+        },
+        "imguizmo"
     ]
 }

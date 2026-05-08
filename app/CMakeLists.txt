@@ -16,6 +16,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glad::glad
     glm::glm
     fmt::fmt
+    imgui::imgui
+    imguizmo::imguizmo
     # 내부 모듈 (링크 시 include 경로 자동 전파)
     SJH::buffer
     SJH::object

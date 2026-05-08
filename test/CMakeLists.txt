@@ -118,6 +118,16 @@ target_link_libraries(test_texture PRIVATE
 target_compile_features(test_texture PRIVATE cxx_std_17)
 catch_discover_tests(test_texture)
 
+#  diagnostics 모듈 — GLStateFields::SymbolicName 정책 검증
+# GL context 불필요 (순수 함수).
+add_executable(test_gl_state_fields test_gl_state_fields.cpp)
+target_link_libraries(test_gl_state_fields PRIVATE
+    Catch2::Catch2WithMain
+    SJH::diagnostics
+)
+target_compile_features(test_gl_state_fields PRIVATE cxx_std_17)
+catch_discover_tests(test_gl_state_fields)
+
 # resources symlink (app/CMakeLists.txt 의 동일 패턴) — test_texture 가 컨테이너 이미지 접근.
 if(EXISTS ${CMAKE_SOURCE_DIR}/resources)
     if(WIN32)
@@ -146,6 +156,7 @@ add_custom_target(tests DEPENDS
     test_gl_fixture
     test_gl_debug
     test_uniform_diagnostics
+    test_gl_state_fields  # 추가
     test_program_uniforms
     test_buffer
     test_vertex_layout

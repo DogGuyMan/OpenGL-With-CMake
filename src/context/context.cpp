@@ -176,6 +176,8 @@ namespace SJH
                 ImGui::ColorEdit3("light color", glm::value_ptr(mLightColor));
                 ImGui::ColorEdit3("object color", glm::value_ptr(mObjectColor));
                 ImGui::SliderFloat("ambient strength", &mAmbientStrength, 0.0f, 1.0f);
+                ImGui::SliderFloat("specular strength", &mSpecularStrength, 0.0f, 1.0f);
+                ImGui::DragFloat("specular shininess", &mSpecularShininess, 1.0f, 1.0f, 256.0f);
             }
             ImGui::Checkbox("animation", &mAnimation);
             // 함수 하나가 UI component 하나에 대응
@@ -218,6 +220,9 @@ namespace SJH
             Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::value_ptr(glm::vec4(1.0f, 0.5f, 0.0f, 1.0f)));
             Uniforms::SetFloat(*mProgram.get(), "ambientStrength", mAmbientStrength);
             Uniforms::SetVec3(*mProgram.get(), "lightPos", glm::value_ptr(mLightPos));
+            Uniforms::SetVec3(*mProgram.get(), "viewPos", glm::value_ptr(mCamera.mPos));
+            Uniforms::SetFloat(*mProgram.get(), "specularStrength", mSpecularStrength);
+            Uniforms::SetFloat(*mProgram.get(), "specularShininess", mSpecularShininess);
 
             // 3. Uniform 전달
             for (size_t i = 0; i < cubePositions.size(); i++)
@@ -242,17 +247,27 @@ namespace SJH
             glm::mat4 lightModelTransform =
                 glm::translate(glm::mat4(1.0), mLightPos) *
                 glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
-            Uniforms::SetVec3(*mProgram.get(),"lightPos", glm::value_ptr(mLightPos));
-            Uniforms::SetVec3(*mProgram.get(),"lightColor", glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
-            Uniforms::SetVec4(*mProgram.get(),"baseColor",  glm::value_ptr(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)));
-            Uniforms::SetFloat(*mProgram.get(),"ambientStrength", 1.0f);
-            Uniforms::SetMat4(*mProgram.get(),"transformMat", glm::value_ptr(projMat * viewMat * lightModelTransform));
-            Uniforms::SetMat4(*mProgram.get(),"modelTransformMat", glm::value_ptr(lightModelTransform));
+
+            // ! 필요 없음 Uniforms::SetVec3(*mProgram.get(), "viewPos", glm::value_ptr(mCamera.mPos));
+            // ! 필요 없음 Uniforms::SetVec3(*mProgram.get(), "lightPos", glm::value_ptr(mLightPos));
+
+            // 라이트 큐브 = emissive=1 흉내. ambientStrength=1 + lightColor=white 로 white saturate 시켜
+            // diffuse / specular 항을 무력화한다. 따라서 그 항에만 들어가는
+            // viewPos / lightPos / specularStrength / specularShininess 는 출력에 영향이 없어 제거.
+            Uniforms::SetVec3(*mProgram.get(), "lightColor", glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
+            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::value_ptr(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)));
+            Uniforms::SetFloat(*mProgram.get(), "ambientStrength", 1.0f);
+            Uniforms::SetMat4(*mProgram.get(), "transformMat", glm::value_ptr(projMat * viewMat * lightModelTransform));
+            Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", glm::value_ptr(lightModelTransform));
+
+            // ! 필요 없음 Uniforms::SetFloat(*mProgram.get(), "specularStrength", mSpecularStrength);
+            // ! 필요 없음 Uniforms::SetFloat(*mProgram.get(), "specularShininess", mSpecularShininess);
+
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         }
 
-        glPointSize(50.0f);
-        glDrawArrays(GL_POINTS, 0, 1);
+        // glPointSize(50.0f);
+        // glDrawArrays(GL_POINTS, 0, 1);
     }
 
     bool Context::Init()
@@ -290,6 +305,10 @@ namespace SJH
         checkerImgPtr->SetCheckImage(16, 16);
         mRM->LoadTextureFromImage(checkerImgPtr.get());
 
+        auto whiteImgPtr = Image::Create("white", 32, 32);
+        whiteImgPtr->SetWhiteImage();
+        mRM->LoadTextureFromImage(whiteImgPtr.get());
+
         /*
         순서
             1. VAO
@@ -315,20 +334,24 @@ namespace SJH
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         // 3
-        {
-            // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
-            glActiveTexture(GL_TEXTURE0);
-            // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
-            mRM->LoadTextureWithName("checkerboard")
-                ->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
-        }
-        {
-            // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
-            glActiveTexture(GL_TEXTURE1);
-            // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
-            mRM->LoadTextureWithName("awesomeface")
-                ->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
-        }
+        // {
+        //     // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
+        //     glActiveTexture(GL_TEXTURE0);
+        //     // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
+        //     mRM->LoadTextureWithName("checkerboard")
+        //         ->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
+        // }
+        // {
+        //     // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
+        //     glActiveTexture(GL_TEXTURE1);
+        //     // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
+        //     mRM->LoadTextureWithName("awesomeface")
+        //         ->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
+        // }
+        glActiveTexture(GL_TEXTURE0);
+        mRM->LoadTextureWithName("white")->Bind();
+        glActiveTexture(GL_TEXTURE1);
+        mRM->LoadTextureWithName("white")->Bind();
 
         mProgram->Use();
 

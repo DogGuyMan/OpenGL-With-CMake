@@ -59,6 +59,7 @@ namespace SJH
         /// @brief 픽셀 채널 수 (1=R, 2=RG, 3=RGB, 4=RGBA).
         int GetChannelCount() const { return mChannelCount; }
         void SetCheckImage(int gridX, int gridY);
+        void SetWhiteImage();
 
     private:
         bool LoadWithStb(const std::string &filepath);

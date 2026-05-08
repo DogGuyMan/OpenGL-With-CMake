@@ -8,6 +8,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <cstring>
 #include <spdlog/spdlog.h>
 
 namespace SJH
@@ -98,5 +99,9 @@ namespace SJH
                     mImageDataPtr[3] = 255;
             }
         }
+    }
+    void Image::SetWhiteImage()
+    {
+        std::memset(mImageDataPtr, 255, mWidth * mHeight * mChannelCount);
     }
 }

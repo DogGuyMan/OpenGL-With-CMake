@@ -134,6 +134,8 @@ namespace SJH
         glm::vec3 mLightColor{glm::vec3(1.0f, 1.0f, 1.0f)};
         glm::vec3 mObjectColor{glm::vec3(1.0f, 0.5f, 0.0f)};
         float mAmbientStrength{0.1f};
+        float mSpecularStrength{0.5f};
+        float mSpecularShininess{32.0f};
     };
 }
 

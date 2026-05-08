@@ -16,7 +16,7 @@
  *  - **개발 중 디버깅**: 의심스러운 draw 직전 `Dump("after_camera_setup")` 한 줄.
  *  - **매 프레임 호출 금지** — `glGet*`이 GPU stall 유발.
  *
- * @see [doc/testplan/2026-05-07-gl-state-and-test-quality-design.md](../../doc/testplan/2026-05-07-gl-state-and-test-quality-design.md) §2.2
+ * @see `doc/testplan/2026-05-07-gl-state-and-test-quality-design.md` §2.2
  */
 
 #ifndef __SJH_DIAGNOSTICS_GL_STATE_LOG_H__

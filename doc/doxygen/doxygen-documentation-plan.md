@@ -40,7 +40,11 @@
 | **4** | `context` | program | ✅ 완료 | "Context 책임 분담" 설계 철학 보존 + 변환. 입력/카메라 추가는 Phase 7 에서. |
 | **5** | placeholder 모듈 | — | ⚠️ 의미 변화 | 본래 `buffer` / `layout` / `resource_management` placeholder 주석. **이후 모두 실제 활성 모듈로 승격** — Doxygen 주석은 각 헤더 자체에 작성됨 (Phase 7 의 §부록 참조). |
 | **6** | 다이어그램 + 페이지 | — | ✅ 완료 | Doxyfile 갱신 (HAVE_DOT 등) + `\page` 메인 + PlantUML |
-| **7** | `object/camera` + `context` 입력 위임 | program, glm | 🚧 진행 중 | Camera POD-like 상태 + Context 의 GLFW 콜백 위임 메서드들 Doxygen 작성. |
+| **7** | `object/camera` + `context` 입력 위임 | program, glm | ✅ 완료 | Camera POD-like 상태 + Context 의 GLFW 콜백 위임 메서드들 Doxygen 작성 (커밋 `3696136` 카메라 리팩토링까지 반영). |
+| **8** | VAO/VBO/EBO 정리 + ImGui/imguizmo 패키지 도입 | — | ✅ 완료 | 코드만 변경(헤더 영향 X) + `vcpkg.json` 의 imgui/imguizmo 를 `20-dependencies.md` 패키지 표 + 의존성 그래프에 반영. |
+| **9** | GL State 진단 인프라 (`GLStateFields`, `GLStateLog`) | diagnostics | ✅ 완료 | `gl_state_fields.h` 에 `@file` 헤더 보강(다른 진단 헤더와 톤 통일). `gl_state_log.h` 는 작성 시점부터 완전. 클래스 의존 그래프에 신규 클래스 1개 + struct 2개 추가. |
+| **10** | ImGui 컴포넌트 + Light + Specular | object, glm, imgui | ✅ 완료 | `context.h` 의 라이팅 멤버 9개 (`mClearColor` / `mAnimation` / `mLight*` / `mObjectColor` / `mAmbient*` / `mSpecular*`) Doxygen `///` 추가 + `light.h` placeholder 주석. |
+| **11** | 테스트 인프라 (`gl_state_snapshot`, `spdlog_capture`) + 사보타지 드릴 | diagnostics, Catch2 | ✅ 완료 | `test/support/*` 헤더는 작성 시점부터 완전 (`@file` + `@code` + `@see` 모두 보유). 추가 작업 없음. |
 
 ## 4. 비활성 모듈 처리 정책 (Phase 5 시점) — 현재는 *역사적 항목*
 

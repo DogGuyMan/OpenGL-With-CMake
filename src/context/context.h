@@ -125,16 +125,31 @@ namespace SJH
         /// @brief 카메라 상태(POD-like). View/Projection 행렬 산출 + 입력 메서드들이 직접 갱신.
         Camera mCamera;
 
-        // clear color
+        // === ImGui / 프레임 클리어 ===
+        /// @brief @c glClearColor 인자. ImGui ColorEdit3 위젯이 직접 갱신.
         glm::vec4 mClearColor{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
 
-        // Light
+        // === 라이팅 (Phong: ambient + diffuse + specular) ===
+        /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
         bool mAnimation{true};
+
+        /// @brief 점 광원 월드 좌표. ImGui DragFloat3 위젯이 갱신, 셰이더 uniform `lightPos` 로 전달.
         glm::vec3 mLightPos{glm::vec3(3.0f, 3.0f, 3.0f)};
+
+        /// @brief 점 광원 색상 (RGB, 0~1). 셰이더 uniform `lightColor`.
         glm::vec3 mLightColor{glm::vec3(1.0f, 1.0f, 1.0f)};
+
+        /// @brief 큐브 base 색상 (RGB, 0~1). 셰이더 uniform `objectColor`. 텍스처 미사용 fallback 용도.
         glm::vec3 mObjectColor{glm::vec3(1.0f, 0.5f, 0.0f)};
+
+        /// @brief Ambient 항 계수 (광원 무관 기본 밝기). 셰이더 uniform `ambientStrength`. 일반 범위 @c [0, 1].
         float mAmbientStrength{0.1f};
+
+        /// @brief Specular 항 계수 (스페큘러 하이라이트 강도). 셰이더 uniform `specularStrength`. 일반 범위 @c [0, 1].
         float mSpecularStrength{0.5f};
+
+        /// @brief Specular 항 지수 (하이라이트 *집중도* — 큰 값일수록 좁고 날카로움).
+        ///        셰이더 uniform `specularShininess`. 일반 범위 @c [2, 256], 기본 @c 32.
         float mSpecularShininess{32.0f};
     };
 }

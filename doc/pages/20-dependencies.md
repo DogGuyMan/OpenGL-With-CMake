@@ -13,6 +13,8 @@
 | **glad** | `glad` | `glad::glad` | OpenGL 함수 로더 — 모든 GL 모듈 |
 | **glm** | `glm` | `glm::glm` | 행렬/벡터 수학 — `Camera`, `Context`, `ResourceManagement` |
 | **stb** | `stb` | `${Stb_INCLUDE_DIR}` (헤더 only) | 이미지 디코딩 — `ResourceManagement` (PRIVATE) |
+| **ImGui** | `imgui[glfw-binding,opengl3-binding]` | `imgui::imgui` | 디버그 UI — `app/main.cpp` 가 GLFW + OpenGL3 바인딩으로 초기화. `Context` 의 라이팅 멤버 (`mLightPos`/`mObjectColor`/`mAmbient*` 등) 를 위젯으로 직접 편집. |
+| **ImGuizmo** | `imguizmo` | `imguizmo::imguizmo` | ImGui 위 좌표축 / 행렬 조작 위젯. 카메라/광원 transform gizmo 용 (Phase 10~). |
 | **Catch2** | `catch2` | `Catch2::Catch2WithMain` | 단위 테스트 (`test/`) |
 
 ## 의존성 그래프 (모듈 → 외부)
@@ -33,8 +35,16 @@ digraph DepGraph {
   subgraph cluster_external {
     label="외부 (vcpkg)";
     style=filled; fillcolor="#f0f0f0";
-    fmt; spdlog; glfw; glad; glm; stb; catch2;
+    fmt; spdlog; glfw; glad; glm; stb; catch2; imgui; imguizmo;
   }
+
+  // app 노드 (라이프 사이클 + ImGui 호스트)
+  app [shape=ellipse, style=filled, fillcolor="#fff7d6"];
+  app -> context;
+  app -> imgui;
+  app -> imguizmo;
+  app -> glfw;
+  app -> glad;
 
   common -> spdlog;
 

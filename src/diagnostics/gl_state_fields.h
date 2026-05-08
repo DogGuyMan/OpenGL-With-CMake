@@ -1,3 +1,34 @@
+/**
+ * @file gl_state_fields.h
+ * @brief 한 시점의 GL 상태(POD struct) + 캡처/포맷팅 자유 함수 — production / test 공유.
+ *
+ * @details
+ *  ### 책임 (Task 1 / audit 트랙 A)
+ *  - @c VertexAttribInfo — 한 vertex attribute slot 의 layout 상태 (size/type/stride/binding).
+ *  - @c GLStateFields — 한 시점의 GL 바인딩 + 픽셀 파이프라인 + viewport + attribute 배열 스냅샷.
+ *  - @c CaptureGLState — 부수효과 0 캡처 (active_texture 저장→유닛 순회→복원).
+ *  - @c SymbolicName — GLenum → 사람이 읽는 이름 (~28 사전 + GL_TEXTUREn 동적).
+ *  - @c FieldsToString — 멀티라인 포맷팅. enum 은 SymbolicName, GLuint 핸들은 raw (비대칭 정책).
+ *
+ *  ### 비-책임
+ *  - ❌ Production 측 디버깅 한 줄 덤프 — `gl_state_log.h` (Task 5).
+ *  - ❌ 테스트 측 RAII Snapshot + Diff — `test/support/gl_state_snapshot.h` (Task 6).
+ *  - ❌ 셰이더/uniform 진단 — `uniform_diagnostics.h`.
+ *
+ *  ### 비대칭 포맷팅 정책 (spec 2.3)
+ *  - enum 필드 (depth_func / blend_factor / cull_face_mode 등) → @c SymbolicName 적용.
+ *  - GLuint 핸들 (vao / program / buffer 등) → raw 정수.
+ *    이유: 핸들 식별자 자체에 의미가 없음, 테스트는 *어떤 객체가 바인딩됐는지* 가 아니라
+ *    *어떤 enum 정책이 활성인지* 를 단언해야 회귀 가시성이 큼.
+ *
+ *  ### bug-coverage-audit 카테고리 매핑
+ *  - 카테고리 C (vertex attribute layout 회귀): `attribute_layouts[]` 가 잡음.
+ *  - 카테고리 B (binding 회귀): `vao` / `array_buffer` / `element_buffer` / `program` 이 잡음.
+ *  - 카테고리 D (픽셀 파이프라인 회귀): `depth_*` / `blend_*` / `cull_*` / `color_write_mask` 가 잡음.
+ *
+ * @see `doc/testplan/2026-05-07-gl-state-and-test-quality-design.md` §2.1
+ */
+
 #ifndef __SJH_DIAGNOSTICS_GL_STATE_FIELDS_H__
 #define __SJH_DIAGNOSTICS_GL_STATE_FIELDS_H__
 

@@ -148,8 +148,11 @@ digraph ClassDependencyGraph {
 
   // 정적 진단 헬퍼 (인스턴스 없음, 모두 static)
   subgraph cluster_diag {
-    label="Diagnostics (static-only)"; style=dashed; color="#aaaaaa";
-    GLObjectLog; GLDebug; UniformDiagnostics;
+    label="Diagnostics (static-only + POD struct)"; style=dashed; color="#aaaaaa";
+    GLObjectLog; GLDebug; UniformDiagnostics; GLStateLog;
+    // POD struct (Phase 9) — 노드 모양 구분
+    GLStateFields    [shape=note];
+    VertexAttribInfo [shape=note];
   }
 
   // 자원 / 데이터
@@ -192,16 +195,22 @@ digraph ClassDependencyGraph {
   Program      -> UniformDiagnostics;
   Buffer       -> GLDebug;
   VertexLayout -> GLDebug;
+
+  // GL State 진단 (Phase 9) — Log → Fields → struct 종속
+  GLStateLog       -> GLStateFields    [label="CaptureGLState\nFieldsToString"];
+  GLStateFields    -> VertexAttribInfo [label="array<.., 16>"];
 }
 \enddot
 
 **범례**
 
-| 선 | 의미 |
+| 선 / 노드 | 의미 |
 |---|---|
 | 실선 | *소유* — 멤버 변수로 보유. 부모 소멸 시 자식도 소멸 (`UPtr` / value 멤버). |
 | 긴 점선 | *입력 의존* — 팩토리/생성자 인자. 수명 결합 없음. |
 | 짧은 점선 | *정적 호출* — 인스턴스 없이 free/static 함수만 사용. |
+| 사각 노드 | 클래스 (멤버 함수 + 캡슐화). |
+| 노트 모양 노드 | POD struct — 모든 필드 public, 동작 없음 (예: `GLStateFields`, `VertexAttribInfo`). |
 
 > 갱신 방법: 새 클래스를 추가했거나 멤버 구성이 바뀌면 `.claude/skills/doxygen-class-graph/` 의 절차를 따른다.
 

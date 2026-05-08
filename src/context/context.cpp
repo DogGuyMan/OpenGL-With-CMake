@@ -2,7 +2,7 @@
 #include "buffer/buffer.h"
 #include "diagnostics/gl_log.h"
 #include "layout/vertex_layout.h"
-#include "program/program_uniforms.h"   // program.h 가 더 이상 transitive 제공 안 함
+#include "program/program_uniforms.h" // program.h 가 더 이상 transitive 제공 안 함
 #include <spdlog/spdlog.h>
 
 namespace SJH
@@ -280,7 +280,7 @@ namespace SJH
         if (!mCamera.mIsCamControl)
             return;
         const float cameraSpeed = 0.05f;
-        const auto cameraFront = mCamera.GetFront();   // 매 프레임 1회만 계산 — 재사용
+        const auto cameraFront = mCamera.GetFront(); // 매 프레임 1회만 계산 — 재사용
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             mCamera.mPos += cameraSpeed * cameraFront;
@@ -305,7 +305,7 @@ namespace SJH
         mWidth = width;
         mHeight = height;
         glViewport(0, 0, mWidth, mHeight);
-        mCamera.SetAspect((float)width, (float)height);   // height==0 가드 내장
+        mCamera.SetAspect((float)width, (float)height); // height==0 가드 내장
     }
 
     void Context::MouseMove(double x, double y)
@@ -316,7 +316,7 @@ namespace SJH
         auto deltaPos = pos - mPrevMousePos;
 
         const float cameraRotSpeed = -0.1f;
-        mCamera.mEulerYaw   -= deltaPos.x * cameraRotSpeed;
+        mCamera.mEulerYaw -= deltaPos.x * cameraRotSpeed;
         mCamera.mEulerPitch -= deltaPos.y * cameraRotSpeed;
 
         if (mCamera.mEulerYaw < 0.0f)
@@ -334,10 +334,11 @@ namespace SJH
 
     void Context::MouseButton(int button, int action, double x, double y)
     {
-        const char* btnName = (button == GLFW_MOUSE_BUTTON_LEFT)   ? "LEFT"
-                            : (button == GLFW_MOUSE_BUTTON_RIGHT)  ? "RIGHT"
-                            : (button == GLFW_MOUSE_BUTTON_MIDDLE) ? "MIDDLE" : "OTHER";
-        const char* actName = (action == GLFW_PRESS) ? "PRESS" : "RELEASE";
+        const char *btnName = (button == GLFW_MOUSE_BUTTON_LEFT)     ? "LEFT"
+                              : (button == GLFW_MOUSE_BUTTON_RIGHT)  ? "RIGHT"
+                              : (button == GLFW_MOUSE_BUTTON_MIDDLE) ? "MIDDLE"
+                                                                     : "OTHER";
+        const char *actName = (action == GLFW_PRESS) ? "PRESS" : "RELEASE";
         spdlog::info("[MouseButton] {} {} at ({:.1f}, {:.1f})", btnName, actName, x, y);
 
         if (button == GLFW_MOUSE_BUTTON_LEFT)
@@ -362,7 +363,7 @@ namespace SJH
 
         // 카메라: z=3 위치에서 원점을 바라봄. 인자 없는 const 게터 — 멤버 직접 사용.
         auto viewMat = mCamera.GetForwardViewMatrix();
-        auto projMat = mCamera.GetProjMatrix();   // mAspect 멤버 사용 (Reshape 에서 갱신)
+        auto projMat = mCamera.GetProjMatrix(); // mAspect 멤버 사용 (Reshape 에서 갱신)
 
         glm::vec4 baseColor(t * t, 2.0f * t * (1.0f - t), (1.0f - t) * (1.0f - t), 1.0f);
 
@@ -413,6 +414,19 @@ namespace SJH
         glClearColor(0.0, 0.1f, 0.2f, 0.0f);
 
         mRM = ResourceManagement::CreateRM();
+        auto imagePtr1 = mRM->LoadImage("container", "./resources/texture/container.jpg");
+        if (imagePtr1 == nullptr)
+            return false;
+        mRM->LoadTextureFromImage(imagePtr1);
+
+        auto imagePtr2 = mRM->LoadImage("awesomeface", "./resources/texture/awesomeface.png");
+        if (imagePtr2 == nullptr)
+            return false;
+        mRM->LoadTextureFromImage(imagePtr2);
+
+        auto checkerImgPtr = Image::Create("checkerboard", 512, 512);
+        checkerImgPtr->SetCheckImage(16, 16);
+        mRM->LoadTextureFromImage(checkerImgPtr.get());
 
         /*
         순서
@@ -421,38 +435,23 @@ namespace SJH
             3. Vertex Attribute Setting
         */
 
+        // 1. VAO 사용할 buffer object는 vertex data를 저장할 용도
+        //      변경빈도(STATIC=한번 / DYNAMIC=자주 / STREAM=매프레임) x 용도(DRAW=앱-> GPU / READ=GPU -> 앱 / COPY=GPU <-> GPU)
         mVertexArrayObject = VertexLayout::Create();
-        mVertexArrayObject->Bind();
-
-        // === buffer object를 만든다 ===
-        // === 지금부터 사용할 buffer object를 지정한다. ===
-        // === 사용할 buffer object는 vertex data를 저장할 용도 ===
-        // === 변경빈도(STATIC=한번 / DYNAMIC=자주 / STREAM=매프레임) x 용도(DRAW=앱-> GPU / READ=GPU -> 앱 / COPY=GPU <-> GPU) ===
-        mVertexBufferObject = Buffer::CreateWithData( GL_ARRAY_BUFFER, GL_STATIC_DRAW,vertices, sizeof(vertices));
-        mElementBufferObject = Buffer::CreateWithData( GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,indices, sizeof(indices));
-
+        mVertexBufferObject = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices, sizeof(vertices));
         mVertexArrayObject->TrySetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
         mVertexArrayObject->TrySetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, sizeof(float) * 3);
         mVertexArrayObject->TrySetAttrib(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, sizeof(float) * 6);
 
-        auto imagePtr1 = mRM->LoadImage("container", "./resources/texture/container.jpg");
-        if (imagePtr1 == nullptr)
-            return false;
+        // 2.
+        mElementBufferObject = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices));
 
+        // VBO 및 버텍스 속성을 다 했으니 VBO와 VAO를 unbind한다.
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        auto imagePtr2 = mRM->LoadImage("awesomeface", "./resources/texture/awesomeface.png");
-        if (imagePtr2 == nullptr)
-            return false;
-
-        auto checkerImgPtr = Image::Create("checkerboard", 512, 512);
-        checkerImgPtr->SetCheckImage(16, 16);
-
-        mRM->LoadTextureFromImage(imagePtr1);
-        mRM->LoadTextureFromImage(imagePtr2);
-        mRM->LoadTextureFromImage(checkerImgPtr.get());
-
-        auto texturePtr = mRM->LoadTextureWithName("awesomeface");
-
+        // 3
         {
             // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
             glActiveTexture(GL_TEXTURE0);

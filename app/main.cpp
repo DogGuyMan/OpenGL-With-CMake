@@ -1,17 +1,24 @@
 #include "common/common.h"
 #include "config.h"
 #include "context/context.h"
-#include "object/camera.h"
 #include "input/glfw_input_utils.h"
+#include "object/camera.h"
 #include "program/program.h"
 #include "shader/shader.h"
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
 #include <glad/glad.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <spdlog/spdlog.h>
 
-void HandleKeyInput(GLFWwindow *window, int key, int scancode, int action, int mods)
+void OnKeyEvent(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
+    // GLFW 키 이벤트를 ImGui IO 로 포워딩.
+    // ImGui 측에서 io.KeysDown[] 와 modifier(Ctrl/Shift/Alt/Super) 상태를 갱신하므로
+    // InputText 입력 / Tab 포커싱 / 단축키(Ctrl+C 등) 가 정상 동작하려면 필수.
+    // 누락 시 ImGui 의 키보드 기반 위젯이 모두 무반응이 된다.
+    ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
     spdlog::info("key: {} ,scancode: {} ,action: {}, mods: {}{}{}",
                  key, scancode,
                  glfw_utils::ActionToString(action),
@@ -22,27 +29,49 @@ void HandleKeyInput(GLFWwindow *window, int key, int scancode, int action, int m
         glfwSetWindowShouldClose(window, true);
 }
 
-void HandleFramebufferSizeChange(GLFWwindow* window, int width, int height) {
+void OnFramebufferSizeChange(GLFWwindow *window, int width, int height)
+{
     SPDLOG_INFO("framebuffer size changed: ({} x {})", width, height);
     // glfwSetWindowUserPointer 에 세팅했던것을 가져오는것
-    auto context = (SJH::Context*)glfwGetWindowUserPointer(window);
+    auto context = (SJH::Context *)glfwGetWindowUserPointer(window);
     context->Reshape(width, height);
 }
 
-void HandleCursorPos(GLFWwindow* window, double x, double y) {
+void OnCharEvent(GLFWwindow *window, unsigned int ch)
+{
+    // OS의 IME/keymap 을 거쳐 변환된 유니코드 codepoint(`ch`)를 ImGui IO 큐에 push.
+    // KeyCallback 은 *가상 키 코드* 를 다루는 반면, 이쪽은 실제 *입력된 글자* 를 다루는 별도 채널.
+    // InputText 위젯에 글자가 실제로 찍히려면 이 콜백이 반드시 ImGui 로 전달돼야 한다.
+    ImGui_ImplGlfw_CharCallback(window, ch);
+}
+
+void OnCursorPos(GLFWwindow *window, double x, double y)
+{
     // glfwSetWindowUserPointer 에 세팅했던것을 가져오는것
-    auto context = (SJH::Context*)glfwGetWindowUserPointer(window);
+    auto context = (SJH::Context *)glfwGetWindowUserPointer(window);
     context->MouseMove(x, y);
 }
 
-void HandleMouseButton(GLFWwindow* window, int button, int action, int modifier) {
+void OnMouseButton(GLFWwindow *window, int button, int action, int modifier)
+{
+    // GLFW 마우스 버튼 PRESS/RELEASE 를 ImGui IO 의 io.MouseDown[] 에 반영.
+    // 이 한 줄로 ImGui 가 "지금 자기 위젯 위에서 클릭이 일어났는지" 를 인지하고
+    // io.WantCaptureMouse / 위젯 활성·드래그 시작·종료 판단의 근거를 만든다.
+    // 누락 시 슬라이더 / 버튼 / ColorEdit 등 모든 ImGui 위젯이 클릭에 반응하지 않는다.
+    ImGui_ImplGlfw_MouseButtonCallback(window, button, action, modifier);
     // glfwSetWindowUserPointer 에 세팅했던것을 가져오는것
-    auto context = (SJH::Context*)glfwGetWindowUserPointer(window);
+    auto context = (SJH::Context *)glfwGetWindowUserPointer(window);
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     context->MouseButton(button, action, x, y);
 }
 
+void OnScroll(GLFWwindow *window, double xoffset, double yoffset)
+{
+    // 휠 / 트랙패드 스크롤 오프셋을 ImGui IO 의 io.MouseWheel(수직), io.MouseWheelH(수평) 에 누적.
+    // DragFloat 휠 미세조정 / 스크롤 영역 / ListBox / Combo 펼침 휠 이동 등이 동작하려면 필수.
+    ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+}
 
 int main()
 {
@@ -93,6 +122,13 @@ int main()
     auto glVersion = glGetString(GL_VERSION);
     spdlog::info("OpenGL context version: {}", reinterpret_cast<const char *>(glVersion));
 
+    auto imguiContext = ImGui::CreateContext();
+    ImGui::SetCurrentContext(imguiContext);
+    ImGui_ImplGlfw_InitForOpenGL(window, false);
+    ImGui_ImplOpenGL3_Init();
+    ImGui_ImplOpenGL3_CreateFontsTexture();
+    ImGui_ImplOpenGL3_CreateDeviceObjects();
+
     // 5. 윈도우 유저 인풋 핸들링 바인드
     auto context = SJH::Context::Create();
     if (!context)
@@ -108,20 +144,22 @@ int main()
     // 나중에 가져올때는 캐스팅을 통해 가져온다.
     glfwSetWindowUserPointer(window, context.get());
 
-    HandleFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glfwSetFramebufferSizeCallback(window, HandleFramebufferSizeChange);
-    glfwSetKeyCallback(window, HandleKeyInput);
-    glfwSetCursorPosCallback(window, HandleCursorPos);
-    glfwSetMouseButtonCallback(window, HandleMouseButton);
+    OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
+    glfwSetKeyCallback(window, OnKeyEvent);
+    glfwSetCharCallback(window, OnCharEvent);
+    glfwSetCursorPosCallback(window, OnCursorPos);
+    glfwSetMouseButtonCallback(window, OnMouseButton);
+    glfwSetScrollCallback(window, OnScroll);
 
     // 6. GLFW 루프 시작, 윈도우 close 버튼을 누르면 루프 종료
     spdlog::info("GLFW 메인 루프 시작");
     while (!glfwWindowShouldClose(window))
     {
-        // TODO 윈도우의 크기가 변경되었을 때
-        // TODO 윈도우에 마우스 입력이 들어왔을 때
-        // TODO 윈도우에 키보드 입력이 들어왔을 때
-        // TODO 콜백 수행부
+        // 유저 인풋 폴링
+        glfwPollEvents();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
         // 렌더링
         context->ProcessInput(window);
@@ -134,11 +172,16 @@ int main()
         3. front와 back을 바꿔치기
         4. 위의 과정을 반복
         */
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
-        // 유저 인풋 폴링
-        glfwPollEvents();
     }
     context.reset();
+
+    ImGui_ImplOpenGL3_DestroyFontsTexture();
+    ImGui_ImplOpenGL3_DestroyDeviceObjects();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext(imguiContext);
 
     spdlog::info("GLFW 종료");
     glfwDestroyWindow(window);

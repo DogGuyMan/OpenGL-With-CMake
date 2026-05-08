@@ -3,6 +3,7 @@
 #include "diagnostics/gl_log.h"
 #include "layout/vertex_layout.h"
 #include "program/program_uniforms.h" // program.h 가 더 이상 transitive 제공 안 함
+#include <imgui.h>
 #include <spdlog/spdlog.h>
 
 namespace SJH
@@ -15,245 +16,52 @@ namespace SJH
      *
      *********************************************************************************/
     // 엥? 교안 CW 배치네..
+
+    // clang-format off
     float vertices[] = {
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        0.0f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        0.0f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        1.0f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        1.0f,
-
-        -0.5f,
-        -0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        0.0f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        0.0f,
-        0.5f,
-        0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        1.0f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        1.0f,
-
-        -0.5f,
-        0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        0.0f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        1.0f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        1.0f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        0.0f,
-
-        0.5f,
-        0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        0.0f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        0.0f,
-
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        0.0f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        0.0f,
-
-        -0.5f,
-        0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        1.0f,
-        0.0f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        1.0,
-        1.0,
-        1.0,
-        0.0f,
-        0.0f,
+        // position(x, y, z)   normal(nx, ny, nz)   color(r, g, b)       uv(u, v)
+        // -- back face (z = -0.5, normal -Z) --
+        -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        // -- front face (z = +0.5, normal +Z) --
+        -0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        // -- left face (x = -0.5, normal -X) --
+        -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
+        // -- right face (x = +0.5, normal +X) --
+         0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
+        // -- bottom face (y = -0.5, normal -Y) --
+        -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
+        // -- top face (y = +0.5, normal +Y) --
+        -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
     };
 
     // ! ⭐️ 제발 인덱스 버퍼는 GLuint로 두자 ⭐️
     uint32_t indices[] = {
-        0,
-        2,
-        1,
-        2,
-        0,
-        3,
-        4,
-        5,
-        6,
-        6,
-        7,
-        4,
-        8,
-        9,
-        10,
-        10,
-        11,
-        8,
-        12,
-        14,
-        13,
-        14,
-        12,
-        15,
-        16,
-        17,
-        18,
-        18,
-        19,
-        16,
-        20,
-        22,
-        21,
-        22,
-        20,
-        23,
+         0,  2,  1,    2,  0,  3,   // back
+         4,  5,  6,    6,  7,  4,   // front
+         8,  9, 10,   10, 11,  8,   // left
+        12, 14, 13,   14, 12, 15,   // right
+        16, 17, 18,   18, 19, 16,   // bottom
+        20, 22, 21,   22, 20, 23,   // top
     };
+    // clang-format on
 
     std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -275,6 +83,7 @@ namespace SJH
             return nullptr;
         return std::move(context);
     }
+
     void Context::ProcessInput(GLFWwindow *window)
     {
         if (!mCamera.mIsCamControl)
@@ -341,7 +150,7 @@ namespace SJH
         const char *actName = (action == GLFW_PRESS) ? "PRESS" : "RELEASE";
         spdlog::info("[MouseButton] {} {} at ({:.1f}, {:.1f})", btnName, actName, x, y);
 
-        if (button == GLFW_MOUSE_BUTTON_LEFT)
+        if (button == GLFW_MOUSE_BUTTON_RIGHT)
         {
             if (action == GLFW_PRESS)
             {
@@ -359,6 +168,28 @@ namespace SJH
 
     void Context::Render()
     {
+        if (ImGui::Begin("ui window"))
+        {
+            // 함수 하나가 UI component 하나에 대응
+            // 리턴 값이 true인 경우 해당 UI가 조작되었음을 의미
+            // UI 조작 이벤트에 대한 액션 로직을 if으로 작성할 수 있음
+            if (ImGui::ColorEdit4("clear color", glm::value_ptr(mClearColor)))
+            {
+                glClearColor(mClearColor.r, mClearColor.g, mClearColor.b, mClearColor.a);
+            }
+            ImGui::Separator();
+            ImGui::DragFloat3("camera pos", glm::value_ptr(mCamera.mPos), 0.01f);
+            ImGui::DragFloat("camera yaw", &mCamera.mEulerYaw, 0.5f);
+            ImGui::DragFloat("camera pitch", &mCamera.mEulerPitch, 0.5f, -89.0f, 89.0f);
+            ImGui::Separator();
+            if (ImGui::Button("reset camera"))
+            {
+                mCamera.mEulerYaw = 0.0f;
+                mCamera.mEulerPitch = 0.0f;
+                mCamera.mPos = glm::vec3(0.0f, 0.0f, 3.0f);
+            }
+        }
+        ImGui::End();
         float t = sinf((float)glfwGetTime()) * 0.5f + 0.5f;
 
         // 카메라: z=3 위치에서 원점을 바라봄. 인자 없는 const 게터 — 멤버 직접 사용.
@@ -439,17 +270,18 @@ namespace SJH
         //      변경빈도(STATIC=한번 / DYNAMIC=자주 / STREAM=매프레임) x 용도(DRAW=앱-> GPU / READ=GPU -> 앱 / COPY=GPU <-> GPU)
         mVertexArrayObject = VertexLayout::Create();
         mVertexBufferObject = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices, sizeof(vertices));
-        mVertexArrayObject->TrySetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
-        mVertexArrayObject->TrySetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, sizeof(float) * 3);
-        mVertexArrayObject->TrySetAttrib(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, sizeof(float) * 6);
+        mVertexArrayObject->TrySetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, 0);
+        mVertexArrayObject->TrySetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, sizeof(float) * 3);
+        mVertexArrayObject->TrySetAttrib(2, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, sizeof(float) * 6);
+        mVertexArrayObject->TrySetAttrib(3, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 11, sizeof(float) * 9);
 
         // 2.
         mElementBufferObject = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices));
 
         // VBO 및 버텍스 속성을 다 했으니 VBO와 VAO를 unbind한다.
-		glBindVertexArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         // 3
         {

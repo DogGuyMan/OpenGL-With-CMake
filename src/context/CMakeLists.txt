@@ -18,6 +18,7 @@ target_link_libraries(sjhopengl_context
             glad::glad
             glm::glm
             glfw
+            imgui::imgui
     PRIVATE SJH::diagnostics
 )
 

@@ -14,6 +14,65 @@
 
 ---
 
+## Implementation Notes — 실측으로 발견된 함정 (Task 1-2 후 반영)
+
+> 본 plan을 Task 1-2 시점에 따라가던 중 발견된 *plan 자체의 결함* 수정 사항. Task 3 이후엔 본 섹션 따라 진행.
+
+### N1: `cmake --build build_Darwin -j`만으로는 신규 테스트 executable이 안 빌드됨
+
+**증상**: Task 1/2의 Step "빌드 + 테스트" 실행 시 출력에 `[100%] Built target OpenGL-With-CMake` 만 나오고 신규 `test_xxx` executable은 *컴파일조차 안 됨*. ctest는 placeholder `test_xxx_NOT_BUILT-XXXX` 만 봄.
+
+**원인**: 본 프로젝트의 ALL 타겟은 *기존 캐시된 타겟 목록*만 빌드. 새 add_executable이 ALL에 자동 편입 안 되는 CMake 캐시 동작.
+
+**해결 — 본 plan의 모든 빌드 명령은 다음 두 패턴 중 하나 사용**:
+
+```bash
+# 패턴 A (권장): tests 우산 타겟 — 모든 테스트 포함
+cmake --build build_Darwin -j --target tests
+
+# 패턴 B (특정 테스트만 빠르게): 대상 테스트 명시
+cmake --build build_Darwin -j --target test_<name>
+```
+
+→ Task 3 이후 모든 Step의 빌드 명령은 `--target tests`로 통일. 그래서 매 Task의 CMakeLists.txt 편집 시 *반드시* `tests` umbrella 의 DEPENDS 목록에 새 테스트를 추가해야 함 (이미 plan에 명시됨, 빠뜨리면 안 됨).
+
+### N2: ctest `-R` 정규식은 *태그*가 아니라 *Catch2 시나리오 이름*을 매치
+
+**증상**: `-R "state_fields"` (태그 substring) 실행 시 `No tests were found!!!`.
+
+**원인**: `catch_discover_tests`는 TEST_CASE의 *첫 번째 인자*(시나리오 이름)을 ctest 이름으로 등록. `[diagnostics][state_fields]` 같은 *두 번째 인자*(태그)는 ctest -R로 매치 안 됨.
+
+**해결**: 시나리오 이름의 substring을 사용. 본 plan의 `-R` 정규식 5곳 이미 수정 완료:
+
+| Task | 정규식 |
+|---|---|
+| 1 | `-R "SymbolicName"` |
+| 2 | `-R "CaptureGLState\|fresh fixture"` |
+| 4 | `-R "UniformDiagnostics"` |
+| 5 | `-R "GLStateLog"` |
+| 6 | `-R "Diff\|ToString"` |
+
+또는 *전체 실행* (`-R` 생략):
+```bash
+ctest --test-dir build_Darwin --output-on-failure
+```
+신규 케이스만 보고 싶으면:
+```bash
+ctest --test-dir build_Darwin --output-on-failure | grep -E "(SymbolicName|CaptureGLState|UniformDiagnostics|GLStateLog|Diff|ToString|FAIL|Pass)"
+```
+
+### N3: Stub 상태의 "Expected: FAIL" 설명이 부정확 — *부수효과 0인 stub*은 우연히 PASS
+
+**증상**: Task 2 Step 3에서 *stub 상태로 ctest 실행 시 5개 중 3개가 PASS, 2개만 FAIL*.
+
+**원인**: stub `CaptureGLState() { return {}; }`은 *아무 GL 호출도 안 함* → 부수효과 0 검증과 GL_NO_ERROR 검증이 *우연히* 통과. 실제로 *capture가 작동해야 잡히는* 검증은 "fresh fixture default"(viewport 비교)와 "VAO 바인딩 후 반영"(handle 비교) 두 케이스.
+
+**해결**: 본 plan의 Task 2 Step 3 Expected 설명 수정 (아래 Task 2 §). 이 비대칭은 plan 결함이지만 *학습 가치*: stub이 통과시키는 케이스는 *진짜 회귀 감지력이 약한* 케이스라는 신호. Task 9 사보타지 드릴이 이 같은 blind spot을 찾는 절차.
+
+→ Task 3 이후 모든 *FAIL 기대* Step에서 "stub이 무엇을 우연 통과시킬 수 있는지" 명시적으로 점검 후 진행.
+
+---
+
 ## File Structure (산출물 매핑)
 
 ```
@@ -320,10 +379,12 @@ add_custom_target(tests DEPENDS
 
 - [ ] **Step 6: 빌드 + 테스트 실행 → PASS 확인**
 
-Run: `cmake --build build_Darwin -j && ctest --test-dir build_Darwin --output-on-failure -R "SymbolicName"`
+Run: `cmake --build build_Darwin -j --target tests && ctest --test-dir build_Darwin --output-on-failure -R "SymbolicName"`
 Expected: 5개 케이스 모두 PASS.
 
-> **주의**: `-R`은 ctest **테스트 이름**(=Catch2 시나리오명)을 매치합니다. `[state_fields]` 같은 *태그*는 매치 안 됨. 시나리오명에 들어있는 문자열을 써야 합니다. 모든 시나리오를 한 번에 보고 싶으면 `-R` 생략하고 `ctest --test-dir build_Darwin --output-on-failure` (전체 실행).
+> **주의** (자세한 근거는 상단 N1, N2 참조):
+> - 빌드: `--target tests` 명시 필수 (그냥 `-j` 만으로는 신규 testexe가 ALL에 안 잡힘)
+> - `-R`: ctest **테스트 이름**(=Catch2 시나리오명)을 매치. 태그는 매치 안 됨.
 
 - [ ] **Step 7: stage (commit은 사용자 명시 요청 시)**
 
@@ -460,10 +521,21 @@ catch_discover_tests(test_gl_state_capture)
 
 `tests` umbrella에도 `test_gl_state_capture` 추가.
 
-- [ ] **Step 3: 빌드 + 테스트 → FAIL 확인** (CaptureGLState가 stub이라 모두 0 반환)
+- [ ] **Step 3: 빌드 + 테스트 → 일부 FAIL 확인** (CaptureGLState 가 stub이라 default 반환)
 
-Run: `cmake --build build_Darwin -j && ctest --test-dir build_Darwin --output-on-failure -R "CaptureGLState|fresh fixture"`
-Expected: "결정성"은 PASS 가능 (둘 다 stub default 반환), 나머지는 FAIL.
+Run: `cmake --build build_Darwin -j --target tests && ctest --test-dir build_Darwin --output-on-failure -R "CaptureGLState|fresh fixture"`
+
+**정확한 기대 결과 — 5개 중 3 PASS / 2 FAIL** (N3 항목 참조):
+
+| 시나리오 | stub 결과 | 이유 |
+|---|---|---|
+| "결정성 — byte-equal" | **PASS** | stub은 둘 다 default 반환 → 동일 |
+| "부수효과 0 — active_texture" | **PASS** ⚠️ | stub은 GL 호출 안 함 → 부수효과도 0 (우연) |
+| "후 GL_NO_ERROR" | **PASS** ⚠️ | stub은 GL 호출 안 함 → 에러 0 (우연) |
+| "fresh fixture default" | **FAIL** | viewport={0,0,0,0} ≠ {0,0,256,256} |
+| "VAO 바인딩 후 반영" | **FAIL** | f.vao=0, 실제 vao=1+ |
+
+⚠️ 표시는 *stub이 우연 통과시킨* 케이스 — 실제 회귀 감지력이 약한 부분이라는 신호. Task 9 사보타지 드릴이 이런 blind spot 추적용.
 
 - [ ] **Step 4: 구현 작성** — `src/diagnostics/gl_state_fields.cpp`의 `CaptureGLState` stub을 다음으로 교체
 
@@ -533,10 +605,10 @@ GLStateFields CaptureGLState()
 }
 ```
 
-- [ ] **Step 5: 빌드 + 테스트 → PASS 확인**
+- [ ] **Step 5: 빌드 + 테스트 → 5/5 PASS 확인**
 
-Run: `cmake --build build_Darwin -j && ctest --test-dir build_Darwin --output-on-failure -R "CaptureGLState|fresh fixture"`
-Expected: 5개 케이스 모두 PASS.
+Run: `cmake --build build_Darwin -j --target tests && ctest --test-dir build_Darwin --output-on-failure -R "CaptureGLState|fresh fixture"`
+Expected: 5개 케이스 모두 PASS (이전 stub 상태에서 FAIL이었던 "fresh fixture default"와 "VAO 바인딩 후 반영"이 GREEN으로 전환).
 
 - [ ] **Step 6: stage**
 
@@ -796,7 +868,7 @@ TEST_CASE("UniformDiagnostics::Invalidate 멱등 + Invalidate 후 재발 가능"
 
 - [ ] **Step 6: 빌드 + 테스트 → PASS 확인**
 
-Run: `cmake --build build_Darwin -j && ctest --test-dir build_Darwin --output-on-failure -R "UniformDiagnostics"`
+Run: `cmake --build build_Darwin -j --target tests && ctest --test-dir build_Darwin --output-on-failure -R "UniformDiagnostics"`
 Expected: 3개 케이스 모두 PASS.
 
 - [ ] **Step 7: stage**
@@ -1054,7 +1126,7 @@ catch_discover_tests(test_gl_state_log)
 
 - [ ] **Step 6: 빌드 + 테스트 → PASS 확인**
 
-Run: `cmake --build build_Darwin -j && ctest --test-dir build_Darwin --output-on-failure -R "GLStateLog"`
+Run: `cmake --build build_Darwin -j --target tests && ctest --test-dir build_Darwin --output-on-failure -R "GLStateLog"`
 Expected: 3개 케이스 모두 PASS.
 
 - [ ] **Step 7: stage**
@@ -1365,7 +1437,7 @@ catch_discover_tests(test_gl_state_snapshot)
 
 - [ ] **Step 5: 빌드 + 테스트 → PASS 확인**
 
-Run: `cmake --build build_Darwin -j && ctest --test-dir build_Darwin --output-on-failure -R "Diff|ToString"`
+Run: `cmake --build build_Darwin -j --target tests && ctest --test-dir build_Darwin --output-on-failure -R "Diff|ToString"`
 Expected: 8개 케이스 모두 PASS.
 
 - [ ] **Step 6: stage**
@@ -1536,7 +1608,7 @@ endif()
 
 - [ ] **Step 4: ctest 통합 검증**
 
-Run: `cmake --build build_Darwin -j && ctest --test-dir build_Darwin --output-on-failure -R "test_smells"`
+Run: `cmake --build build_Darwin -j --target tests && ctest --test-dir build_Darwin --output-on-failure -R "test_smells"`
 Expected: PASS (또는 warning 출력 + PASS).
 
 - [ ] **Step 5: stage**
@@ -1591,7 +1663,7 @@ git stash --include-untracked
 
 # 2. 한 사보타지씩 손으로 적용
 $EDITOR src/diagnostics/gl_state_fields.cpp  # 표의 사보타지 1번을 직접 적용
-cmake --build build_Darwin -j
+cmake --build build_Darwin -j --target tests
 ctest --test-dir build_Darwin --output-on-failure
 # → 결과 기록 (어느 케이스가 FAIL했는지)
 
@@ -1752,7 +1824,7 @@ glGetIntegerv(GL_CURRENT_PROGRAM,      &tmp); f.program = ...
 의 두 줄을 swap. (vao에 program이 들어가고 vice versa)
 
 ```bash
-cmake --build build_Darwin -j
+cmake --build build_Darwin -j --target tests
 ctest --test-dir build_Darwin --output-on-failure -R "capture"
 # Expected: ≥1 FAIL — "fresh fixture default" 또는 "VAO 바인딩 후 fields.vao 반영"
 # 결과 기록 → doc/test-quality-drill/gl_state_capture.md 표의 "실제 잡힌 케이스"
@@ -1767,7 +1839,7 @@ ctest --test-dir build_Darwin --output-on-failure -R "capture"
 `src/diagnostics/gl_state_fields.cpp`의 텍스처 순회 `for (int i = 0; i < 16; ++i)`를 `for (int i = 0; i < 1; ++i)`로 변경.
 
 ```bash
-cmake --build build_Darwin -j
+cmake --build build_Darwin -j --target tests
 ctest --test-dir build_Darwin --output-on-failure -R "capture"
 # Expected: 잡힐 가능성 — fresh fixture에서 모든 unit이 0이라면 *잡히지 않음*.
 # 잡히지 않으면 → "blind spot" 발견 → 케이스 추가 후 재드릴.
@@ -1781,7 +1853,7 @@ git checkout -- src/diagnostics/gl_state_fields.cpp
 `src/diagnostics/gl_state_fields.cpp`의 `glActiveTexture(static_cast<GLenum>(saved_active));` 라인 삭제 또는 주석 처리.
 
 ```bash
-cmake --build build_Darwin -j
+cmake --build build_Darwin -j --target tests
 ctest --test-dir build_Darwin --output-on-failure -R "capture"
 # Expected: "부수효과 0 — active_texture 변하지 않음" FAIL.
 

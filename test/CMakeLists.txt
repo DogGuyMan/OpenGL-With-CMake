@@ -128,6 +128,16 @@ target_link_libraries(test_gl_state_fields PRIVATE
 target_compile_features(test_gl_state_fields PRIVATE cxx_std_17)
 catch_discover_tests(test_gl_state_fields)
 
+#  diagnostics 모듈 — CaptureGLState (GL context 필요)
+add_executable(test_gl_state_capture test_gl_state_capture.cpp)
+target_link_libraries(test_gl_state_capture PRIVATE
+    Catch2::Catch2WithMain
+    gl_test_fixture
+    SJH::diagnostics
+)
+target_compile_features(test_gl_state_capture PRIVATE cxx_std_17)
+catch_discover_tests(test_gl_state_capture)
+
 # resources symlink (app/CMakeLists.txt 의 동일 패턴) — test_texture 가 컨테이너 이미지 접근.
 if(EXISTS ${CMAKE_SOURCE_DIR}/resources)
     if(WIN32)

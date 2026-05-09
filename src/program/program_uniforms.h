@@ -42,6 +42,9 @@
 #define __SJH_PROGRAM_UNIFORMS_H__
 
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace SJH
 {
@@ -66,12 +69,12 @@ namespace SJH
         void Forget(GLuint programId);
 
         // --- setter family — 캐시 히트 시 lookup 비용 0. 미존재 이름은 첫 호출 1회 warn ---
-        void SetMat4 (Program &prog, const char *name, const float *mat4); ///< GL_FLOAT_MAT4
-        void SetVec4 (Program &prog, const char *name, const float *v4);   ///< GL_FLOAT_VEC4
-        void SetVec3 (Program &prog, const char *name, const float *v3);   ///< GL_FLOAT_VEC3
-        void SetVec2 (Program &prog, const char *name, const float *v2);   ///< GL_FLOAT_VEC2
-        void SetFloat(Program &prog, const char *name, float v);           ///< GL_FLOAT
-        void SetInt  (Program &prog, const char *name, int v);             ///< GL_INT / GL_SAMPLER_*
+        void SetMat4 (Program &prog, const char *name, const glm::mat4& m4); ///< GL_FLOAT_MAT4
+        void SetVec4 (Program &prog, const char *name, const glm::vec4& v4);   ///< GL_FLOAT_VEC4
+        void SetVec3 (Program &prog, const char *name, const glm::vec3& v3);   ///< GL_FLOAT_VEC3
+        void SetVec2 (Program &prog, const char *name, const glm::vec2& v2);   ///< GL_FLOAT_VEC2
+        void SetFloat(Program &prog, const char *name, const float& v);           ///< GL_FLOAT
+        void SetInt  (Program &prog, const char *name, const int& v);             ///< GL_INT / GL_SAMPLER_*
 
         /// @brief 캐시된 location 반환. 미존재면 -1 (+ 첫 호출 시 diagnostics 가 warn).
         GLint Get(Program &prog, const char *name);

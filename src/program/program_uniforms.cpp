@@ -90,7 +90,7 @@ namespace SJH::Uniforms
         sCacheRegistry.erase(programId);
     }
 
-    void SetMat4(Program &prog, const char *name, const float *mat4)
+    void SetMat4(Program &prog, const char *name, const glm::mat4& m4)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -100,10 +100,10 @@ namespace SJH::Uniforms
             return;
         }
         Diagnostics::UniformDiagnostics::NotifyTypeMismatch(pid, name, GL_FLOAT_MAT4, e.type);
-        glUniformMatrix4fv(e.location, 1, GL_FALSE, mat4);
+        glUniformMatrix4fv(e.location, 1, GL_FALSE, glm::value_ptr(m4));
     }
 
-    void SetVec4(Program &prog, const char *name, const float *v4)
+    void SetVec4(Program &prog, const char *name, const glm::vec4& v4)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -113,10 +113,10 @@ namespace SJH::Uniforms
             return;
         }
         Diagnostics::UniformDiagnostics::NotifyTypeMismatch(pid, name, GL_FLOAT_VEC4, e.type);
-        glUniform4fv(e.location, 1, v4);
+        glUniform4fv(e.location, 1, glm::value_ptr(v4));
     }
 
-    void SetVec3(Program &prog, const char *name, const float *v3)
+    void SetVec3(Program &prog, const char *name, const glm::vec3& v3)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -126,10 +126,10 @@ namespace SJH::Uniforms
             return;
         }
         Diagnostics::UniformDiagnostics::NotifyTypeMismatch(pid, name, GL_FLOAT_VEC3, e.type);
-        glUniform3fv(e.location, 1, v3);
+        glUniform3fv(e.location, 1, glm::value_ptr(v3));
     }
 
-    void SetVec2(Program &prog, const char *name, const float *v2)
+    void SetVec2(Program &prog, const char *name, const glm::vec2& v2)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -139,10 +139,10 @@ namespace SJH::Uniforms
             return;
         }
         Diagnostics::UniformDiagnostics::NotifyTypeMismatch(pid, name, GL_FLOAT_VEC2, e.type);
-        glUniform2fv(e.location, 1, v2);
+        glUniform2fv(e.location, 1, glm::value_ptr(v2));
     }
 
-    void SetFloat(Program &prog, const char *name, float v)
+    void SetFloat(Program &prog, const char *name, const float& v)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -155,7 +155,7 @@ namespace SJH::Uniforms
         glUniform1f(e.location, v);
     }
 
-    void SetInt(Program &prog, const char *name, int v)
+    void SetInt(Program &prog, const char *name, const int& v)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);

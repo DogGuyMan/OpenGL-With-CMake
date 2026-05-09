@@ -16,6 +16,7 @@ target_link_libraries(sjhopengl_program
     PUBLIC  SJH::common
             SJH::shader
             glad::glad
+            glm::glm
     PRIVATE SJH::diagnostics
 )
 

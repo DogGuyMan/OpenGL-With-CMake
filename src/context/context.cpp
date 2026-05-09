@@ -223,15 +223,15 @@ namespace SJH
         mVertexArrayObject->Bind();
         {
             // 이거 없으면 안되더라..
-            Uniforms::SetVec3(*mProgram.get(), "viewPos", glm::value_ptr(mCamera.mPos));
-            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::value_ptr(glm::vec4(1.0f, 0.5f, 0.0f, 1.0f)));
-            Uniforms::SetVec3(*mProgram.get(), "light.position", glm::value_ptr(mLight.mPos));
-            Uniforms::SetVec3(*mProgram.get(), "light.ambient", glm::value_ptr(mLight.mAmbient));
-            Uniforms::SetVec3(*mProgram.get(), "light.diffuse", glm::value_ptr(mLight.mDiffuse));
-            Uniforms::SetVec3(*mProgram.get(), "light.specular", glm::value_ptr(mLight.mSpecular));
-            Uniforms::SetVec3(*mProgram.get(), "material.ambient", glm::value_ptr(mMaterial.mAmbient));
-            Uniforms::SetVec3(*mProgram.get(), "material.diffuse", glm::value_ptr(mMaterial.mDiffuse));
-            Uniforms::SetVec3(*mProgram.get(), "material.specular", glm::value_ptr(mMaterial.mSpecular));
+            Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.mPos);
+            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
+            Uniforms::SetVec3(*mProgram.get(), "light.position", mLight.mPos);
+            Uniforms::SetVec3(*mProgram.get(), "light.ambient", mLight.mAmbient);
+            Uniforms::SetVec3(*mProgram.get(), "light.diffuse", mLight.mDiffuse);
+            Uniforms::SetVec3(*mProgram.get(), "light.specular", mLight.mSpecular);
+            Uniforms::SetVec3(*mProgram.get(), "material.ambient", mMaterial.mAmbient);
+            Uniforms::SetVec3(*mProgram.get(), "material.diffuse", mMaterial.mDiffuse);
+            Uniforms::SetVec3(*mProgram.get(), "material.specular", mMaterial.mSpecular);
             Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial.mShininess);
 
             // 3. Uniform 전달
@@ -244,8 +244,8 @@ namespace SJH
                                        mAnimation ? angle : 0.0f,
                                        glm::vec3(1.0f, 0.5f, 0.0f));
                 auto transformMat = projMat * viewMat * modelMat;
-                Uniforms::SetMat4(*mProgram.get(), "transformMat", glm::value_ptr(transformMat));
-                Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", glm::value_ptr(modelMat));
+                Uniforms::SetMat4(*mProgram.get(), "transformMat", transformMat);
+                Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelMat);
                 // VBO + EBO 협력으로 그렸을때.
                 glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
             }
@@ -258,19 +258,19 @@ namespace SJH
                 glm::translate(glm::mat4(1.0), mLight.mPos) *
                 glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
 
-            // ! 필요 없음 Uniforms::SetVec3(*mProgram.get(), "viewPos", glm::value_ptr(mCamera.mPos));
-            // ! 필요 없음 Uniforms::SetVec3(*mProgram.get(), "lightPos", glm::value_ptr(mLightPos));
+            // ! 필요 없음 Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.mPos);
+            // ! 필요 없음 Uniforms::SetVec3(*mProgram.get(), "lightPos", mLightPos);
 
             // 라이트 큐브 = emissive=1 흉내. ambientStrength=1 + mLightColor=white 로 white saturate 시켜
             // diffuse / specular 항을 무력화한다. 따라서 그 항에만 들어가는
             // viewPos / lightPos / specularStrength / specularShininess 는 출력에 영향이 없어 제거.
-            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::value_ptr(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)));
-            Uniforms::SetVec3(*mProgram.get(), "light.position", glm::value_ptr(mLight.mPos));
-            Uniforms::SetVec3(*mProgram.get(), "light.ambient", glm::value_ptr(mLight.mAmbient));
-            Uniforms::SetVec3(*mProgram.get(), "light.diffuse", glm::value_ptr(mLight.mDiffuse));
-            Uniforms::SetVec3(*mProgram.get(), "light.specular", glm::value_ptr(mLight.mSpecular));
-            Uniforms::SetMat4(*mProgram.get(), "transformMat", glm::value_ptr(projMat * viewMat * lightModelTransform));
-            Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", glm::value_ptr(lightModelTransform));
+            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            Uniforms::SetVec3(*mProgram.get(), "light.position", mLight.mPos);
+            Uniforms::SetVec3(*mProgram.get(), "light.ambient", mLight.mAmbient);
+            Uniforms::SetVec3(*mProgram.get(), "light.diffuse", mLight.mDiffuse);
+            Uniforms::SetVec3(*mProgram.get(), "light.specular", mLight.mSpecular);
+            Uniforms::SetMat4(*mProgram.get(), "transformMat", (projMat * viewMat * lightModelTransform));
+            Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", lightModelTransform);
 
             // ! 필요 없음 Uniforms::SetFloat(*mProgram.get(), "specularStrength", mSpecularStrength);
             // ! 필요 없음 Uniforms::SetFloat(*mProgram.get(), "specularShininess", mSpecularShininess);

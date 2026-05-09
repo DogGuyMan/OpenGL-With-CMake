@@ -181,9 +181,6 @@ namespace SJH
 
             if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen))
             {
-                ImGui::ColorEdit3("m.ambient", glm::value_ptr(mMaterial.mAmbient));
-                ImGui::ColorEdit3("m.diffuse", glm::value_ptr(mMaterial.mDiffuse));
-                ImGui::ColorEdit3("m.specular", glm::value_ptr(mMaterial.mSpecular));
                 ImGui::DragFloat("m.shininess", &mMaterial.mShininess, 1.0f, 1.0f, 256.0f);
             }
             ImGui::Checkbox("animation", &mAnimation);
@@ -219,20 +216,38 @@ namespace SJH
         glEnable(GL_DEPTH_TEST);
 
         // 2. Use Program
-        mProgram->Use();
-        mVertexArrayObject->Bind();
+        mSimpleProgram->Use();
+        mVertexArrayObject->Bind(); // 이거 없으면 안되더라..
         {
-            // 이거 없으면 안되더라..
+            auto lightModelTransform =
+                glm::translate(glm::mat4(1.0), mLight.mPos) *
+                glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
+            Uniforms::SetVec4(*mSimpleProgram.get(), "baseColor", glm::vec4(mLight.mAmbient + mLight.mDiffuse, 1.0f));
+            Uniforms::SetMat4(*mSimpleProgram.get(), "transformMat", projMat * viewMat * lightModelTransform);
+            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        }
+
+        mProgram->Use();
+        mVertexArrayObject->Bind(); // 이거 없으면 안되더라..
+        {
             Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.mPos);
-            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
+            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
             Uniforms::SetVec3(*mProgram.get(), "light.position", mLight.mPos);
             Uniforms::SetVec3(*mProgram.get(), "light.ambient", mLight.mAmbient);
             Uniforms::SetVec3(*mProgram.get(), "light.diffuse", mLight.mDiffuse);
             Uniforms::SetVec3(*mProgram.get(), "light.specular", mLight.mSpecular);
-            Uniforms::SetVec3(*mProgram.get(), "material.ambient", mMaterial.mAmbient);
-            Uniforms::SetVec3(*mProgram.get(), "material.diffuse", mMaterial.mDiffuse);
-            Uniforms::SetVec3(*mProgram.get(), "material.specular", mMaterial.mSpecular);
+            Uniforms::SetInt(*mProgram.get(), "material.diffuse", 2);
+            Uniforms::SetInt(*mProgram.get(), "material.specular", 3);
+            // material.specular 는 sampler2D — texture unit index(int).
+            // unit 3 에 container2_specular(금속 가장자리만 밝음) 를 바인딩하여
+            // 표면의 specular 마스크 역할을 하게 한다.
+            Uniforms::SetInt(*mProgram.get(), "material.specular", 3);
             Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial.mShininess);
+
+            glActiveTexture(GL_TEXTURE2);
+            mRM->LoadTextureWithName("container2")->Bind();
+            glActiveTexture(GL_TEXTURE3);
+            mRM->LoadTextureWithName("container2_specular")->Bind();
 
             // 3. Uniform 전달
             for (size_t i = 0; i < cubePositions.size(); i++)
@@ -251,54 +266,21 @@ namespace SJH
             }
         }
 
-        mProgram->Use();
-        mVertexArrayObject->Bind();
-        {
-            glm::mat4 lightModelTransform =
-                glm::translate(glm::mat4(1.0), mLight.mPos) *
-                glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
-
-            // ! 필요 없음 Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.mPos);
-            // ! 필요 없음 Uniforms::SetVec3(*mProgram.get(), "lightPos", mLightPos);
-
-            // 라이트 큐브 = emissive=1 흉내. ambientStrength=1 + mLightColor=white 로 white saturate 시켜
-            // diffuse / specular 항을 무력화한다. 따라서 그 항에만 들어가는
-            // viewPos / lightPos / specularStrength / specularShininess 는 출력에 영향이 없어 제거.
-            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            Uniforms::SetVec3(*mProgram.get(), "light.position", mLight.mPos);
-            Uniforms::SetVec3(*mProgram.get(), "light.ambient", mLight.mAmbient);
-            Uniforms::SetVec3(*mProgram.get(), "light.diffuse", mLight.mDiffuse);
-            Uniforms::SetVec3(*mProgram.get(), "light.specular", mLight.mSpecular);
-            Uniforms::SetMat4(*mProgram.get(), "transformMat", (projMat * viewMat * lightModelTransform));
-            Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", lightModelTransform);
-
-            // ! 필요 없음 Uniforms::SetFloat(*mProgram.get(), "specularStrength", mSpecularStrength);
-            // ! 필요 없음 Uniforms::SetFloat(*mProgram.get(), "specularShininess", mSpecularShininess);
-
-            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        }
-
         // glPointSize(50.0f);
         // glDrawArrays(GL_POINTS, 0, 1);
     }
 
     bool Context::Init()
     {
-        // ShaderUPtr -> ShaderPtr 암묵 변환 — Program::Create 가 shared 입력을 요구
-        ShaderPtr vertexShader = Shader::CreateFromFile(
-            "./resources/shader/simple.vs", GL_VERTEX_SHADER);
-        ShaderPtr fragmentShader = Shader::CreateFromFile(
-            "./resources/shader/simple.fs", GL_FRAGMENT_SHADER);
 
-        if (!vertexShader || !fragmentShader)
-            return false;
-
-        spdlog::info("vertex shader id: {}", vertexShader->GetShaderAddr());
-        spdlog::info("fragment shader id: {}", fragmentShader->GetShaderAddr());
-
-        mProgram = Program::Create({vertexShader, fragmentShader});
+        mProgram = Program::CreateWithVSFS("./resources/shader/lighting.vs", "./resources/shader/lighting.fs");
         if (!mProgram)
             return false;
+
+        mSimpleProgram = Program::CreateWithVSFS("./resources/shader/simple.vs", "./resources/shader/simple.fs");
+        if (!mSimpleProgram)
+            return false;
+
         spdlog::info("program id: {}", mProgram->GetProgramAddr());
         glClearColor(0.0, 0.1f, 0.2f, 0.0f);
 
@@ -312,6 +294,18 @@ namespace SJH
         if (imagePtr2 == nullptr)
             return false;
         mRM->LoadTextureFromImage(imagePtr2);
+
+        auto imagePtr3 = mRM->LoadImage("container2", "./resources/texture/container2.png");
+        if (imagePtr3 == nullptr)
+            return false;
+        mRM->LoadTextureFromImage(imagePtr3);
+        mMaterial.mDiffuseTextureName = "container2";
+
+        auto imagePtr4 = mRM->LoadImage("container2_specular", "./resources/texture/container2_specular.png");
+        if (imagePtr4 == nullptr)
+            return false;
+        mRM->LoadTextureFromImage(imagePtr4);
+        mMaterial.mDiffuseTextureName = "container2_specular";
 
         auto checkerImgPtr = Image::Create("checkerboard", 512, 512);
         checkerImgPtr->SetCheckImage(16, 16);

@@ -103,6 +103,8 @@ namespace SJH
         /// @brief 컴파일·링크된 셰이더 프로그램. 매 @ref Render 에서 @c Use().
         ProgramUPtr mProgram;
 
+        ProgramUPtr mSimpleProgram;
+
         /// @brief Vertex Array Object — vertex attribute layout(위치/색상/UV) 보관.
         VertexLayoutUPtr mVertexArrayObject;
 

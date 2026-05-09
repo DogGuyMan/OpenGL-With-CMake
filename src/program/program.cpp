@@ -1,7 +1,7 @@
 #include "program/program.h"
-#include "program/program_uniforms.h"
 #include "diagnostics/gl_log.h"
 #include "diagnostics/uniform_diagnostics.h"
+#include "program/program_uniforms.h"
 
 namespace SJH
 {
@@ -16,6 +16,18 @@ namespace SJH
         return program;
     }
 
+    ProgramUPtr Program::CreateWithVSFS(const std::string &vertShaderFilename,
+                                        const std::string &fragShaderFilename)
+    {
+        ShaderPtr vs = Shader::CreateFromFile(vertShaderFilename,
+                                              GL_VERTEX_SHADER);
+        ShaderPtr fs = Shader::CreateFromFile(fragShaderFilename,
+                                              GL_FRAGMENT_SHADER);
+        if (!vs || !fs)
+            return nullptr;
+        return std::move(Create({vs, fs}));
+    }
+
     Program::~Program()
     {
         if (mProgramAddr != 0)
@@ -27,7 +39,8 @@ namespace SJH
         }
     }
 
-    void Program::Use() const {
+    void Program::Use() const
+    {
         glUseProgram(mProgramAddr);
     }
 

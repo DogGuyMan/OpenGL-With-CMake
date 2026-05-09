@@ -34,6 +34,7 @@ namespace SJH
          * @see Shader::CreateFromFile
          */
         static ProgramUPtr Create(const std::vector<ShaderPtr> &shaders);
+        static ProgramUPtr CreateWithVSFS(const std::string& vertShaderFilename, const std::string& fragShaderFilename);
 
         /// @brief @c Uniforms::Forget 으로 외부 캐시 정리 후 @c glDeleteProgram 호출 (핸들이 0 이 아닐 때만).
         ~Program();

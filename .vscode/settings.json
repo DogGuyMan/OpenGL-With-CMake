@@ -58,7 +58,7 @@
     },
     "[cmake]": {
         "editor.formatOnSave": false,
-        "editor.defaultFormatter": "cheshirekow.cmake-format"
+        "editor.defaultFormatter": "KylinIdeTeam.cmake-intellisence"
     },
     "cmake.options.statusBarVisibility": "visible",
     "doxdocgen.file.fileTemplate": "@file {name}",

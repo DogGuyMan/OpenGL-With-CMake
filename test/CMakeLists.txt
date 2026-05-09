@@ -180,6 +180,38 @@ target_link_libraries(test_gl_state_log PRIVATE
 target_compile_features(test_gl_state_log PRIVATE cxx_std_17)
 catch_discover_tests(test_gl_state_log)
 
+#  shader 모듈 — Material POD 클래스 회귀 (default values + 레이아웃)
+# GL context 불필요. SJH::shader 가 glm::glm 을 PUBLIC 으로 가져옴.
+add_executable(test_material test_material.cpp)
+target_link_libraries(test_material PRIVATE
+    Catch2::Catch2WithMain
+    SJH::shader     # "shader/material.h" 접근 + glm
+)
+target_compile_features(test_material PRIVATE cxx_std_17)
+catch_discover_tests(test_material)
+
+#  object 모듈 — Light POD 클래스 회귀
+# GL context 불필요. SJH::object 가 INTERFACE 라이브러리로 glm 노출.
+add_executable(test_light test_light.cpp)
+target_link_libraries(test_light PRIVATE
+    Catch2::Catch2WithMain
+    SJH::object     # "object/light.h" 접근 + glm
+)
+target_compile_features(test_light PRIVATE cxx_std_17)
+catch_discover_tests(test_light)
+
+#  Shader source contract — simple.fs 와 C++ Material/Light 클래스의 약속 검증
+# GL context 불필요. CMake 가 SJH_RESOURCES_DIR 절대 경로 주입 (빌드 디렉토리 위치 무관).
+add_executable(test_shader_uniform_contract test_shader_uniform_contract.cpp)
+target_link_libraries(test_shader_uniform_contract PRIVATE
+    Catch2::Catch2WithMain
+)
+target_compile_definitions(test_shader_uniform_contract PRIVATE
+    SJH_RESOURCES_DIR="${CMAKE_SOURCE_DIR}/resources"
+)
+target_compile_features(test_shader_uniform_contract PRIVATE cxx_std_17)
+catch_discover_tests(test_shader_uniform_contract)
+
 #  test/support — GLStateSnapshot wrapper + Diff (Task 6)
 # 대부분 GL context 불필요 — struct 직접 구성으로 path 강제. 일부 Capture sanity는 GL ctx.
 add_executable(test_gl_state_snapshot test_gl_state_snapshot.cpp)
@@ -223,6 +255,9 @@ add_custom_target(tests DEPENDS
     test_gl_state_capture   # Task 2
     test_gl_state_log       # Task 5
     test_gl_state_snapshot  # Task 6
+    test_material           # POD value class regression
+    test_light              # POD value class regression
+    test_shader_uniform_contract  # simple.fs ↔ Material/Light contract
     test_program_uniforms
     test_buffer
     test_vertex_layout

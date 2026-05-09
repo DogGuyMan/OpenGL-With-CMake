@@ -12,5 +12,22 @@
 
 #ifndef __SJH_LIGHT_H__
 #define __SJH_LIGHT_H__
+#include <glm/glm.hpp>
+
+// light parameter
+class Light
+{
+public :
+    /// @brief 점 광원 월드 좌표. ImGui DragFloat3 위젯이 갱신, 셰이더 uniform `lightPos` 로 전달.
+    glm::vec3 mPos{glm::vec3(3.0f, 3.0f, 3.0f)};
+
+    /// @brief 점 광원 색상 (RGB, 0~1). 셰이더 uniform `lightColor`.
+    glm::vec3 mAmbient{glm::vec3(0.1f, 0.1f, 0.1f)};
+
+    glm::vec3 mDiffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
+
+
+    glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
+};
 
 #endif // __SJH_LIGHT_H__

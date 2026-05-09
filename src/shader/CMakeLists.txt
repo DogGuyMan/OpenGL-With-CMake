@@ -1,6 +1,4 @@
-add_library(sjhopengl_shader STATIC
-    shader.cpp
-)
+add_library(sjhopengl_shader STATIC shader.cpp)
 add_library(SJH::shader ALIAS sjhopengl_shader)
 
 target_include_directories(sjhopengl_shader
@@ -11,7 +9,8 @@ target_include_directories(sjhopengl_shader
 target_link_libraries(sjhopengl_shader
     PUBLIC  SJH::common
             glad::glad
+            glm::glm
     PRIVATE SJH::diagnostics
 )
 
-target_compile_features(sjhopengl_shader PRIVATE cxx_std_17)
+target_compile_features(sjhopengl_shader PUBLIC cxx_std_17)

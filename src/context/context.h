@@ -5,6 +5,8 @@
 #include "common/common.h"
 #include "layout/vertex_layout.h"
 #include "object/camera.h"
+#include "object/light.h"
+#include "shader/material.h"
 #include "program/program.h"
 #include "resource_management/resource_management.h"
 #include "shader/shader.h"
@@ -110,6 +112,9 @@ namespace SJH
         /// @brief Element Buffer Object — 인덱스 버퍼(@c GL_ELEMENT_ARRAY_BUFFER). 36개 인덱스로 12 삼각형 = 큐브 6면.
         BufferUPtr mElementBufferObject;
 
+        /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
+        bool mAnimation{true};
+
         /// @brief 이미지 → 텍스처 로딩/이름 기반 조회를 담당하는 리소스 관리자.
         ResourceManagementUPtr mRM;
 
@@ -130,27 +135,9 @@ namespace SJH
         glm::vec4 mClearColor{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
 
         // === 라이팅 (Phong: ambient + diffuse + specular) ===
-        /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
-        bool mAnimation{true};
 
-        /// @brief 점 광원 월드 좌표. ImGui DragFloat3 위젯이 갱신, 셰이더 uniform `lightPos` 로 전달.
-        glm::vec3 mLightPos{glm::vec3(3.0f, 3.0f, 3.0f)};
-
-        /// @brief 점 광원 색상 (RGB, 0~1). 셰이더 uniform `lightColor`.
-        glm::vec3 mLightColor{glm::vec3(1.0f, 1.0f, 1.0f)};
-
-        /// @brief 큐브 base 색상 (RGB, 0~1). 셰이더 uniform `objectColor`. 텍스처 미사용 fallback 용도.
-        glm::vec3 mObjectColor{glm::vec3(1.0f, 0.5f, 0.0f)};
-
-        /// @brief Ambient 항 계수 (광원 무관 기본 밝기). 셰이더 uniform `ambientStrength`. 일반 범위 @c [0, 1].
-        float mAmbientStrength{0.1f};
-
-        /// @brief Specular 항 계수 (스페큘러 하이라이트 강도). 셰이더 uniform `specularStrength`. 일반 범위 @c [0, 1].
-        float mSpecularStrength{0.5f};
-
-        /// @brief Specular 항 지수 (하이라이트 *집중도* — 큰 값일수록 좁고 날카로움).
-        ///        셰이더 uniform `specularShininess`. 일반 범위 @c [2, 256], 기본 @c 32.
-        float mSpecularShininess{32.0f};
+        Light mLight;
+        Material mMaterial;
     };
 }
 

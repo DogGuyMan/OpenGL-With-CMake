@@ -167,26 +167,29 @@ digraph ClassDependencyGraph {
     Shader; Program; Buffer; VertexLayout;
   }
 
-  // 씬
+  // 씬 + 머티리얼/라이트 (Phase 12)
   subgraph cluster_scene {
-    label="Scene"; style=dashed; color="#aaaaaa";
-    Camera; Context;
+    label="Scene + Material/Light"; style=dashed; color="#aaaaaa";
+    Camera; Light; Material; Context;
   }
 
   // 소유 관계 (실선) — 멤버로 보유, 수명 결합
-  Context -> Program            [label="UPtr"];
+  Context -> Program            [label="UPtr ×2\n(lighting + simple)"];
   Context -> VertexLayout       [label="UPtr"];
   Context -> Buffer             [label="UPtr ×2\n(VBO + EBO)"];
   Context -> ResourceManagement [label="UPtr"];
   Context -> Camera             [label="value"];
+  Context -> Light              [label="value"];
+  Context -> Material           [label="value"];
 
   ResourceManagement -> Image   [label="map<name, UPtr>"];
   ResourceManagement -> Texture [label="map<name, UPtr>"];
 
-  // 입력 의존 (긴 점선) — 멤버 X, 팩토리 인자
+  // 입력 의존 (긴 점선) — 멤버 X, 팩토리 인자 / 이름 키 해석
   edge [style=dashed, color="#5b6b80"];
-  Program -> Shader  [label="vector<ShaderPtr>\n(Create 인자)"];
-  Texture -> Image   [label="Image*\n(CreateTexture 인자)"];
+  Program  -> Shader              [label="vector<ShaderPtr>\n(Create 인자)"];
+  Texture  -> Image               [label="Image*\n(CreateTexture 인자)"];
+  Material -> ResourceManagement  [label="이름 키 →\nLoadTextureWithName"];
 
   // 정적 진단 사용 (짧은 점선) — 인스턴스 X
   edge [style=dotted, color="#9aa6b8", fontcolor="#9aa6b8"];

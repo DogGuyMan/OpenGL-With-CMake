@@ -45,6 +45,9 @@
 | **9** | GL State 진단 인프라 (`GLStateFields`, `GLStateLog`) | diagnostics | ✅ 완료 | `gl_state_fields.h` 에 `@file` 헤더 보강(다른 진단 헤더와 톤 통일). `gl_state_log.h` 는 작성 시점부터 완전. 클래스 의존 그래프에 신규 클래스 1개 + struct 2개 추가. |
 | **10** | ImGui 컴포넌트 + Light + Specular | object, glm, imgui | ✅ 완료 | `context.h` 의 라이팅 멤버 9개 (`mClearColor` / `mAnimation` / `mLight*` / `mObjectColor` / `mAmbient*` / `mSpecular*`) Doxygen `///` 추가 + `light.h` placeholder 주석. |
 | **11** | 테스트 인프라 (`gl_state_snapshot`, `spdlog_capture`) + 사보타지 드릴 | diagnostics, Catch2 | ✅ 완료 | `test/support/*` 헤더는 작성 시점부터 완전 (`@file` + `@code` + `@see` 모두 보유). 추가 작업 없음. |
+| **12** | Material & Lighting (`Light` / `Material` 클래스 신설) | object, shader, glm | ✅ 완료 | `Light` (point light + Phong 3항 색상) + `Material` (color-기반) 신설. `light.h` 의 placeholder 주석 → 실 클래스 docstring + 멤버 4개 Doxygen. `material.h` 빈 `@file` → Phong 책임/비-책임/네임스페이스 일관성 이슈 명시. Context 의 라이팅 멤버 9개가 두 클래스로 흡수됨. |
+| **13** | Uniform setter 시그니처 변경 (`const T*` → `const T&`) | program | ✅ 완료 | `program_uniforms.h` 의 6개 setter 시그니처 변경 — 헤더 docstring 은 이미 일반 표현으로 작성되어 있어 본문 갱신 불필요. |
+| **14** | 스페큘러/디퓨즈 텍스처링 + `Program::CreateWithVSFS` | program, shader | ✅ 완료 | `Material` 멤버를 색상 vec3 → 텍스처 *이름 키* 로 전면 교체 (변경 이력 docstring 에 기록). `Program::CreateWithVSFS` 편의 팩토리 Doxygen 추가. `Context::mSimpleProgram` (광원 큐브용) docstring 추가. 클래스 의존 그래프에 Light/Material 노드 + Material→ResourceManagement (이름 키 해석) 엣지 추가. |
 
 ## 4. 비활성 모듈 처리 정책 (Phase 5 시점) — 현재는 *역사적 항목*
 

@@ -56,19 +56,24 @@ void main() {
     // in 변수명은 vsTexCoord — texCoord 는 정의되지 않은 식별자.
     vec3 specTexColor = texture(material.specular, vsTexCoord).rgb;
     vec3 viewDir = normalize(viewPos - vsPosition);
+    // 3-1 Phong:
     vec3 reflectDir = reflect(-lightDir, pixelNorm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    //  float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // 3-2 Blinn-Phong:
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+        float spec = pow(max(dot(pixelNorm, halfwayDir), 0.0), material.shininess);
     vec3 specular = spec * specTexColor * light.specular;
 
     // specular 는 albedo 와 *곱하지 않고* 더한다.
     // (ambient + diffuse) 만 surface albedo(fragColor) 로 modulate, specular 는 빛 자체 색으로 가산.
     // 이전 형태인 (ambient+diffuse+specular)*fragColor 는 specular 가 baseColor(주황) 에 tint 되어 묻혔음.
 
-    // fragColor = vec4(ambient + diffuse, 1.0f) * fragColor + vec4(specular, 0.0f);
+    fragColor = vec4(ambient + diffuse, 1.0f) * fragColor + vec4(specular, 0.0f);
+
 
     // DEBUG
 
     // fragColor = vec4(pixelNorm * 0.5 + 0.5, 1.0); // Test 1 — Normal이 회전을 따라가는가?
     // fragColor = vec4(normalize(light.position - vsPosition) * 0.5 + 0.5, 1.0); // Test 2 — LightDir이 회전과 무관한가?
-    fragColor = vec4(vec3(diff), 1.0); // Test 3 — Diffuse(N·L)는 광원 방향과 정렬되는가?
+    // fragColor = vec4(vec3(diff), 1.0); // Test 3 — Diffuse(N·L)는 광원 방향과 정렬되는가?
 }

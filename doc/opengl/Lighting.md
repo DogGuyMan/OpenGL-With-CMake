@@ -1,6 +1,6 @@
-# Phong Shading — 3 가지 헷갈리는 지점 정리
+# Phong Shading — 4 가지 헷갈리는 지점 정리
 
-> [simple.vs](../../resources/shader/simple.vs) / [simple.fs](../../resources/shader/simple.fs) 작성 중 마주친 세 가지 의문에 대한 노트.
+> [simple.vs](../../resources/shader/simple.vs) / [simple.fs](../../resources/shader/simple.fs) / [lighting.vs](../../resources/shader/lighting.vs) / [lighting.fs](../../resources/shader/lighting.fs) 작성 중 마주친 네 가지 의문에 대한 노트.
 > 1학년 수준 직관 + 정확한 수식 페어링.
 
 ---
@@ -141,6 +141,110 @@ float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularShininess);
 
 ---
 
+## Q4. 광원이 +X 에 있는데 specular spot 이 거기 안 보임 — 버그 아닌가?
+
+### 한 줄 요약
+**Specular 는 광원 방향이 아니라 *광원과 카메라의 중간 방향(halfway)* 에 나타난다. View 에 의존하는 것이 specular 의 *정의 자체*. 모델이 회전하면 spot 은 표면 위를 미끄러져 다른 face 로 옮겨가는 것이 정상.**
+
+### Diffuse vs Specular — 의존 변수 차이
+
+| 항 | 수식 | 의존 변수 | View-dependent? | 표면 특성 |
+|---|---|---|---|---|
+| Diffuse  | `L_d = k_d · max(N·L, 0)`        | N, L      | ❌ No  | matte (무광) |
+| Specular | `L_s = k_s · max(R·V, 0)^n`      | N, L, **V** | ✅ Yes | glossy (광택) |
+
+→ Diffuse 는 카메라를 어디로 옮겨도 *같은 face* 가 밝다. Lambertian.
+→ Specular 는 카메라가 움직이면 highlight 도 따라 움직인다. Mirror-like.
+
+### 직관 — 거울 속 천장 조명
+욕실 거울에 천장 조명이 비치는 위치를 떠올려 보자.
+- **천장 조명 바로 아래** 에 반사가 보이는가? 아니다.
+- **내가 거울 앞 어디에 서 있느냐** 에 따라 반사 위치가 달라진다.
+- 한 발짝 옆으로 가면 반사 spot 도 *나를 따라* 옆으로 움직인다.
+- 조명은 가만히 있는데도 그렇다.
+
+이게 specular 의 본질. **빛 → 표면 → 카메라** 의 거울 반사 경로가 성립하는 픽셀에서만 highlight 가 보인다. Q3 의 `reflect()` 는 이 경로를 계산하는 도구.
+
+### 카메라 위치별 spot 위치 — Blinn-Phong 의 H 로 보면 명확
+
+Halfway vector: `H = normalize(L + V)`. Blinn-Phong 은 `(N·H)^n` 으로 specular 계산.
+
+| 카메라 위치 | H 방향 | Specular spot 이 나타나는 face |
+|---|---|---|
+| 광원 바로 옆 | H ≈ L | 광원 방향 face (이때만 diffuse 와 일치) |
+| 광원 정반대편 | H ≈ V | 카메라 쪽 face |
+| 90° 옆 | L 과 V 의 중간 | **광원·카메라 중간 방향** face |
+
+### 그림으로 — 카메라 이동에 따른 spot 이동
+```
+   광원 ●            광원 ●            광원 ●
+       \                \                \
+        \                \                \
+       [큐브] ← 카메라  [큐브]            [큐브]
+                            \              ↑
+                             ↘           카메라
+                          카메라
+
+   spot 위치:        spot 위치:         spot 위치:
+   광원 쪽 face      광원-카메라        카메라 쪽 face
+                      중간 모서리
+```
+→ 큐브는 가만히 있는데, 카메라만 움직였는데, spot 위치가 바뀐다.
+→ Diffuse 였다면 셋 다 *같은* (광원 쪽) face 가 밝게 유지됨.
+
+### 모델 회전 시 일어나는 일 (광원·카메라 고정)
+- H 방향은 *월드 좌표에서 변하지 않음*.
+- "월드 좌표에서 H 방향에 가까운 normal 을 가진 픽셀" 에 spot 이 나타남.
+- 모델이 회전하면 → 어떤 face 의 normal 이 H 에 가까운지 *시간에 따라 바뀜*.
+- → spot 이 face 사이를 미끄러져 다른 면으로 넘어가는 것이 **정상**.
+
+### 흔한 오해 — Diffuse 직관으로 Specular 를 본다
+
+| 오해 | 사실 |
+|---|---|
+| "광원 방향 face 가 밝아야 한다" | Diffuse 만 맞음. Specular 는 V 에 따라 다른 face. |
+| "모델이 회전하면 같은 표면 점에 spot 이 붙어 함께 회전" | 그건 normal 이 안 변환된 *버그*. 정상은 spot 이 표면을 *미끄러짐*. |
+| "광원이 고정이면 spot 도 고정" | Diffuse 는 그렇지만 specular 는 V 도 고정이어야 그렇다. |
+
+### Blinn-Phong 변형 — 시각적으로 더 자연스러움
+
+Phong 의 `reflect()` 대신 halfway vector 를 사용:
+```glsl
+// 기존 Phong:
+// vec3 reflectDir = reflect(-lightDir, pixelNorm);
+// float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+
+// Blinn-Phong:
+vec3 halfwayDir = normalize(lightDir + viewDir);
+float spec = pow(max(dot(pixelNorm, halfwayDir), 0.0), shininess);
+```
+- `dot(N, H)` 는 `dot(R, V)` 보다 각도가 *절반* — 같은 sharpness 내려면 shininess 를 **2~4 배** 키워야 함.
+- View 가 표면에 거의 평행한 grazing angle 에서 더 자연스러운 highlight (Phong 은 끊김).
+- 계산도 `reflect()` 한 번 줄어 약간 저렴.
+
+### 검증 방법 — "정상인가 버그인가" 1분 안에 확인
+
+1. 모델 회전 끄고 (`mAnimation = false`)
+2. 카메라(WASD/QE) 만 움직이며 spot 관찰
+3. 관찰 결과 분기:
+
+| 관찰 | 진단 |
+|---|---|
+| Diffuse 영역(밝은 face)이 카메라 이동과 *무관* | 정상 |
+| Specular spot 이 카메라 이동에 따라 *따라 움직임* | 정상 |
+| Specular spot 이 카메라 이동과 무관 | View-independent 버그 (V 가 안 들어가 있음) |
+| Diffuse 와 specular 가 둘 다 카메라 따라 움직임 | 좌표공간 불일치 버그 |
+
+### 만약 *광원 방향에 고정된* highlight 를 원한다면
+그건 specular 가 아니다.
+- **Toon/cel shader 의 specular band** — N·L 기반 계단 함수
+- **Diffuse 강조 + emissive** — 자체 발광
+- **Half-Lambert (Valve)** — `(N·L * 0.5 + 0.5)^2` 로 wraparound
+
+표준 Phong/Blinn-Phong 의 specular 는 *반드시* view-dependent.
+
+---
+
 ## 한 장 요약
 
 | 질문 | 핵심 한 줄 | 정확한 수식 |
@@ -148,6 +252,22 @@ float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularShininess);
 | Q1 normal 변환 | 정점은 M, normal 은 M 의 inverse-transpose. 위치가 아닌 *방향* + 직각 보존 보정 | `n' = (M⁻¹)ᵀ · n`,  `w=0` |
 | Q2 position 두 번 | clip space 는 그릴 픽셀 결정, world space 는 빛/거리 계산. 광원·정점·뷰어가 *같은 공간* 이어야 함 | `gl_Position = P·V·M·p`,  `posVec = M·p` |
 | Q3 reflect 식 | 입사 벡터 I 의 N-수직 성분만 부호 반전. 평행 성분은 유지. 흔한 오해는 *I 본체* 누락 | `R = I − 2(N·I) N` |
+| Q4 specular view-dependence | Diffuse(N·L) 는 광원만, Specular(R·V) 는 카메라까지. spot 은 *광원·카메라 중간 방향* face 에 나타남. 모델 회전 시 spot 이 표면 미끄러짐 = 정상 | `L_s = k_s·(R·V)^n` 또는 `(N·H)^n`,  `H = normalize(L+V)` |
+
+---
+
+## Diffuse vs Specular — 시험용 핵심 비교 (Q4 보강)
+
+| 항목 | Diffuse | Specular |
+|------|---------|----------|
+| 의존 변수 | N, L | N, L, **V** |
+| 수식 | `k_d · max(N·L, 0)` | `k_s · max(R·V, 0)^n` |
+| View dependent? | ❌ | ✅ |
+| 표면 특성 | matte (무광) | glossy (광택) |
+| Highlight 위치 | 광원 방향 face | 광원·카메라 halfway face |
+| 카메라 이동 시 | 변화 없음 | Highlight 따라 움직임 |
+| 광원 고정 + 모델 회전 | 광원 향한 face 가 시간차로 밝아짐 | spot 이 표면 위를 미끄러져 face 옮겨감 |
+| 물리 모델 | Lambertian (균일 산란) | Mirror-like (거울 반사) |
 
 ---
 
@@ -155,4 +275,5 @@ float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularShininess);
 
 - [simple.vs](../../resources/shader/simple.vs) — Q1, Q2 의 normal·position 변환 위치
 - [simple.fs](../../resources/shader/simple.fs) — Q3 의 `reflect()` 호출 위치
+- [lighting.vs](../../resources/shader/lighting.vs) / [lighting.fs](../../resources/shader/lighting.fs) — Q4 진단 대상 (texture material 버전)
 - [context.cpp](../../src/context/context.cpp) — `lightPos` / `viewPos` 등 lighting uniform 세팅 측

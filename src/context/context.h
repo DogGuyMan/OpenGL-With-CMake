@@ -100,9 +100,10 @@ namespace SJH
         /// @brief 셰이더/프로그램/VAO/VBO/EBO/텍스처를 일괄 초기화. @ref Create 내부에서 한 번만 호출.
         bool Init();
 
-        /// @brief 컴파일·링크된 셰이더 프로그램. 매 @ref Render 에서 @c Use().
+        /// @brief 라이팅 셰이더 프로그램 (`lighting.vs/fs`). 큐브 본체 그릴 때 사용 — Phong + 텍스처 맵.
         ProgramUPtr mProgram;
 
+        /// @brief 단순 셰이더 프로그램 (`simple.vs/fs`). 광원 큐브 등 *라이팅 무관* 객체 그릴 때 사용 — color uniform 직접 출력.
         ProgramUPtr mSimpleProgram;
 
         /// @brief Vertex Array Object — vertex attribute layout(위치/색상/UV) 보관.
@@ -138,7 +139,10 @@ namespace SJH
 
         // === 라이팅 (Phong: ambient + diffuse + specular) ===
 
+        /// @brief 점 광원 — 위치 + Phong 3항 색상. ImGui 위젯이 직접 편집 → 셰이더 uniform `light.*` 로 전송.
         Light mLight;
+
+        /// @brief 표면 머티리얼 — 디퓨즈/스페큘러 텍스처 *이름 키* + shininess. 셰이더 uniform `material.*` 로 전송.
         Material mMaterial;
     };
 }

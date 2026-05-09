@@ -1,32 +1,50 @@
 /**
  * @file light.h
- * @brief **Placeholder 모듈** — 점광원/방향광 등 광원 객체 캡슐화 예정.
+ * @brief 점 광원 — 위치 + Phong 3항 (ambient / diffuse / specular) 색상.
  *
- * @details 현재 라이팅 상태는 @ref SJH::Context 가 직접 보유 (
- *          @c mLightPos / @c mLightColor / @c mAmbientStrength / @c mSpecularStrength /
- *          @c mSpecularShininess). 광원이 2개 이상으로 늘어나거나 광원 타입(점/방향/스포트)을
- *          분기해야 할 때 본 파일에 @c Light / @c PointLight / @c DirectionalLight 클래스를 신설.
- * @note    파일이 비어 있는 동안에도 @c src/object/CMakeLists.txt 의 @c sjhopengl_object
- *          INTERFACE 타겟을 통해 include path 만 노출됨.
+ * @details
+ *  ### 책임
+ *  - 광원 *위치* 와 Phong 라이팅 모델의 *3개 항 색상* 보관.
+ *  - 셰이더 uniform `light.position` / `light.ambient` / `light.diffuse` / `light.specular` 로 전송될 데이터 컨테이너.
+ *
+ *  ### Phong 3항의 직관
+ *  - **ambient**: 광원과 무관한 *기본 밝기* — 그림자 영역도 완전히 검지 않게.
+ *  - **diffuse**: 표면 normal 과 광원 방향의 cos 으로 감쇠 — *주된* 밝기 항.
+ *  - **specular**: 시선 방향과 반사 벡터의 cos^shininess — *하이라이트*.
+ *
+ *  ### 변경 이력
+ *  - **Phase 10 (306d9f4)**: Context 가 직접 라이팅 멤버 보유 (`mLightPos` / `mLightColor` / `mAmbientStrength` 등 8개).
+ *  - **Phase 12 (02bd90e)**: 본 클래스로 분리 — Phong 3항을 색상 vec3 로 표현.
+ *
+ *  ### 비-책임
+ *  - ❌ 셰이더 uniform 전송 — @c Context::Render 가 @c Uniforms::SetVec3 로 직접 push.
+ *  - ❌ 광원 *타입* (점/방향/스포트) 분기 — 현재 점광원만 지원. 추후 enum + subclass 도입 예정.
+ *
+ * @note 현재 @c SJH:: 네임스페이스 *외부* 에 정의 — 코드베이스 다른 클래스와 일관성 어긋남.
+ *       향후 @c SJH:: 로 이동 + 광원 타입 enum 도입 예정.
  */
 
 #ifndef __SJH_LIGHT_H__
 #define __SJH_LIGHT_H__
 #include <glm/glm.hpp>
 
-// light parameter
+/// @brief 점 광원 + Phong 3항 색상 컨테이너.
 class Light
 {
 public :
-    /// @brief 점 광원 월드 좌표. ImGui DragFloat3 위젯이 갱신, 셰이더 uniform `lightPos` 로 전달.
+    /// @brief 점 광원 월드 좌표. 셰이더 uniform `light.position`. ImGui DragFloat3 위젯이 갱신.
     glm::vec3 mPos{glm::vec3(3.0f, 3.0f, 3.0f)};
 
-    /// @brief 점 광원 색상 (RGB, 0~1). 셰이더 uniform `lightColor`.
+    /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
+    /// @details 광원과 무관한 기본 밝기. 일반적으로 매우 작은 값 (예: @c (0.1, 0.1, 0.1)) 으로 그림자 영역에도 약간의 색.
     glm::vec3 mAmbient{glm::vec3(0.1f, 0.1f, 0.1f)};
 
+    /// @brief Diffuse 항 색상 (RGB, 0~1). 셰이더 uniform `light.diffuse`.
+    /// @details Lambertian 항의 광원 색. 광원의 *주된 색상* — 일반적으로 흰색 근처.
     glm::vec3 mDiffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
 
-
+    /// @brief Specular 항 색상 (RGB, 0~1). 셰이더 uniform `light.specular`.
+    /// @details 하이라이트 색. 일반적으로 흰색 — 금속이 아닌 표면은 광원 색을 그대로 반사.
     glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
 };
 

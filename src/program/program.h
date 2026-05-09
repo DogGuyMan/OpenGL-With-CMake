@@ -34,6 +34,16 @@ namespace SJH
          * @see Shader::CreateFromFile
          */
         static ProgramUPtr Create(const std::vector<ShaderPtr> &shaders);
+
+        /**
+         * @brief VS/FS 파일 경로 2개로부터 직접 Program 생성하는 편의 팩토리.
+         * @param vertShaderFilename 정점 셰이더 GLSL 파일 경로 (예: @c "./resources/shader/lighting.vs").
+         * @param fragShaderFilename 프래그먼트 셰이더 GLSL 파일 경로.
+         * @return 두 셰이더 컴파일 + 프로그램 link 모두 성공 시 @c ProgramUPtr, 실패 시 @c nullptr.
+         * @details 내부적으로 @c Shader::CreateFromFile 2회 호출 후 @c Create 에 위임.
+         *          호출자는 @c Shader 인스턴스를 따로 보관할 필요 없을 때 사용 (대부분의 경우).
+         * @see Create, Shader::CreateFromFile
+         */
         static ProgramUPtr CreateWithVSFS(const std::string& vertShaderFilename, const std::string& fragShaderFilename);
 
         /// @brief @c Uniforms::Forget 으로 외부 캐시 정리 후 @c glDeleteProgram 호출 (핸들이 0 이 아닐 때만).

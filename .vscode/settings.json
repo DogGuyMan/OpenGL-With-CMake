@@ -68,6 +68,7 @@
     "doxdocgen.generic.paramTemplate": "@param {param} ",
     "doxdocgen.generic.returnTemplate": "@return",
     "doxdocgen.generic.includeTypeAtReturn": false,
+    "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.codeAnalysis.clangTidy.enabled": false,
     "C_Cpp.configurationWarnings": "disabled",
     "files.associations": {

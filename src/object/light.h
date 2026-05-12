@@ -48,4 +48,23 @@ public :
     glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
 };
 
+class DirectionalLight
+{
+public :
+
+    glm::vec3 mDirection{glm::vec3(-0.2f, -1.0f, -0.3f)};
+
+    /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
+    /// @details 광원과 무관한 기본 밝기. 일반적으로 매우 작은 값 (예: @c (0.1, 0.1, 0.1)) 으로 그림자 영역에도 약간의 색.
+    glm::vec3 mAmbient{glm::vec3(0.1f, 0.1f, 0.1f)};
+
+    /// @brief Diffuse 항 색상 (RGB, 0~1). 셰이더 uniform `light.diffuse`.
+    /// @details Lambertian 항의 광원 색. 광원의 *주된 색상* — 일반적으로 흰색 근처.
+    glm::vec3 mDiffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
+
+    /// @brief Specular 항 색상 (RGB, 0~1). 셰이더 uniform `light.specular`.
+    /// @details 하이라이트 색. 일반적으로 흰색 — 금속이 아닌 표면은 광원 색을 그대로 반사.
+    glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
+};
+
 #endif // __SJH_LIGHT_H__

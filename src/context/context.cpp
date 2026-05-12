@@ -173,7 +173,7 @@ namespace SJH
         {
             if (ImGui::CollapsingHeader("light", ImGuiTreeNodeFlags_DefaultOpen))
             {
-                ImGui::DragFloat3("l.position", glm::value_ptr(mLight.mPos), 0.01f);
+                ImGui::DragFloat3("l.direction", glm::value_ptr(mLight.mDirection), 0.01f);
                 ImGui::ColorEdit3("l.ambient", glm::value_ptr(mLight.mAmbient));
                 ImGui::ColorEdit3("l.diffuse", glm::value_ptr(mLight.mDiffuse));
                 ImGui::ColorEdit3("l.specular", glm::value_ptr(mLight.mSpecular));
@@ -219,23 +219,23 @@ namespace SJH
         glEnable(GL_DEPTH_TEST);
 
         // 2. Use Program
-        mSimpleProgram->Use();
-        mVertexArrayObject->Bind(); // 이거 없으면 안되더라..
-        {
-            auto lightModelTransform =
-                glm::translate(glm::mat4(1.0), mLight.mPos) *
-                glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
-            Uniforms::SetVec4(*mSimpleProgram.get(), "baseColor", glm::vec4(mLight.mAmbient + mLight.mDiffuse, 1.0f));
-            Uniforms::SetMat4(*mSimpleProgram.get(), "transformMat", projMat * viewMat * lightModelTransform);
-            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        }
+        // mSimpleProgram->Use();
+        // mVertexArrayObject->Bind(); // 이거 없으면 안되더라..
+        // {
+        //     auto lightModelTransform =
+        //         glm::translate(glm::mat4(1.0), mLight.mPos) *
+        //         glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
+        //     Uniforms::SetVec4(*mSimpleProgram.get(), "baseColor", glm::vec4(mLight.mAmbient + mLight.mDiffuse, 1.0f));
+        //     Uniforms::SetMat4(*mSimpleProgram.get(), "transformMat", projMat * viewMat * lightModelTransform);
+        //     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        // }
 
         mProgram->Use();
         mVertexArrayObject->Bind(); // 이거 없으면 안되더라..
         {
             Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.mPos);
             Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            Uniforms::SetVec3(*mProgram.get(), "light.position", mLight.mPos);
+            Uniforms::SetVec3(*mProgram.get(), "light.direction", mLight.mDirection);
             Uniforms::SetVec3(*mProgram.get(), "light.ambient", mLight.mAmbient);
             Uniforms::SetVec3(*mProgram.get(), "light.diffuse", mLight.mDiffuse);
             Uniforms::SetVec3(*mProgram.get(), "light.specular", mLight.mSpecular);

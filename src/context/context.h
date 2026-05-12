@@ -140,7 +140,7 @@ namespace SJH
         // === 라이팅 (Phong: ambient + diffuse + specular) ===
 
         /// @brief 점 광원 — 위치 + Phong 3항 색상. ImGui 위젯이 직접 편집 → 셰이더 uniform `light.*` 로 전송.
-        Light mLight;
+        DirectionalLight mLight;
 
         /// @brief 표면 머티리얼 — 디퓨즈/스페큘러 텍스처 *이름 키* + shininess. 셰이더 uniform `material.*` 로 전송.
         Material mMaterial;

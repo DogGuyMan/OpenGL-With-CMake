@@ -9,7 +9,7 @@ in vec2 vsTexCoord;
 out vec4 fragColor;
 
 struct Light {
-    vec3 position;
+    vec3 direction;
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
@@ -42,7 +42,7 @@ void main() {
     vec3 ambient = diffuseTexColor * light.ambient;
 
     // 2. Diffuse 라이팅
-    vec3 lightDir = normalize(light.position - vsPosition);
+    vec3 lightDir = normalize(-light.direction);
     vec3 pixelNorm = normalize(vsNormal);   // vertex shader에서 계산된 normal은
                                             // rasterization 되는 과정에서 선형 보간이 진행되서
                                             // FS에 와서도 normalize를 해줘야 함.

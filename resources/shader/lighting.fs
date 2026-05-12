@@ -9,7 +9,8 @@ in vec2 vsTexCoord;
 out vec4 fragColor;
 
 struct Light {
-    vec3 direction;
+    vec3 position;
+    vec3 attenuation;
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
@@ -42,10 +43,16 @@ void main() {
     vec3 ambient = diffuseTexColor * light.ambient;
 
     // 2. Diffuse 라이팅
-    vec3 lightDir = normalize(-light.direction);
-    vec3 pixelNorm = normalize(vsNormal);   // vertex shader에서 계산된 normal은
-                                            // rasterization 되는 과정에서 선형 보간이 진행되서
-                                            // FS에 와서도 normalize를 해줘야 함.
+    float dist = length(light.position - vsPosition);
+    vec3 distPoly = vec3(1.0, dist, dist * dist); // 1.0, d, d*d
+    //  distPoly.x * light.attenuation.x + => 1.0 * Kc +
+    //  distPoly.y * light.attenuation.y + => d * K1 +
+    //  distPoly.z * light.attenuation.z + => d*d*K2 +
+    float attenuation = 1.0 / dot(distPoly, light.attenuation);
+    vec3 lightDir = (light.position - vsPosition) / dist;
+    vec3 pixelNorm = normalize(vsNormal); // vertex shader에서 계산된 normal은
+    // rasterization 되는 과정에서 선형 보간이 진행되서
+    // FS에 와서도 normalize를 해줘야 함.
     float diff = max(dot(pixelNorm, lightDir), 0.0);
     // light.diffuse 채널을 써야 함. 직전 버전은 light.ambient 와 곱해
     // diffuse 슬라이더가 무력화되고 ambient 슬라이더가 두 항을 동시에 흔들었음.
@@ -61,15 +68,14 @@ void main() {
     //  float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     // 3-2 Blinn-Phong:
     vec3 halfwayDir = normalize(lightDir + viewDir);
-        float spec = pow(max(dot(pixelNorm, halfwayDir), 0.0), material.shininess);
+    float spec = pow(max(dot(pixelNorm, halfwayDir), 0.0), material.shininess);
     vec3 specular = spec * specTexColor * light.specular;
 
     // specular 는 albedo 와 *곱하지 않고* 더한다.
     // (ambient + diffuse) 만 surface albedo(fragColor) 로 modulate, specular 는 빛 자체 색으로 가산.
     // 이전 형태인 (ambient+diffuse+specular)*fragColor 는 specular 가 baseColor(주황) 에 tint 되어 묻혔음.
 
-    fragColor = vec4((ambient + diffuse + specular), 1.0f) * fragColor;
-
+    fragColor = vec4((ambient + diffuse + specular), 1.0f) * attenuation * fragColor;
 
     // DEBUG
 

@@ -31,7 +31,7 @@
 /// @brief 점 광원 + Phong 3항 색상 컨테이너.
 class Light
 {
-public :
+public:
     /// @brief 점 광원 월드 좌표. 셰이더 uniform `light.position`. ImGui DragFloat3 위젯이 갱신.
     glm::vec3 mPos{glm::vec3(3.0f, 3.0f, 3.0f)};
 
@@ -50,8 +50,7 @@ public :
 
 class DirectionalLight
 {
-public :
-
+public:
     glm::vec3 mDirection{glm::vec3(-0.2f, -1.0f, -0.3f)};
 
     /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
@@ -66,5 +65,41 @@ public :
     /// @details 하이라이트 색. 일반적으로 흰색 — 금속이 아닌 표면은 광원 색을 그대로 반사.
     glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
 };
+
+class PointLight
+{
+public:
+    float distance{32.0f};
+    /// @brief 점 광원 월드 좌표. 셰이더 uniform `light.position`. ImGui DragFloat3 위젯이 갱신.
+    glm::vec3 mPos{glm::vec3(3.0f, 3.0f, 3.0f)};
+
+    /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
+    /// @details 광원과 무관한 기본 밝기. 일반적으로 매우 작은 값 (예: @c (0.1, 0.1, 0.1)) 으로 그림자 영역에도 약간의 색.
+    glm::vec3 mAmbient{glm::vec3(0.1f, 0.1f, 0.1f)};
+
+    /// @brief Diffuse 항 색상 (RGB, 0~1). 셰이더 uniform `light.diffuse`.
+    /// @details Lambertian 항의 광원 색. 광원의 *주된 색상* — 일반적으로 흰색 근처.
+    glm::vec3 mDiffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
+
+    /// @brief Specular 항 색상 (RGB, 0~1). 셰이더 uniform `light.specular`.
+    /// @details 하이라이트 색. 일반적으로 흰색 — 금속이 아닌 표면은 광원 색을 그대로 반사.
+    glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
+};
+
+static glm::vec3 GetAttenuationCoeff(float distance)
+{
+    const auto linear_coeff = glm::vec4(
+        8.4523112e-05, 4.4712582e+00, -1.8516388e+00, 3.3955811e+01);
+    const auto quad_coeff = glm::vec4(
+        -7.6103583e-04, 9.0120201e+00, -1.1618500e+01, 1.0000464e+02);
+
+    float kc = 1.0f;
+    float d = 1.0f / distance;
+    auto dvec = glm::vec4(1.0f, d, d * d, d * d * d);
+    float kl = glm::dot(linear_coeff, dvec);
+    float kq = glm::dot(quad_coeff, dvec);
+
+    return glm::vec3(kc, glm::max(kl, 0.0f), glm::max(kq * kq, 0.0f));
+}
 
 #endif // __SJH_LIGHT_H__

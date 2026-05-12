@@ -181,7 +181,10 @@ namespace SJH
 
             if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen))
             {
-                ImGui::DragFloat("m.shininess", &mMaterial.mShininess, 1.0f, 1.0f, 256.0f);
+                // ImGui 는 float* 를 요구 — 임시 변수로 편집 후 setter 로 clamp 적용.
+                float shininess = mMaterial.GetShininess();
+                if (ImGui::DragFloat("m.shininess", &shininess, 1.0f, 2.0f, 256.0f))
+                    mMaterial.SetShininess(shininess);
             }
             ImGui::Checkbox("animation", &mAnimation);
             // 함수 하나가 UI component 하나에 대응
@@ -236,13 +239,12 @@ namespace SJH
             Uniforms::SetVec3(*mProgram.get(), "light.ambient", mLight.mAmbient);
             Uniforms::SetVec3(*mProgram.get(), "light.diffuse", mLight.mDiffuse);
             Uniforms::SetVec3(*mProgram.get(), "light.specular", mLight.mSpecular);
-            Uniforms::SetInt(*mProgram.get(), "material.diffuse", 2);
-            Uniforms::SetInt(*mProgram.get(), "material.specular", 3);
             // material.specular 는 sampler2D — texture unit index(int).
             // unit 3 에 container2_specular(금속 가장자리만 밝음) 를 바인딩하여
             // 표면의 specular 마스크 역할을 하게 한다.
+            Uniforms::SetInt(*mProgram.get(), "material.diffuse", 2);
             Uniforms::SetInt(*mProgram.get(), "material.specular", 3);
-            Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial.mShininess);
+            Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial.GetShininess());
 
             glActiveTexture(GL_TEXTURE2);
             mRM->LoadTextureWithName("container2")->Bind();
@@ -299,13 +301,14 @@ namespace SJH
         if (imagePtr3 == nullptr)
             return false;
         mRM->LoadTextureFromImage(imagePtr3);
-        mMaterial.mDiffuseTextureName = "container2";
 
         auto imagePtr4 = mRM->LoadImage("container2_specular", "./resources/texture/container2_specular.png");
         if (imagePtr4 == nullptr)
             return false;
         mRM->LoadTextureFromImage(imagePtr4);
-        mMaterial.mDiffuseTextureName = "container2_specular";
+
+        // 디퓨즈 + 스페큘러 이름 키를 한 번에 설정 (이전: mDiffuseTextureName 에 specular 값을 두 번 대입하던 버그 수정).
+        mMaterial.SetTextureNames("container2", "container2_specular");
 
         auto checkerImgPtr = Image::Create("checkerboard", 512, 512);
         checkerImgPtr->SetCheckImage(16, 16);

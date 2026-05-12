@@ -75,14 +75,9 @@ TEST_CASE("Uniforms::Set* — setter family 가 crash 없이 GL 호출 위임",
 
     prog->Use();   // setter 들이 의미 있게 동작하려면 use 상태여야 함.
 
-    const float identity[16] = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f,
-    };
-    const float v3[3] = { 1.0f, 2.0f, 3.0f };
-    const float v4[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+    const glm::mat4 identity(1.0f);
+    const glm::vec3 v3(1.0f, 2.0f, 3.0f);
+    const glm::vec4 v4(0.5f, 0.5f, 0.5f, 1.0f);
 
     SJH::Uniforms::SetMat4 (*prog, "uModel",     identity);
     SJH::Uniforms::SetVec3 (*prog, "uTranslate", v3);

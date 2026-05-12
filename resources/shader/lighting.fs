@@ -68,7 +68,7 @@ void main() {
     // (ambient + diffuse) 만 surface albedo(fragColor) 로 modulate, specular 는 빛 자체 색으로 가산.
     // 이전 형태인 (ambient+diffuse+specular)*fragColor 는 specular 가 baseColor(주황) 에 tint 되어 묻혔음.
 
-    fragColor = vec4(ambient + diffuse, 1.0f) * fragColor + vec4(specular, 0.0f);
+    fragColor = vec4((ambient + diffuse + specular), 1.0f) * fragColor;
 
 
     // DEBUG

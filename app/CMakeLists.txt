@@ -18,6 +18,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     fmt::fmt
     imgui::imgui
     imguizmo::imguizmo
+    assimp::assimp
     # 내부 모듈 (링크 시 include 경로 자동 전파)
     SJH::buffer
     SJH::object

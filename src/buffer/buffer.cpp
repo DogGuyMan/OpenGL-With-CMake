@@ -9,10 +9,10 @@ namespace SJH
      * GL_ARRAY_BUFFER : GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices, sizeof(float) * 12
      * GL_ELEMENT_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(uint32_t) * 6
      */
-    BufferUPtr Buffer::CreateWithData(GLuint buffer_type, GLuint usage, const void *data, size_t data_size)
+    BufferUPtr Buffer::CreateWithData(GLuint buffer_type, GLuint usage, const void *data, size_t stride, size_t count)
     {
         auto buffer = std::unique_ptr<Buffer>(new Buffer());
-        if (!buffer->Init(buffer_type, usage, data, data_size))
+        if (!buffer->Init(buffer_type, usage, data, stride, count))
             return nullptr;
         return std::move(buffer);
     }
@@ -29,16 +29,18 @@ namespace SJH
         return Diagnostics::GLDebug::CheckGLBindBuffer(mBuffer);
     }
 
-    bool Buffer::Init(GLuint buffer_type, GLuint usage, const void *data, size_t data_size)
+    bool Buffer::Init(GLuint buffer_type, GLuint usage, const void *data, size_t stride, size_t count)
     {
         mBufferType = buffer_type;
         mUsage = usage;
+        mStride = stride;
+        mCount = count;
         glGenBuffers(1, &mBuffer);
         if (!Diagnostics::GLDebug::CheckGLGenBuffers(mBuffer))
             return false;
         if(!Bind()) {return false;}
-        glBufferData(buffer_type, data_size, data, usage);
-        if (!Diagnostics::GLDebug::CheckGLBufferData(data_size))
+        glBufferData(buffer_type, mStride * mCount, data, usage);
+        if (!Diagnostics::GLDebug::CheckGLBufferData(stride * count))
             return false;
         return true;
     }

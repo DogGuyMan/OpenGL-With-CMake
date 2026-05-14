@@ -180,6 +180,18 @@ target_link_libraries(test_gl_state_log PRIVATE
 target_compile_features(test_gl_state_log PRIVATE cxx_std_17)
 catch_discover_tests(test_gl_state_log)
 
+#  diagnostics 모듈 — GLValidate 6 카테고리 (Cat A-F) + RunFullSweep
+# A는 GL ctx 불필요, B-F는 inline VS/FS + GLContextFixture 사용.
+add_executable(test_gl_validate test_gl_validate.cpp)
+target_link_libraries(test_gl_validate PRIVATE
+    Catch2::Catch2WithMain
+    gl_test_fixture
+    spdlog_capture
+    SJH::diagnostics
+)
+target_compile_features(test_gl_validate PRIVATE cxx_std_17)
+catch_discover_tests(test_gl_validate)
+
 #  shader 모듈 — Material POD 클래스 회귀 (default values + 레이아웃)
 # GL context 불필요. SJH::shader 가 glm::glm 을 PUBLIC 으로 가져옴.
 add_executable(test_material test_material.cpp)
@@ -257,7 +269,8 @@ add_custom_target(tests DEPENDS
     test_gl_state_snapshot  # Task 6
     test_material           # POD value class regression
     test_light              # POD value class regression
-    test_shader_uniform_contract  # simple.fs ↔ Material/Light contract
+    test_shader_uniform_contract  # lighting.fs ↔ Material/Light caster contract
+    test_gl_validate        # GLValidate 6 카테고리 (Cat A-F)
     test_program_uniforms
     test_buffer
     test_vertex_layout

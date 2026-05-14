@@ -2,6 +2,7 @@
 #include "buffer/buffer.h"
 #include "diagnostics/gl_log.h"
 #include "diagnostics/gl_state_log.h" // Task 5 — Init() 끝에 1회 상태 덤프
+#include "diagnostics/gl_validate.h"  // GLValidate — Mesh/Shader 정합성 진단
 #include "layout/vertex_layout.h"
 #include "program/program_uniforms.h" // program.h 가 더 이상 transitive 제공 안 함
 #include <imgui.h>
@@ -17,52 +18,6 @@ namespace SJH
      *
      *********************************************************************************/
     // 엥? 교안 CW 배치네..
-
-    // clang-format off
-    float vertices[] = {
-        // position(x, y, z)   normal(nx, ny, nz)   color(r, g, b)       uv(u, v)
-        // -- back face (z = -0.5, normal -Z) --
-        -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
-        // -- front face (z = +0.5, normal +Z) --
-        -0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
-        // -- left face (x = -0.5, normal -X) --
-        -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
-        // -- right face (x = +0.5, normal +X) --
-         0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
-        // -- bottom face (y = -0.5, normal -Y) --
-        -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
-        // -- top face (y = +0.5, normal +Y) --
-        -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,   0.0f, 0.0f,
-    };
-
-    // ! ⭐️ 제발 인덱스 버퍼는 GLuint로 두자 ⭐️
-    uint32_t indices[] = {
-         0,  2,  1,    2,  0,  3,   // back
-         4,  5,  6,    6,  7,  4,   // front
-         8,  9, 10,   10, 11,  8,   // left
-        12, 14, 13,   14, 12, 15,   // right
-        16, 17, 18,   18, 19, 16,   // bottom
-        20, 22, 21,   22, 20, 23,   // top
-    };
-    // clang-format on
 
     std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -171,13 +126,39 @@ namespace SJH
     {
         if (ImGui::Begin("ui window"))
         {
-            if (ImGui::CollapsingHeader("light", ImGuiTreeNodeFlags_DefaultOpen))
+            if (ImGui::CollapsingHeader("dirLight"))
             {
-                ImGui::DragFloat3("l.position", glm::value_ptr(mLight.mPos), 0.01f);
-                ImGui::DragFloat("l.distance", &mLight.distance, 0.5f, 0.0f, 3000.0f);
-                ImGui::ColorEdit3("l.ambient", glm::value_ptr(mLight.mAmbient));
-                ImGui::ColorEdit3("l.diffuse", glm::value_ptr(mLight.mDiffuse));
-                ImGui::ColorEdit3("l.specular", glm::value_ptr(mLight.mSpecular));
+                ImGui::DragFloat3("dir.direction", glm::value_ptr(mDirLight.mDirection), 0.01f);
+                ImGui::ColorEdit3("dir.ambient", glm::value_ptr(mDirLight.mAmbient));
+                ImGui::ColorEdit3("dir.diffuse", glm::value_ptr(mDirLight.mDiffuse));
+                ImGui::ColorEdit3("dir.specular", glm::value_ptr(mDirLight.mSpecular));
+            }
+
+            for (int i = 0; i < 2; ++i)
+            {
+                ImGui::PushID(i); // 같은 라벨 충돌 방지
+                std::string header = "pointLight[" + std::to_string(i) + "]";
+                if (ImGui::CollapsingHeader(header.c_str()))
+                {
+                    ImGui::DragFloat3("p.position", glm::value_ptr(mPointLights[i].mPos), 0.01f);
+                    ImGui::DragFloat("p.distance", &mPointLights[i].mDistance, 0.5f, 1.0f, 3250.0f);
+                    ImGui::ColorEdit3("p.ambient", glm::value_ptr(mPointLights[i].mAmbient));
+                    ImGui::ColorEdit3("p.diffuse", glm::value_ptr(mPointLights[i].mDiffuse));
+                    ImGui::ColorEdit3("p.specular", glm::value_ptr(mPointLights[i].mSpecular));
+                }
+                ImGui::PopID();
+            }
+
+            if (ImGui::CollapsingHeader("spotLight", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::DragFloat3("s.position", glm::value_ptr(mSpotLight.mPos), 0.01f);
+                ImGui::DragFloat3("s.direction", glm::value_ptr(mSpotLight.mDirection), 0.01f);
+                ImGui::DragFloat("s.cutoff(deg)", &mSpotLight.mCutoffAngleDeg, 0.1f, 0.0f, 89.0f);
+                ImGui::DragFloat("s.outerCutoff(deg)", &mSpotLight.mOuterCutoffAngleDeg, 0.1f, 0.0f, 90.0f);
+                ImGui::DragFloat("s.distance", &mSpotLight.mDistance, 0.5f, 1.0f, 3250.0f);
+                ImGui::ColorEdit3("s.ambient", glm::value_ptr(mSpotLight.mAmbient));
+                ImGui::ColorEdit3("s.diffuse", glm::value_ptr(mSpotLight.mDiffuse));
+                ImGui::ColorEdit3("s.specular", glm::value_ptr(mSpotLight.mSpecular));
             }
 
             if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen))
@@ -219,31 +200,64 @@ namespace SJH
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
-        // 2. Use Program
+        // 2. Use Program — 광원 *위치 표시 큐브* 들 (DirLight 는 방향만 가지므로 표시 안 함)
         mSimpleProgram->Use();
-        mVertexArrayObject->Bind(); // 이거 없으면 안되더라..
         {
-            auto lightModelTransform =
-                glm::translate(glm::mat4(1.0), mLight.mPos) *
-                glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
-            Uniforms::SetVec4(*mSimpleProgram.get(), "baseColor", glm::vec4(mLight.mAmbient + mLight.mDiffuse, 1.0f));
-            Uniforms::SetMat4(*mSimpleProgram.get(), "transformMat", projMat * viewMat * lightModelTransform);
-            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+            // 두 점광원 + 스포트라이트 = 총 3개 마커 큐브. 각자 자기 diffuse 색으로 출력.
+            const glm::vec3 markerPositions[3] = {
+                mPointLights[0].mPos,
+                mPointLights[1].mPos,
+                mSpotLight.mPos,
+            };
+            const glm::vec3 markerColors[3] = {
+                mPointLights[0].mDiffuse,
+                mPointLights[1].mDiffuse,
+                mSpotLight.mDiffuse,
+            };
+            for (int i = 0; i < 3; ++i)
+            {
+                auto markerTransform =
+                    glm::translate(glm::mat4(1.0f), markerPositions[i]) *
+                    glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+                Uniforms::SetVec4(*mSimpleProgram.get(), "baseColor", glm::vec4(markerColors[i], 1.0f));
+                Uniforms::SetMat4(*mSimpleProgram.get(), "transformMat", projMat * viewMat * markerTransform);
+                mBox->Draw();
+            }
         }
 
         mProgram->Use();
-        mVertexArrayObject->Bind(); // 이거 없으면 안되더라..
         {
             Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.mPos);
-            Uniforms::SetVec4(*mProgram.get(), "baseColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            Uniforms::SetVec3(*mProgram.get(), "light.position", mLight.mPos);
-            Uniforms::SetVec3(*mProgram.get(), "light.attenuation", GetAttenuationCoeff(mLight.distance));
-            Uniforms::SetVec3(*mProgram.get(), "light.ambient", mLight.mAmbient);
-            Uniforms::SetVec3(*mProgram.get(), "light.diffuse", mLight.mDiffuse);
-            Uniforms::SetVec3(*mProgram.get(), "light.specular", mLight.mSpecular);
-            // material.specular 는 sampler2D — texture unit index(int).
-            // unit 3 에 container2_specular(금속 가장자리만 밝음) 를 바인딩하여
-            // 표면의 specular 마스크 역할을 하게 한다.
+
+            // --- DirLight 1개 (평행광 / 거리감쇠 없음) ---
+            Uniforms::SetVec3(*mProgram.get(), "dirLight.direction", mDirLight.mDirection);
+            Uniforms::SetVec3(*mProgram.get(), "dirLight.ambient",   mDirLight.mAmbient);
+            Uniforms::SetVec3(*mProgram.get(), "dirLight.diffuse",   mDirLight.mDiffuse);
+            Uniforms::SetVec3(*mProgram.get(), "dirLight.specular",  mDirLight.mSpecular);
+
+            // --- PointLight 2개 (배열, 거리감쇠 vec3 는 mDistance 로 도출) ---
+            for (int i = 0; i < 2; ++i)
+            {
+                std::string base = "pointLights[" + std::to_string(i) + "].";
+                Uniforms::SetVec3(*mProgram.get(), (base + "position").c_str(),    mPointLights[i].mPos);
+                Uniforms::SetVec3(*mProgram.get(), (base + "attenuation").c_str(), GetAttenuationCoeff(mPointLights[i].mDistance));
+                Uniforms::SetVec3(*mProgram.get(), (base + "ambient").c_str(),     mPointLights[i].mAmbient);
+                Uniforms::SetVec3(*mProgram.get(), (base + "diffuse").c_str(),     mPointLights[i].mDiffuse);
+                Uniforms::SetVec3(*mProgram.get(), (base + "specular").c_str(),    mPointLights[i].mSpecular);
+            }
+
+            // --- SpotLight 1개 (점광원 + 콘 cutoff) ---
+            Uniforms::SetVec3 (*mProgram.get(), "spotLight.position",    mSpotLight.mPos);
+            Uniforms::SetVec3 (*mProgram.get(), "spotLight.direction",   mSpotLight.mDirection);
+            // CPU 는 degree 로 보관, 셰이더는 cosine 으로 비교 — 송신 시점에 변환.
+            Uniforms::SetFloat(*mProgram.get(), "spotLight.cutoff",      cosf(glm::radians(mSpotLight.mCutoffAngleDeg)));
+            Uniforms::SetFloat(*mProgram.get(), "spotLight.outerCutoff", cosf(glm::radians(mSpotLight.mOuterCutoffAngleDeg)));
+            Uniforms::SetVec3 (*mProgram.get(), "spotLight.attenuation", GetAttenuationCoeff(mSpotLight.mDistance));
+            Uniforms::SetVec3 (*mProgram.get(), "spotLight.ambient",     mSpotLight.mAmbient);
+            Uniforms::SetVec3 (*mProgram.get(), "spotLight.diffuse",     mSpotLight.mDiffuse);
+            Uniforms::SetVec3 (*mProgram.get(), "spotLight.specular",    mSpotLight.mSpecular);
+
+            // --- Material — diffuse/specular 텍스처 unit + shininess ---
             Uniforms::SetInt(*mProgram.get(), "material.diffuse", 2);
             Uniforms::SetInt(*mProgram.get(), "material.specular", 3);
             Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial.GetShininess());
@@ -266,7 +280,7 @@ namespace SJH
                 Uniforms::SetMat4(*mProgram.get(), "transformMat", transformMat);
                 Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelMat);
                 // VBO + EBO 협력으로 그렸을때.
-                glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+                mBox->Draw();
             }
         }
 
@@ -276,6 +290,35 @@ namespace SJH
 
     bool Context::Init()
     {
+        // === Light Casters 초기화 (사용자 제공 reference 값) ===
+        // 거리감쇠 c1=0.09 / c2=0.032 → learnopengl 표 distance≈50 행에 대응하므로 mDistance=50 로 설정.
+        // (project 의 GetAttenuationCoeff 가 distance→(Kc,Kl,Kq) 변환을 담당)
+
+        mDirLight.mDirection = glm::vec3(0.0f, -1.0f, 0.0f);
+        mDirLight.mAmbient   = glm::vec3(1.0f, 1.0f, 1.0f);
+        mDirLight.mDiffuse   = glm::vec3(1.0f, 1.0f, 1.0f);
+        mDirLight.mSpecular  = glm::vec3(1.0f, 1.0f, 1.0f);
+
+        mPointLights[0].mPos      = glm::vec3(1.2f, 1.0f, 1.0f);
+        mPointLights[0].mDistance = 50.0f;
+        mPointLights[0].mAmbient  = glm::vec3(0.05f, 0.05f, 0.05f);
+        mPointLights[0].mDiffuse  = glm::vec3(0.8f, 0.4f, 0.2f);
+        mPointLights[0].mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+
+        mPointLights[1].mPos      = glm::vec3(-1.2f, 1.0f, -1.0f);
+        mPointLights[1].mDistance = 50.0f;
+        mPointLights[1].mAmbient  = glm::vec3(0.05f, 0.05f, 0.05f);
+        mPointLights[1].mDiffuse  = glm::vec3(0.2f, 0.4f, 0.8f);
+        mPointLights[1].mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+
+        mSpotLight.mPos                  = glm::vec3(0.0f, 1.5f, 0.0f);
+        mSpotLight.mDirection            = glm::vec3(0.0f, -1.0f, 0.0f);
+        mSpotLight.mCutoffAngleDeg       = 12.5f;
+        mSpotLight.mOuterCutoffAngleDeg  = 17.5f;
+        mSpotLight.mDistance             = 50.0f;
+        mSpotLight.mAmbient              = glm::vec3(0.0f, 0.0f, 0.0f);
+        mSpotLight.mDiffuse              = glm::vec3(1.0f, 1.0f, 1.0f);
+        mSpotLight.mSpecular             = glm::vec3(1.0f, 1.0f, 1.0f);
 
         mProgram = Program::CreateWithVSFS("./resources/shader/lighting.vs", "./resources/shader/lighting.fs");
         if (!mProgram)
@@ -327,59 +370,28 @@ namespace SJH
             3. Vertex Attribute Setting
         */
 
-        // 1. VAO 사용할 buffer object는 vertex data를 저장할 용도
-        //      변경빈도(STATIC=한번 / DYNAMIC=자주 / STREAM=매프레임) x 용도(DRAW=앱-> GPU / READ=GPU -> 앱 / COPY=GPU <-> GPU)
-        mVertexArrayObject = VertexLayout::Create();
-        mVertexBufferObject = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices, sizeof(vertices));
-        mVertexArrayObject->TrySetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, 0);
-        mVertexArrayObject->TrySetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, sizeof(float) * 3);
-        mVertexArrayObject->TrySetAttrib(2, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 11, sizeof(float) * 6);
-        mVertexArrayObject->TrySetAttrib(3, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 11, sizeof(float) * 9);
+        // 큐브 메시 1개 — VAO/VBO/EBO 는 Mesh 가 캡슐화. unbind 도 Mesh::Init 내부에서 처리됨.
+        // (직전: 여기서 glBindVertexArray(0) / glBindBuffer 3종을 직접 호출했지만 Mesh 캡슐화 후 redundant.
+        //  마찬가지로 unit 0/1 에 white 텍스처를 바인딩하고 lighting.fs 의 tex0/tex1 sampler 에 SetInt 까지 했지만,
+        //  multi-light 마이그레이션 후 두 sampler 가 셰이더에서 제거되었고 simple.fs 는 sampler 자체가 없음 →
+        //  unit 0/1 바인딩, tex0/tex1 SetInt, checkerboard/awesomeface 주석 블록 모두 dead code 로 일괄 제거.)
+        mBox = Mesh::CreateBox();
 
-        // 2.
-        mElementBufferObject = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices, sizeof(indices));
-
-        // VBO 및 버텍스 속성을 다 했으니 VBO와 VAO를 unbind한다.
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        // 3
-        // {
-        //     // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
-        //     glActiveTexture(GL_TEXTURE0);
-        //     // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
-        //     mRM->LoadTextureWithName("checkerboard")
-        //         ->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
-        // }
-        // {
-        //     // glActiveTexture(textureSlot) 함수로 현재 다루고자 하는 텍스처 슬롯을 선택
-        //     glActiveTexture(GL_TEXTURE1);
-        //     // glBindTexture(textureType, textureId) 함수로 현재 설정중인 텍스처 슬롯에 우리의 텍스처 오브젝트를 바인딩
-        //     mRM->LoadTextureWithName("awesomeface")
-        //         ->Bind(); // -> glBindTexture(GL_TEXTURE_2D, mTextureID);
-        // }
-        glActiveTexture(GL_TEXTURE0);
-        mRM->LoadTextureWithName("white")->Bind();
-        glActiveTexture(GL_TEXTURE1);
-        mRM->LoadTextureWithName("white")->Bind();
-
-        mProgram->Use();
-
-        for (int i = 0; i < 2; i++)
-        {
-            std::string texuniform = "tex" + std::to_string(i);
-            // glGetUniformLocation() 함수로 shader 내의 sampler2D uniform 핸들을 얻어옴
-            //      auto loc = glGetUniformLocation(mProgram->GetProgramAddr(), texuniform.c_str());
-            // glUniform1i() 함수로 sampler2D uniform에 텍스처 슬롯 인덱스를 입력
-            //      glUniform1i(loc, i);
-            Uniforms::SetInt(*mProgram.get(), texuniform.c_str(), i);
-        }
-
-        // Init 끝 — VAO/VBO/EBO/program/textures 모두 설정 완료 시점의 *온전한 GL 상태* 1회 덤프.
+        // Init 끝 — Mesh/program/textures 모두 설정 완료 시점의 *온전한 GL 상태* 1회 덤프.
         // Render() 안에서 의도치 않은 상태 변화가 의심되면 본 baseline과 비교 가능.
         // (매 프레임 호출 금지 — glGet* stall. Init() 1회 한정.)
         Diagnostics::GLStateLog::Dump("Context::Init done");
+
+        // GLValidate program-side 진단 — Mesh ↔ Shader contract.
+        // Cat A (CheckIndices) 는 Mesh::Init 이 이미 호출. 본 시점 직전에 Mesh::Draw 가
+        // VAO 를 Bind 해야 Cat B (attribute layout) 가 정확 — 명시적으로 Bind 후 검증.
+        // Cat C (CheckUniformCoverage) 는 Init 직후 모든 uniform이 default-0 인 게 정상이라 skip
+        // (Render 안 setter 호출 후 의미 있음).
+        mBox->GetVertexLayout()->Bind();
+        mProgram->Use();
+        Diagnostics::GLValidate::CheckAttribLayout(mProgram->GetProgramAddr(), "Context::Init");
+        Diagnostics::GLValidate::CheckSamplerBindings(mProgram->GetProgramAddr(), "Context::Init");
+        Diagnostics::GLValidate::DumpShaderInfoLogs(mProgram->GetProgramAddr(), "Context::Init");
 
         return true;
     }

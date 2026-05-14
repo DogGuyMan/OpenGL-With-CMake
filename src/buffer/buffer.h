@@ -4,6 +4,8 @@
 #include "common/common.h"
 #include <glad/glad.h>
 
+// ShaderPtr을 사용하자.
+// VBO EBO는 다른 VAO와 연결하여 재사용할 수 있다.
 namespace SJH
 {
     CLASS_PTR(Buffer)
@@ -48,13 +50,15 @@ namespace SJH
          *          잘못된 타입 (예: 인덱스 버퍼에 GLfloat) 은 진단으로 못 잡힘 — 호출자 책임.
          */
         static BufferUPtr CreateWithData(GLuint buffer_type, GLuint usage,
-                                         const void *data, size_t data_size);
+                                         const void *data, size_t stride, size_t count);
 
         /// @brief @c glDeleteBuffers 호출 (핸들이 0 이 아닐 때만).
         ~Buffer();
 
         /// @brief 내부 GL 버퍼 핸들 반환 — 디버깅 / 직접 GL 호출 시 사용.
         GLuint Get() const { return mBuffer; }
+        size_t GetStride() const {return mStride;}
+        size_t GetCount() const {return mCount;}
 
         /// @brief 본 버퍼를 자신의 @c bufferType 슬롯에 바인딩 (`glBindBuffer`).
         /// @return 진단 통과 시 @c true. 실패 시 spdlog 출력 + @c false.
@@ -64,11 +68,13 @@ namespace SJH
         Buffer() = default;
 
         /// @brief Gen + Bind + 데이터 업로드 + 각 단계 진단. `CreateWithData` 내부에서만 호출.
-        bool Init(GLuint buffer_type, GLuint usage, const void *data, size_t data_size);
+        bool Init(GLuint buffer_type, GLuint usage, const void* data, size_t stride, size_t count);
 
         GLuint mBuffer{0};
         GLuint mBufferType{0};
         GLuint mUsage{0};
+        size_t mStride {0};
+        size_t mCount {0};
     };
 
 }

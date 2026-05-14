@@ -9,6 +9,7 @@
         "glm",
         "stb",
         "catch2",
+        "assimp",
         {
             "name": "imgui",
             "features": [

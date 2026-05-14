@@ -6,6 +6,7 @@
 #include "layout/vertex_layout.h"
 #include "object/camera.h"
 #include "object/light.h"
+#include "object/mesh.h"
 #include "shader/material.h"
 #include "program/program.h"
 #include "resource_management/resource_management.h"
@@ -106,14 +107,7 @@ namespace SJH
         /// @brief 단순 셰이더 프로그램 (`simple.vs/fs`). 광원 큐브 등 *라이팅 무관* 객체 그릴 때 사용 — color uniform 직접 출력.
         ProgramUPtr mSimpleProgram;
 
-        /// @brief Vertex Array Object — vertex attribute layout(위치/색상/UV) 보관.
-        VertexLayoutUPtr mVertexArrayObject;
-
-        /// @brief Vertex Buffer Object — 큐브 정점 데이터(@c GL_ARRAY_BUFFER).
-        BufferUPtr mVertexBufferObject;
-
-        /// @brief Element Buffer Object — 인덱스 버퍼(@c GL_ELEMENT_ARRAY_BUFFER). 36개 인덱스로 12 삼각형 = 큐브 6면.
-        BufferUPtr mElementBufferObject;
+        MeshUPtr mBox;
 
         /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
         bool mAnimation{true};
@@ -137,12 +131,17 @@ namespace SJH
         /// @brief @c glClearColor 인자. ImGui ColorEdit3 위젯이 직접 갱신.
         glm::vec4 mClearColor{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
 
-        // === 라이팅 (Phong: ambient + diffuse + specular) ===
+        // === 라이팅 (Multi Light Caster — Directional + Point[N] + Spot) ===
 
-        /// @brief 점 광원 — 위치 + Phong 3항 색상. ImGui 위젯이 직접 편집 → 셰이더 uniform `light.*` 로 전송.
-        // Light mLight;
-        // DirectionalLight mLight;
-        PointLight mLight;
+        /// @brief 평행광 1개 — 전역 ambient + 태양광 역할. 셰이더 uniform `dirLight.*`.
+        DirLight mDirLight;
+
+        /// @brief 점광원 2개 — 위치 + 거리감쇠. 셰이더 uniform `pointLights[i].*`.
+        ///        배열 크기는 셰이더의 @c NUM_POINT_LIGHTS 와 동기 (현재 2).
+        PointLight mPointLights[2];
+
+        /// @brief 스포트라이트 1개 — 점광원 + 콘 cutoff. 셰이더 uniform `spotLight.*`.
+        SpotLight mSpotLight;
 
         /// @brief 표면 머티리얼 — 디퓨즈/스페큘러 텍스처 *이름 키* + shininess. 셰이더 uniform `material.*` 로 전송.
         Material mMaterial;

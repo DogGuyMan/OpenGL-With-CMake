@@ -45,3 +45,7 @@ find_package(imgui CONFIG REQUIRED)
 # ImGuizmo: 3D 변환 기즈모 (translation/rotation/scale) — imgui 의존
 find_package(imguizmo CONFIG REQUIRED)
 # 타겟: imguizmo::imguizmo — imgui::imgui 를 PUBLIC 으로 끌어오므로 imgui 별도 링크 불필요
+
+# Assimp: 3D 모델 임포트 (Open Asset Import Library)
+find_package(assimp CONFIG REQUIRED)
+# 타겟: assimp::assimp

@@ -21,7 +21,9 @@
 #include "program/program.h"
 #include "program/program_uniforms.h"
 #include "diagnostics/uniform_diagnostics.h"
+#include "object/light.h"   // DirLight/PointLight/SpotLight + GetAttenuationCoeff (헤더는 forward decl 만)
 
+#include <cmath>            // cosf — SpotLight degree→cosine 변환
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -176,5 +178,42 @@ namespace SJH::Uniforms
         if (e.location < 0)
             Diagnostics::UniformDiagnostics::NotifyMissing(pid, name);
         return e.location;
+    }
+
+    // === 광원 struct → uniform block 일괄 전송 helpers ==========================
+    // 책임 분리: 셰이더 struct 멤버 이름과의 *문자열 결합* 만 본 TU 가 담당, 실제
+    // GL 호출은 SetVec3/SetFloat 가 재사용 — 캐시/진단/타입체크 경로 그대로 통과.
+
+    void SetDirLight(Program &prog, const char *prefix, const DirLight &light)
+    {
+        const std::string base = prefix;
+        SetVec3(prog, (base + ".direction").c_str(), light.mDirection);
+        SetVec3(prog, (base + ".ambient").c_str(),   light.mAmbient);
+        SetVec3(prog, (base + ".diffuse").c_str(),   light.mDiffuse);
+        SetVec3(prog, (base + ".specular").c_str(),  light.mSpecular);
+    }
+
+    void SetPointLight(Program &prog, const char *prefix, const PointLight &light)
+    {
+        const std::string base = prefix;
+        SetVec3(prog, (base + ".position").c_str(),    light.mPos);
+        SetVec3(prog, (base + ".attenuation").c_str(), GetAttenuationCoeff(light.mDistance));
+        SetVec3(prog, (base + ".ambient").c_str(),     light.mAmbient);
+        SetVec3(prog, (base + ".diffuse").c_str(),     light.mDiffuse);
+        SetVec3(prog, (base + ".specular").c_str(),    light.mSpecular);
+    }
+
+    void SetSpotLight(Program &prog, const char *prefix, const SpotLight &light)
+    {
+        const std::string base = prefix;
+        SetVec3 (prog, (base + ".position").c_str(),    light.mPos);
+        SetVec3 (prog, (base + ".direction").c_str(),   light.mDirection);
+        // CPU 는 degree, 셰이더는 cosine — 송신 시점에 변환 (struct 정의 시 의도된 분업).
+        SetFloat(prog, (base + ".cutoff").c_str(),      cosf(glm::radians(light.mCutoffAngleDeg)));
+        SetFloat(prog, (base + ".outerCutoff").c_str(), cosf(glm::radians(light.mOuterCutoffAngleDeg)));
+        SetVec3 (prog, (base + ".attenuation").c_str(), GetAttenuationCoeff(light.mDistance));
+        SetVec3 (prog, (base + ".ambient").c_str(),     light.mAmbient);
+        SetVec3 (prog, (base + ".diffuse").c_str(),     light.mDiffuse);
+        SetVec3 (prog, (base + ".specular").c_str(),    light.mSpecular);
     }
 }

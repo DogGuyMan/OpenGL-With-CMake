@@ -230,32 +230,17 @@ namespace SJH
             Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.mPos);
 
             // --- DirLight 1개 (평행광 / 거리감쇠 없음) ---
-            Uniforms::SetVec3(*mProgram.get(), "dirLight.direction", mDirLight.mDirection);
-            Uniforms::SetVec3(*mProgram.get(), "dirLight.ambient",   mDirLight.mAmbient);
-            Uniforms::SetVec3(*mProgram.get(), "dirLight.diffuse",   mDirLight.mDiffuse);
-            Uniforms::SetVec3(*mProgram.get(), "dirLight.specular",  mDirLight.mSpecular);
+            Uniforms::SetDirLight(*mProgram, "dirLight", mDirLight);
 
-            // --- PointLight 2개 (배열, 거리감쇠 vec3 는 mDistance 로 도출) ---
+            // --- PointLight 2개 (배열, 거리감쇠는 helper 가 mDistance 로 내부 도출) ---
             for (int i = 0; i < 2; ++i)
             {
-                std::string base = "pointLights[" + std::to_string(i) + "].";
-                Uniforms::SetVec3(*mProgram.get(), (base + "position").c_str(),    mPointLights[i].mPos);
-                Uniforms::SetVec3(*mProgram.get(), (base + "attenuation").c_str(), GetAttenuationCoeff(mPointLights[i].mDistance));
-                Uniforms::SetVec3(*mProgram.get(), (base + "ambient").c_str(),     mPointLights[i].mAmbient);
-                Uniforms::SetVec3(*mProgram.get(), (base + "diffuse").c_str(),     mPointLights[i].mDiffuse);
-                Uniforms::SetVec3(*mProgram.get(), (base + "specular").c_str(),    mPointLights[i].mSpecular);
+                const std::string base = "pointLights[" + std::to_string(i) + "]";
+                Uniforms::SetPointLight(*mProgram, base.c_str(), mPointLights[i]);
             }
 
-            // --- SpotLight 1개 (점광원 + 콘 cutoff) ---
-            Uniforms::SetVec3 (*mProgram.get(), "spotLight.position",    mSpotLight.mPos);
-            Uniforms::SetVec3 (*mProgram.get(), "spotLight.direction",   mSpotLight.mDirection);
-            // CPU 는 degree 로 보관, 셰이더는 cosine 으로 비교 — 송신 시점에 변환.
-            Uniforms::SetFloat(*mProgram.get(), "spotLight.cutoff",      cosf(glm::radians(mSpotLight.mCutoffAngleDeg)));
-            Uniforms::SetFloat(*mProgram.get(), "spotLight.outerCutoff", cosf(glm::radians(mSpotLight.mOuterCutoffAngleDeg)));
-            Uniforms::SetVec3 (*mProgram.get(), "spotLight.attenuation", GetAttenuationCoeff(mSpotLight.mDistance));
-            Uniforms::SetVec3 (*mProgram.get(), "spotLight.ambient",     mSpotLight.mAmbient);
-            Uniforms::SetVec3 (*mProgram.get(), "spotLight.diffuse",     mSpotLight.mDiffuse);
-            Uniforms::SetVec3 (*mProgram.get(), "spotLight.specular",    mSpotLight.mSpecular);
+            // --- SpotLight 1개 (점광원 + 콘 cutoff — degree→cosine 변환은 helper 내부) ---
+            Uniforms::SetSpotLight(*mProgram, "spotLight", mSpotLight);
 
             // --- Material — diffuse/specular 텍스처 unit + shininess ---
             Uniforms::SetInt(*mProgram.get(), "material.diffuse", 2);

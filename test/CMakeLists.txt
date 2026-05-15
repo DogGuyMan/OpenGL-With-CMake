@@ -137,13 +137,13 @@ target_link_libraries(test_vertex_layout PRIVATE
 target_compile_features(test_vertex_layout PRIVATE cxx_std_17)
 catch_discover_tests(test_vertex_layout)
 
-#  resource_management 모듈 — Texture / ResourceManagement RAII + 캐시 + sampler 계약 회귀
+#  resource_registry 모듈 — Texture / ResourceRegistry RAII + 캐시 + sampler 계약 회귀
 #  실행 디렉토리에 ./resources/texture/container.jpg 가 있어야 케이스 RUN — POST_BUILD 로 symlink.
 add_executable(test_texture test_texture.cpp)
 target_link_libraries(test_texture PRIVATE
     Catch2::Catch2WithMain
     gl_test_fixture
-    SJH::resource_management
+    SJH::resource_registry
 )
 target_compile_features(test_texture PRIVATE cxx_std_17)
 catch_discover_tests(test_texture)

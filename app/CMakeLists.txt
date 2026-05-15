@@ -28,7 +28,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SJH::layout
     SJH::program
     SJH::shader
-    SJH::resource_management
+    SJH::resource_registry
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

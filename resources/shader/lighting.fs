@@ -53,6 +53,14 @@ uniform DirLight dirLight;
 uniform PointLight pointLights[NUM_POINT_LIGHTS];   // GLSL은 동적 배열 불가 — 컴파일 타임 상수
 uniform SpotLight spotLight;
 
+// === Light 활성/비활성 플래그 — runtime toggle (GLSL bool 은 송신 시 int 사용) ===
+// 0 = skip (해당 광원 계산·누적 생략), 1 = active. CPU 가 매 프레임 송신.
+// 셰이더가 receive 안 한 경우 GL default 0 → 의도치 않게 전부 검정 화면이 될 수 있으므로
+// CPU 측은 반드시 매 프레임 3개 모두 SetInt 로 보낼 것 (context.cpp Render).
+uniform int dirLightEnabled;
+uniform int pointLightsEnabled[NUM_POINT_LIGHTS];
+uniform int spotLightEnabled;
+
 uniform vec3 viewPos;
 
 // =========================================================================
@@ -139,17 +147,22 @@ void main() {
     // 보간된 normal 은 fragment shader 진입 후 다시 정규화 필요 (선형 보간 결과 길이 1 보장 안 됨)
     vec3 pixelNorm = normalize(vsNormal);
     vec3 viewDir = normalize(viewPos - vsPosition);
+    vec3 result = vec3(0.0);
 
-    // 1) 방향광 (전역 평행광 1개)
-    vec3 result = CalcDirLight(dirLight, pixelNorm, viewDir);
+    // 1) 방향광 — enabled 플래그가 켜져 있을 때만 누적 (전역 평행광 1개)
+    if (dirLightEnabled != 0)
+        result += CalcDirLight(dirLight, pixelNorm, viewDir);
 
-    // 2) 점광원들 (NUM_POINT_LIGHTS 개)
+    // 2) 점광원들 — 각 슬롯 독립 토글. pointLightsEnabled[i] == 0 이면 그 슬롯 skip.
+    //    덕분에 "0 번 점광원만 살리고 1 번은 끈다" 같은 부분 활성 시나리오 지원.
     for (int i = 0; i < NUM_POINT_LIGHTS; ++i) {
-        result += CalcPointLight(pointLights[i], pixelNorm, viewDir);
+        if (pointLightsEnabled[i] != 0)
+            result += CalcPointLight(pointLights[i], pixelNorm, viewDir);
     }
 
     // 3) 스포트라이트 (1개)
-    result += CalcSpotLight(spotLight, pixelNorm, viewDir);
+    if (spotLightEnabled != 0)
+        result += CalcSpotLight(spotLight, pixelNorm, viewDir);
 
     fragColor = vec4(result, 1.0);
 }

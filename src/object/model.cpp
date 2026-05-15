@@ -1,4 +1,6 @@
 #include "model.h"
+#include "resource_registry/texture.h"
+#include "shader/material.h"
 #include <spdlog/spdlog.h>
 
 namespace SJH
@@ -23,6 +25,40 @@ namespace SJH
             return false;
         }
 
+        auto dirname = filename.substr(0, filename.find_last_of("/"));
+        auto LoadTexture = [&](aiMaterial *material, aiTextureType type) -> Texture*
+        {
+            if (material->GetTextureCount(type) <= 0)
+                return nullptr;
+            aiString filepath;
+            material->GetTexture(type, 0, &filepath); // 🛠 type 인자 사용 (이전 코드는 DIFFUSE 하드코딩 버그)
+            const auto fullPath = fmt::format("{}/{}", dirname, filepath.C_Str());
+            auto image = Image::Load(filepath.C_Str(), fullPath); // 🛠 새 API: (image_name, filepath)
+            if (!image)
+                return nullptr;
+            auto tex = Texture::CreateTexture(image.get());   // TextureUPtr
+            if (!tex)
+                return nullptr;
+            mTextures.push_back(std::move(tex));              // Model 이 lifetime owner
+            return mTextures.back().get();                    // 비소유 관찰자 반환
+        };
+
+        for (uint32_t i = 0; i < scene->mNumMaterials; i++)
+        {
+            auto aiMat = scene->mMaterials[i];
+            auto glMaterial = Material::Create();
+
+            const auto diffuse  = LoadTexture(aiMat, aiTextureType_DIFFUSE);
+            const auto specular = LoadTexture(aiMat, aiTextureType_SPECULAR);
+
+            // 새 Material API — 이름은 비워두고 *해석된 관찰자 + sampler 유닛* 만 설정.
+            glMaterial->SetResolvedTextures(
+                /*diffuse */ diffuse,  /*diffuseUnit*/ 0,
+                /*specular*/ specular, /*specularUnit*/ 1);
+
+            mMaterials.push_back(std::move(glMaterial)); // 🛠 m_materials → mMaterials
+        }
+
         ProcessNode(scene->mRootNode, scene);
         return true;
     }
@@ -44,7 +80,6 @@ namespace SJH
             ProcessNode(node->mChildren[i], scene);
         }
     }
-
 
     void Model::ProcessMesh(aiMesh *mesh, const aiScene *scene)
     {
@@ -74,6 +109,9 @@ namespace SJH
 
         // 우리가 만들었던 Mesh 코드 호출
         auto glMesh = Mesh::Create(vertices, indices, GL_TRIANGLES);
-        mMeshes.push_back(std::move(glMesh));
+        Material* mat = nullptr;
+        if (mesh->mMaterialIndex < mMaterials.size()) // 🛠 m_materials → mMaterials, unsigned 범위 안전
+            mat = mMaterials[mesh->mMaterialIndex].get();
+        mRenderUnit.push_back({std::move(glMesh), mat});
     }
 }

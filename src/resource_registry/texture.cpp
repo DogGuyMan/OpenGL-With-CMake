@@ -2,7 +2,7 @@
  * @file texture.cpp
  * @brief Texture 정의 — Image 픽셀을 GL 텍스처 객체로 업로드하고 RAII 로 핸들 관리.
  */
-#include "resource_management.h"
+#include "resource_registry.h"
 #include <memory>
 #include <spdlog/spdlog.h>
 

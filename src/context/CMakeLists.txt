@@ -14,7 +14,7 @@ target_link_libraries(sjhopengl_context
             SJH::buffer
             SJH::layout
             SJH::object
-            SJH::resource_management
+            SJH::resource_registry
             SJH::program
             glad::glad
             glm::glm

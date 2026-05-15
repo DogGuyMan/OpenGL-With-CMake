@@ -10,6 +10,7 @@
 #include "stb_image.h"
 #include <cstring>
 #include <spdlog/spdlog.h>
+#include <glm/glm.hpp>
 
 namespace SJH
 {
@@ -103,5 +104,18 @@ namespace SJH
     void Image::SetWhiteImage()
     {
         std::memset(mImageDataPtr, 255, mWidth * mHeight * mChannelCount);
+    }
+
+    void Image::SetSingleColorImage(const glm::vec4 &color)
+    {
+        glm::vec4 clamped = glm::clamp(color * 255.0f, 0.0f, 255.0f);
+        uint8_t rgba[4] = {
+            (uint8_t)clamped.r,
+            (uint8_t)clamped.g,
+            (uint8_t)clamped.b,
+            (uint8_t)clamped.a,
+        };
+        for (int i = 0; i < mWidth * mHeight; i++)
+            std::memcpy(mImageDataPtr + 4 * i, rgba, 4);
     }
 }

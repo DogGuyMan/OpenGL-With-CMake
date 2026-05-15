@@ -10,7 +10,7 @@
 #include "object/model.h"
 #include "shader/material.h"
 #include "program/program.h"
-#include "resource_management/resource_management.h"
+#include "resource_registry/resource_registry.h"
 #include "shader/shader.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -28,7 +28,7 @@ namespace SJH
      *  - VBO/EBO 생성 (@ref Buffer)              — @c GL_ARRAY_BUFFER / @c GL_ELEMENT_ARRAY_BUFFER
      *  - VAO + Vertex Attribute (@ref VertexLayout) — @c glGenVertexArrays + @c glVertexAttribPointer
      *  - 셰이더/프로그램 (@ref Shader / @ref Program)
-     *  - 텍스처 로드 + 바인딩 + uniform 설정 (@ref ResourceManagement)
+     *  - 텍스처 로드 + 바인딩 + uniform 설정 (@ref ResourceRegistry)
      *  - 카메라 상태 보관 + 입력 → 카메라 갱신 위임 (@ref Camera)
      *  - 매 프레임 draw call 시퀀스 (@ref Render)
      *  - 위 객체들의 자동 파괴 (@c UPtr 소멸 시점)
@@ -115,8 +115,8 @@ namespace SJH
         /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
         bool mAnimation{true};
 
-        /// @brief 이미지 → 텍스처 로딩/이름 기반 조회를 담당하는 리소스 관리자.
-        ResourceManagementUPtr mRM;
+        /// @brief Texture/Material/Model 을 이름 키로 캐시·조회하는 리소스 레지스트리.
+        ResourceRegistryUPtr mRM;
 
         /// @brief 현재 프레임버퍼 너비. @ref Reshape 가 갱신, @ref Render 가 projection 행렬 산출에 사용.
         int mWidth{640};
@@ -146,8 +146,16 @@ namespace SJH
         /// @brief 스포트라이트 1개 — 점광원 + 콘 cutoff. 셰이더 uniform `spotLight.*`.
         SpotLight mSpotLight;
 
-        /// @brief 표면 머티리얼 — 디퓨즈/스페큘러 텍스처 *이름 키* + shininess. 셰이더 uniform `material.*` 로 전송.
-        Material mMaterial;
+        // === Light 활성 토글 — 셰이더 uniform `*Enabled` 로 전송, ImGui 체크박스가 갱신. ===
+        /// @brief DirLight 사용 여부 — false 면 셰이더가 dirLight 항을 누적하지 않음.
+        bool mDirLightEnabled{true};
+        /// @brief PointLight 슬롯별 사용 여부 — 슬롯 단위 독립 토글.
+        bool mPointLightsEnabled[2]{true, true};
+        /// @brief SpotLight 사용 여부.
+        bool mSpotLightEnabled{true};
+
+        /// @brief 표면 머티리얼. Material::Create() 로 Init 에서 초기화.
+        MaterialUPtr mMaterial;
     };
 }
 

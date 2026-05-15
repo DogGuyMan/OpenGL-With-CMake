@@ -128,6 +128,7 @@ namespace SJH
         {
             if (ImGui::CollapsingHeader("dirLight"))
             {
+                ImGui::Checkbox("dir.enabled", &mDirLightEnabled);
                 ImGui::DragFloat3("dir.direction", glm::value_ptr(mDirLight.mDirection), 0.01f);
                 ImGui::ColorEdit3("dir.ambient", glm::value_ptr(mDirLight.mAmbient));
                 ImGui::ColorEdit3("dir.diffuse", glm::value_ptr(mDirLight.mDiffuse));
@@ -140,6 +141,7 @@ namespace SJH
                 std::string header = "pointLight[" + std::to_string(i) + "]";
                 if (ImGui::CollapsingHeader(header.c_str()))
                 {
+                    ImGui::Checkbox("p.enabled", &mPointLightsEnabled[i]);
                     ImGui::DragFloat3("p.position", glm::value_ptr(mPointLights[i].mPos), 0.01f);
                     ImGui::DragFloat("p.distance", &mPointLights[i].mDistance, 0.5f, 1.0f, 3250.0f);
                     ImGui::ColorEdit3("p.ambient", glm::value_ptr(mPointLights[i].mAmbient));
@@ -151,6 +153,7 @@ namespace SJH
 
             if (ImGui::CollapsingHeader("spotLight", ImGuiTreeNodeFlags_DefaultOpen))
             {
+                ImGui::Checkbox("s.enabled", &mSpotLightEnabled);
                 ImGui::DragFloat3("s.position", glm::value_ptr(mSpotLight.mPos), 0.01f);
                 ImGui::DragFloat3("s.direction", glm::value_ptr(mSpotLight.mDirection), 0.01f);
                 ImGui::DragFloat("s.cutoff(deg)", &mSpotLight.mCutoffAngleDeg, 0.1f, 0.0f, 89.0f);
@@ -164,9 +167,9 @@ namespace SJH
             if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 // ImGui 는 float* 를 요구 — 임시 변수로 편집 후 setter 로 clamp 적용.
-                float shininess = mMaterial.GetShininess();
+                float shininess = mMaterial->GetShininess();
                 if (ImGui::DragFloat("m.shininess", &shininess, 1.0f, 2.0f, 256.0f))
-                    mMaterial.SetShininess(shininess);
+                    mMaterial->SetShininess(shininess);
             }
             ImGui::Checkbox("animation", &mAnimation);
             // 함수 하나가 UI component 하나에 대응
@@ -189,6 +192,10 @@ namespace SJH
             }
         }
         ImGui::End();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+
         float t = sinf((float)glfwGetTime()) * 0.5f + 0.5f;
 
         // 카메라: z=3 위치에서 원점을 바라봄. 인자 없는 const 게터 — 멤버 직접 사용.
@@ -196,9 +203,6 @@ namespace SJH
         auto projMat = mCamera.GetProjMatrix(); // mAspect 멤버 사용 (Reshape 에서 갱신)
 
         // glm::vec4 baseColor(t * t, 2.0f * t * (1.0f - t), (1.0f - t) * (1.0f - t), 1.0f);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
 
         // 2. Use Program — 광원 *위치 표시 큐브* 들 (DirLight 는 방향만 가지므로 표시 안 함)
         mSimpleProgram->Use();
@@ -229,6 +233,17 @@ namespace SJH
         {
             Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.mPos);
 
+            // --- Light 활성 플래그 — 셰이더가 enabled==0 슬롯의 Calc* 호출을 건너뜀.
+            //     ImGui 체크박스로 토글된 광원은 화면에 기여 안 함.
+            Uniforms::SetInt(*mProgram.get(), "dirLightEnabled", mDirLightEnabled ? 1 : 0);
+            Uniforms::SetInt(*mProgram.get(), "spotLightEnabled", mSpotLightEnabled ? 1 : 0);
+            for (int i = 0; i < 2; ++i)
+            {
+                const std::string name = "pointLightsEnabled[" + std::to_string(i) + "]";
+                Uniforms::SetInt(*mProgram.get(), name.c_str(), mPointLightsEnabled[i] ? 1 : 0);
+            }
+
+            Uniforms::SetSpotLight(*mProgram.get(), "spotLight", mSpotLight);
             // --- DirLight 1개 (평행광 / 거리감쇠 없음) ---
             Uniforms::SetDirLight(*mProgram, "dirLight", mDirLight);
 
@@ -242,31 +257,28 @@ namespace SJH
             // --- SpotLight 1개 (점광원 + 콘 cutoff — degree->cosine 변환은 helper 내부) ---
             Uniforms::SetSpotLight(*mProgram, "spotLight", mSpotLight);
 
-            // --- Material — diffuse/specular 텍스처 unit + shininess ---
-            Uniforms::SetInt(*mProgram.get(), "material.diffuse", 2);
-            Uniforms::SetInt(*mProgram.get(), "material.specular", 3);
-            Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial.GetShininess());
+            // Material — sampler 유닛 + shininess. 유닛 번호는 SetResolvedTextures 가 Init 에서 확정.
+            Uniforms::SetInt(*mProgram.get(), "material.diffuse", mMaterial->GetDiffuseUnit());
+            Uniforms::SetInt(*mProgram.get(), "material.specular", mMaterial->GetSpecularUnit());
+            Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial->GetShininess());
 
-            glActiveTexture(GL_TEXTURE2);
-            mRM->LoadTextureWithName("container2")->Bind();
-            glActiveTexture(GL_TEXTURE3);
-            mRM->LoadTextureWithName("container2_specular")->Bind();
-
-            // 3. Uniform 전달
-            for (size_t i = 0; i < cubePositions.size(); i++)
+            // Material 의 해석된 관찰자를 자기 유닛에 바인딩.
+            if (const Texture *dt = mMaterial->GetDiffuseTexture())
             {
-                auto &pos = cubePositions[i];
-                auto modelMat = glm::translate(glm::mat4(1.0f), pos);
-                auto angle = glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i);
-                modelMat = glm::rotate(modelMat,
-                                       mAnimation ? angle : 0.0f,
-                                       glm::vec3(1.0f, 0.5f, 0.0f));
-                auto transformMat = projMat * viewMat * modelMat;
-                Uniforms::SetMat4(*mProgram.get(), "transformMat", transformMat);
-                Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelMat);
-                // VBO + EBO 협력으로 그렸을때.
-                mBox->Draw();
+                glActiveTexture(GL_TEXTURE0 + mMaterial->GetDiffuseUnit());
+                glBindTexture(GL_TEXTURE_2D, dt->GetTextureID());
             }
+            if (const Texture *st = mMaterial->GetSpecularTexture())
+            {
+                glActiveTexture(GL_TEXTURE0 + mMaterial->GetSpecularUnit());
+                glBindTexture(GL_TEXTURE_2D, st->GetTextureID());
+            }
+
+            auto modelTransform = glm::mat4(1.0f);
+            auto transform = projMat * viewMat * modelTransform;
+            Uniforms::SetMat4(*mProgram.get(), "transformMat", transform);
+            Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelTransform);
+            mModel->Draw();
         }
 
         // glPointSize(50.0f);
@@ -280,30 +292,30 @@ namespace SJH
         // (project 의 GetAttenuationCoeff 가 distance->(Kc,Kl,Kq) 변환을 담당)
 
         mDirLight.mDirection = glm::vec3(0.0f, -1.0f, 0.0f);
-        mDirLight.mAmbient   = glm::vec3(1.0f, 1.0f, 1.0f);
-        mDirLight.mDiffuse   = glm::vec3(1.0f, 1.0f, 1.0f);
-        mDirLight.mSpecular  = glm::vec3(1.0f, 1.0f, 1.0f);
+        mDirLight.mAmbient = glm::vec3(1.0f, 1.0f, 1.0f);
+        mDirLight.mDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+        mDirLight.mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 
-        mPointLights[0].mPos      = glm::vec3(1.2f, 1.0f, 1.0f);
+        mPointLights[0].mPos = glm::vec3(1.2f, 1.0f, 1.0f);
         mPointLights[0].mDistance = 50.0f;
-        mPointLights[0].mAmbient  = glm::vec3(0.05f, 0.05f, 0.05f);
-        mPointLights[0].mDiffuse  = glm::vec3(0.8f, 0.4f, 0.2f);
+        mPointLights[0].mAmbient = glm::vec3(0.05f, 0.05f, 0.05f);
+        mPointLights[0].mDiffuse = glm::vec3(0.8f, 0.4f, 0.2f);
         mPointLights[0].mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 
-        mPointLights[1].mPos      = glm::vec3(-1.2f, 1.0f, -1.0f);
+        mPointLights[1].mPos = glm::vec3(-1.2f, 1.0f, -1.0f);
         mPointLights[1].mDistance = 50.0f;
-        mPointLights[1].mAmbient  = glm::vec3(0.05f, 0.05f, 0.05f);
-        mPointLights[1].mDiffuse  = glm::vec3(0.2f, 0.4f, 0.8f);
+        mPointLights[1].mAmbient = glm::vec3(0.05f, 0.05f, 0.05f);
+        mPointLights[1].mDiffuse = glm::vec3(0.2f, 0.4f, 0.8f);
         mPointLights[1].mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 
-        mSpotLight.mPos                  = glm::vec3(0.0f, 1.5f, 0.0f);
-        mSpotLight.mDirection            = glm::vec3(0.0f, -1.0f, 0.0f);
-        mSpotLight.mCutoffAngleDeg       = 12.5f;
-        mSpotLight.mOuterCutoffAngleDeg  = 17.5f;
-        mSpotLight.mDistance             = 50.0f;
-        mSpotLight.mAmbient              = glm::vec3(0.0f, 0.0f, 0.0f);
-        mSpotLight.mDiffuse              = glm::vec3(1.0f, 1.0f, 1.0f);
-        mSpotLight.mSpecular             = glm::vec3(1.0f, 1.0f, 1.0f);
+        mSpotLight.mPos = glm::vec3(0.0f, 1.5f, 0.0f);
+        mSpotLight.mDirection = glm::vec3(0.0f, -1.0f, 0.0f);
+        mSpotLight.mCutoffAngleDeg = 12.5f;
+        mSpotLight.mOuterCutoffAngleDeg = 17.5f;
+        mSpotLight.mDistance = 50.0f;
+        mSpotLight.mAmbient = glm::vec3(0.0f, 0.0f, 0.0f);
+        mSpotLight.mDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+        mSpotLight.mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 
         mProgram = Program::CreateWithVSFS("./resources/shader/lighting.vs", "./resources/shader/lighting.fs");
         if (!mProgram)
@@ -316,37 +328,51 @@ namespace SJH
         spdlog::info("program id: {}", mProgram->GetProgramAddr());
         glClearColor(0.0, 0.1f, 0.2f, 0.0f);
 
-        mRM = ResourceManagement::CreateRM();
-        auto imagePtr1 = mRM->LoadImage("container", "./resources/texture/container.jpg");
-        if (imagePtr1 == nullptr)
+        mRM = ResourceRegistry::Create();
+
+        // 이미지는 스코프 한정 — CreateTexture 가 GPU 업로드를 마치면 즉시 소멸.
+        struct TexSpec { const char *key; const char *path; };
+        const TexSpec fileTextures[] = {
+            {"container",           "./resources/texture/container.jpg"},
+            {"awesomeface",         "./resources/texture/awesomeface.png"},
+            {"container2",          "./resources/texture/container2.png"},
+            {"container2_specular", "./resources/texture/container2_specular.png"},
+        };
+        for (const auto &spec : fileTextures)
+        {
+            auto image = Image::Load(spec.key, spec.path);
+            if (image == nullptr)
+                return false;
+            if (mRM->CreateTexture(spec.key, image.get()) == nullptr)
+                return false;
+        }
+
+        auto checkerImg = Image::Create("checkerboard", 512, 512);
+        if (checkerImg == nullptr)
             return false;
-        mRM->LoadTextureFromImage(imagePtr1);
-
-        auto imagePtr2 = mRM->LoadImage("awesomeface", "./resources/texture/awesomeface.png");
-        if (imagePtr2 == nullptr)
+        checkerImg->SetCheckImage(16, 16);
+        if (mRM->CreateTexture("checkerboard", checkerImg.get()) == nullptr)
             return false;
-        mRM->LoadTextureFromImage(imagePtr2);
 
-        auto imagePtr3 = mRM->LoadImage("container2", "./resources/texture/container2.png");
-        if (imagePtr3 == nullptr)
+        auto whiteImg = Image::Create("white", 32, 32);
+        if (whiteImg == nullptr)
             return false;
-        mRM->LoadTextureFromImage(imagePtr3);
-
-        auto imagePtr4 = mRM->LoadImage("container2_specular", "./resources/texture/container2_specular.png");
-        if (imagePtr4 == nullptr)
+        whiteImg->SetWhiteImage();
+        if (mRM->CreateTexture("white", whiteImg.get()) == nullptr)
             return false;
-        mRM->LoadTextureFromImage(imagePtr4);
 
-        // 디퓨즈 + 스페큘러 이름 키를 한 번에 설정 (이전: mDiffuseTextureName 에 specular 값을 두 번 대입하던 버그 수정).
-        mMaterial.SetTextureNames("container2", "container2_specular");
+        auto grayImg = Image::Create("gray", 32, 32);
+        if (grayImg == nullptr)
+            return false;
+        grayImg->SetSingleColorImage({0.5f, 0.5f, 0.5f, 1.0f});
+        if (mRM->CreateTexture("gray", grayImg.get()) == nullptr)
+            return false;
 
-        auto checkerImgPtr = Image::Create("checkerboard", 512, 512);
-        checkerImgPtr->SetCheckImage(16, 16);
-        mRM->LoadTextureFromImage(checkerImgPtr.get());
-
-        auto whiteImgPtr = Image::Create("white", 32, 32);
-        whiteImgPtr->SetWhiteImage();
-        mRM->LoadTextureFromImage(whiteImgPtr.get());
+        mMaterial = Material::Create();
+        mMaterial->SetTextureNames("white", "gray");
+        mMaterial->SetResolvedTextures(
+            mRM->FindTexture("white"), 0,
+            mRM->FindTexture("gray"), 1);
 
         /*
         순서
@@ -362,6 +388,10 @@ namespace SJH
         //  unit 0/1 바인딩, tex0/tex1 SetInt, checkerboard/awesomeface 주석 블록 모두 dead code 로 일괄 제거.)
         mBox = Mesh::CreateBox();
 
+        mModel = Model::Load("./resources/model/backpack/backpack.obj");
+        if (!mModel)
+            return false;
+
         // Init 끝 — Mesh/program/textures 모두 설정 완료 시점의 *온전한 GL 상태* 1회 덤프.
         // Render() 안에서 의도치 않은 상태 변화가 의심되면 본 baseline과 비교 가능.
         // (매 프레임 호출 금지 — glGet* stall. Init() 1회 한정.)
@@ -374,6 +404,7 @@ namespace SJH
         // (Render 안 setter 호출 후 의미 있음).
         mBox->GetVertexLayout()->Bind();
         mProgram->Use();
+
         Diagnostics::GLValidate::CheckAttribLayout(mProgram->GetProgramAddr(), "Context::Init");
         Diagnostics::GLValidate::CheckSamplerBindings(mProgram->GetProgramAddr(), "Context::Init");
         Diagnostics::GLValidate::DumpShaderInfoLogs(mProgram->GetProgramAddr(), "Context::Init");

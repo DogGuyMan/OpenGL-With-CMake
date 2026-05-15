@@ -1,4 +1,4 @@
-add_library(sjhopengl_object STATIC mesh.cpp)
+add_library(sjhopengl_object STATIC mesh.cpp model.cpp)
 add_library(SJH::object ALIAS sjhopengl_object)
 
 target_include_directories(sjhopengl_object

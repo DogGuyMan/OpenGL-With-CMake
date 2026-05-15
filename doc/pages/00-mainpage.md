@@ -27,7 +27,7 @@ digraph LayerArchitecture {
     Program; Shader;
     Buffer [label="Buffer\n(VBO/EBO)"];
     VertexLayout [label="VertexLayout\n(VAO)"];
-    ResourceManagement [label="ResourceManagement\n(Image/Texture)"];
+    ResourceRegistry [label="ResourceRegistry\n(Texture/Material/Model)"];
   }
 
   subgraph cluster_objects {
@@ -57,7 +57,7 @@ digraph LayerArchitecture {
   Context -> Shader;
   Context -> Buffer;
   Context -> VertexLayout;
-  Context -> ResourceManagement;
+  Context -> ResourceRegistry;
   Context -> Camera;
   Context -> Diagnostics;
   Context -> glm;
@@ -80,11 +80,11 @@ digraph LayerArchitecture {
   VertexLayout -> Diagnostics;
   VertexLayout -> glad;
 
-  ResourceManagement -> Common;
-  ResourceManagement -> Diagnostics;
-  ResourceManagement -> glad;
-  ResourceManagement -> glm;
-  ResourceManagement -> stb;
+  ResourceRegistry -> Common;
+  ResourceRegistry -> Diagnostics;
+  ResourceRegistry -> glad;
+  ResourceRegistry -> glm;
+  ResourceRegistry -> stb;
 
   Camera -> glm;
 
@@ -103,7 +103,7 @@ digraph RenderSequence {
   node [shape=box, fontname="Helvetica"];
   Start [label="main()", shape=ellipse];
   init [label="GLFW init\n+ glad load"];
-  ctx [label="Context::Create()\n→ Shader → Program\n→ VAO → VBO/EBO\n→ Image → Texture"];
+  ctx [label="Context::Create()\n→ Shader → Program\n→ VAO → VBO/EBO\n→ Texture (Image: transient)"];
   uptr [label="glfwSetWindowUserPointer(window, ctx)\n(콜백에서 Context 역참조용)"];
   callbacks [label="GLFW callbacks 등록\n(framebuffer / key / cursor / mouse)"];
   loop [label="while (!shouldClose)\n  ProcessInput()\n  Render()\n   swapBuffers + pollEvents",
@@ -158,7 +158,7 @@ digraph ClassDependencyGraph {
   // 자원 / 데이터
   subgraph cluster_resource {
     label="Resource"; style=dashed; color="#aaaaaa";
-    Image; Texture; ResourceManagement;
+    Image; Texture; ResourceRegistry;
   }
 
   // GL 객체 RAII
@@ -167,29 +167,30 @@ digraph ClassDependencyGraph {
     Shader; Program; Buffer; VertexLayout;
   }
 
-  // 씬 + 머티리얼/라이트 (Phase 12)
+  // 씬 + 머티리얼/라이트/모델 (Phase 12+)
   subgraph cluster_scene {
-    label="Scene + Material/Light"; style=dashed; color="#aaaaaa";
-    Camera; Light; Material; Context;
+    label="Scene + Material/Light/Model"; style=dashed; color="#aaaaaa";
+    Camera; Light; Material; Model; Context;
   }
 
   // 소유 관계 (실선) — 멤버로 보유, 수명 결합
   Context -> Program            [label="UPtr ×2\n(lighting + simple)"];
   Context -> VertexLayout       [label="UPtr"];
   Context -> Buffer             [label="UPtr ×2\n(VBO + EBO)"];
-  Context -> ResourceManagement [label="UPtr"];
+  Context -> ResourceRegistry   [label="UPtr"];
   Context -> Camera             [label="value"];
   Context -> Light              [label="value"];
-  Context -> Material           [label="value"];
+  Context -> Material           [label="MaterialUPtr"];
 
-  ResourceManagement -> Image   [label="map<name, UPtr>"];
-  ResourceManagement -> Texture [label="map<name, UPtr>"];
+  ResourceRegistry -> Texture   [label="map<name, UPtr>"];
+  ResourceRegistry -> Material  [label="map<name, UPtr>"];
+  ResourceRegistry -> Model     [label="map<name, UPtr>"];
 
-  // 입력 의존 (긴 점선) — 멤버 X, 팩토리 인자 / 이름 키 해석
+  // 입력 의존 (긴 점선) — 멤버 X, 팩토리 인자 / 이름 키 해석 / 비소유 관찰자
   edge [style=dashed, color="#5b6b80"];
   Program  -> Shader              [label="vector<ShaderPtr>\n(Create 인자)"];
   Texture  -> Image               [label="Image*\n(CreateTexture 인자)"];
-  Material -> ResourceManagement  [label="이름 키 →\nLoadTextureWithName"];
+  Material -> Texture             [label="const Texture*\n관찰자 (비소유)"];
 
   // 정적 진단 사용 (짧은 점선) — 인스턴스 X
   edge [style=dotted, color="#9aa6b8", fontcolor="#9aa6b8"];
@@ -232,6 +233,6 @@ digraph ClassDependencyGraph {
 | program | @ref SJH::Program "Program" + `SJH::Uniforms::*` 자유 함수 | 프로그램 링크 RAII + uniform setter (캐시 친구 함수) |
 | buffer | @ref SJH::Buffer "Buffer" | VBO/EBO RAII (`glGenBuffers` ~ `glDeleteBuffers`) |
 | layout | @ref SJH::VertexLayout "VertexLayout" | VAO + `glVertexAttribPointer` 진단 통합 |
-| resource_management | @ref SJH::ResourceManagement "ResourceManagement", @ref SJH::Image "Image", @ref SJH::Texture "Texture" | 이미지/텍스처 lifecycle 중앙 관리 |
+| resource_registry | @ref SJH::ResourceRegistry "ResourceRegistry", @ref SJH::Image "Image", @ref SJH::Texture "Texture" | Texture/Material/Model 이름 키 캐시 — `Create*`/`Find*` 동사 분리, 세션 수명 불변식 |
 | object | @ref SJH::Camera "Camera" | 카메라 상태 + view/projection 행렬 산출 |
 | context | @ref SJH::Context "Context" | 씬 자원 + 매 프레임 draw + GLFW 콜백 위임 진입점 |

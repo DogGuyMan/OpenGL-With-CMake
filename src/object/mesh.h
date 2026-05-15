@@ -22,7 +22,7 @@ namespace SJH
     class Mesh
     {
     public:
-        static MeshUPtr Create(const std::vector<Vertex> &vertices,const std::vector<GLuint> &indices,GLuint primitiveType);
+        static MeshUPtr Create(const std::vector<Vertex> &vertices, const std::vector<GLuint> &indices, GLuint primitiveType);
         static MeshUPtr CreateBox();
 
         const VertexLayout *GetVertexLayout() const
@@ -32,11 +32,12 @@ namespace SJH
         BufferPtr GetVertexBuffer() const { return mVertexBuffer; }
         BufferPtr GetIndexBuffer() const { return mIndexBuffer; }
 
+
         void Draw() const;
 
     private:
-        Mesh() {}
-        void Init(const std::vector<Vertex> &vertices,const std::vector<GLuint> &indices,GLuint primitiveType);
+        Mesh() = default;
+        void Init(const std::vector<Vertex> &vertices, const std::vector<GLuint> &indices, GLuint primitiveType);
 
         GLuint mPrimitiveType{GL_TRIANGLES};
         VertexLayoutUPtr mVertexLayout;

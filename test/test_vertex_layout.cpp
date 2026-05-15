@@ -87,7 +87,7 @@ TEST_CASE("VertexLayout::TrySetAttrib — VBO 바인딩 후 attribute 설정 성
     };
     auto vbo = SJH::Buffer::CreateWithData(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-        vertices.data(), vertices.size() * sizeof(float));
+        vertices.data(), sizeof(float), vertices.size());
     REQUIRE(vbo != nullptr);
 
     DrainGLErrors();

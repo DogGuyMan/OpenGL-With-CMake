@@ -36,7 +36,7 @@ TEST_CASE("Buffer::CreateWithData — VBO happy path + 핸들 유효", "[buffer]
 
     auto vbo = SJH::Buffer::CreateWithData(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-        vertices.data(), byteSize);
+        vertices.data(), sizeof(float), vertices.size());   // (stride, count) 로 분할
 
     REQUIRE(vbo != nullptr);
     REQUIRE(vbo->Get() != 0);
@@ -70,7 +70,7 @@ TEST_CASE("Buffer::CreateWithData — EBO happy path", "[buffer][gl]")
 
     auto ebo = SJH::Buffer::CreateWithData(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
-        indices.data(), byteSize);
+        indices.data(), sizeof(GLuint), indices.size());
 
     REQUIRE(ebo != nullptr);
     REQUIRE(ebo->Get() != 0);
@@ -96,7 +96,7 @@ TEST_CASE("Buffer 소멸자 — RAII 로 핸들 해제", "[buffer][gl]")
         constexpr std::array<float, 3> single = { 1.0f, 2.0f, 3.0f };
         auto vbo = SJH::Buffer::CreateWithData(
             GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-            single.data(), single.size() * sizeof(float));
+            single.data(), sizeof(float), single.size());
         REQUIRE(vbo != nullptr);
         capturedHandle = vbo->Get();
         REQUIRE(capturedHandle != 0);
@@ -123,10 +123,10 @@ TEST_CASE("Buffer — VBO/EBO 같은 클래스로 두 인스턴스 독립", "[bu
 
     auto vbo = SJH::Buffer::CreateWithData(
         GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-        verts.data(), verts.size() * sizeof(float));
+        verts.data(), sizeof(float), verts.size());
     auto ebo = SJH::Buffer::CreateWithData(
         GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
-        idx.data(), idx.size() * sizeof(GLuint));
+        idx.data(), sizeof(GLuint), idx.size());
 
     REQUIRE(vbo != nullptr);
     REQUIRE(ebo != nullptr);

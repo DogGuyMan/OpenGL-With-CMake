@@ -11,8 +11,8 @@
 | **spdlog** | `spdlog` | `spdlog::spdlog` | 모든 모듈의 로깅 백엔드 |
 | **GLFW** | `glfw3` | `glfw` (네임스페이스 없음 — 정적 `.a`) | 윈도우/입력/GL 컨텍스트 — `app/main.cpp` + `Context::ProcessInput` |
 | **glad** | `glad` | `glad::glad` | OpenGL 함수 로더 — 모든 GL 모듈 |
-| **glm** | `glm` | `glm::glm` | 행렬/벡터 수학 — `Camera`, `Context`, `ResourceManagement` |
-| **stb** | `stb` | `${Stb_INCLUDE_DIR}` (헤더 only) | 이미지 디코딩 — `ResourceManagement` (PRIVATE) |
+| **glm** | `glm` | `glm::glm` | 행렬/벡터 수학 — `Camera`, `Context`, `ResourceRegistry` |
+| **stb** | `stb` | `${Stb_INCLUDE_DIR}` (헤더 only) | 이미지 디코딩 — `ResourceRegistry` (PRIVATE) |
 | **ImGui** | `imgui[glfw-binding,opengl3-binding]` | `imgui::imgui` | 디버그 UI — `app/main.cpp` 가 GLFW + OpenGL3 바인딩으로 초기화. `Context` 의 라이팅 멤버 (`mLightPos`/`mObjectColor`/`mAmbient*` 등) 를 위젯으로 직접 편집. |
 | **ImGuizmo** | `imguizmo` | `imguizmo::imguizmo` | ImGui 위 좌표축 / 행렬 조작 위젯. 카메라/광원 transform gizmo 용 (Phase 10~). |
 | **Catch2** | `catch2` | `Catch2::Catch2WithMain` | 단위 테스트 (`test/`) |
@@ -28,7 +28,7 @@ digraph DepGraph {
     label="내부 모듈";
     style=dashed;
     common; diagnostics; shader; program;
-    buffer; layout; resource_management; object;
+    buffer; layout; resource_registry; object;
     context;
   }
 
@@ -69,12 +69,12 @@ digraph DepGraph {
   layout -> diagnostics;
   layout -> glad;
 
-  resource_management -> common;
-  resource_management -> diagnostics;
-  resource_management -> glad;
-  resource_management -> glm;
-  resource_management -> spdlog;
-  resource_management -> stb;
+  resource_registry -> common;
+  resource_registry -> diagnostics;
+  resource_registry -> glad;
+  resource_registry -> glm;
+  resource_registry -> spdlog;
+  resource_registry -> stb;
 
   object -> glm;
 
@@ -82,7 +82,7 @@ digraph DepGraph {
   context -> shader;
   context -> buffer;
   context -> layout;
-  context -> resource_management;
+  context -> resource_registry;
   context -> object;
   context -> diagnostics;
   context -> glad;
@@ -101,7 +101,7 @@ digraph DepGraph {
 | program | `SJH::common`, `SJH::shader`, `glad::glad` | `SJH::diagnostics` |
 | buffer | `SJH::common`, `glad::glad` | `SJH::diagnostics` |
 | layout | `SJH::common`, `glad::glad` | `SJH::diagnostics` |
-| resource_management | `SJH::common`, `glad::glad`, `glm::glm`, `spdlog::spdlog` | `SJH::diagnostics`, `${Stb_INCLUDE_DIR}` |
+| resource_registry | `SJH::common`, `glad::glad`, `glm::glm`, `spdlog::spdlog` | `SJH::diagnostics`, `${Stb_INCLUDE_DIR}` |
 | object (INTERFACE) | `glm::glm` | — |
 | context | `SJH::*` 모듈 + `glad::glad` + `glm::glm` + `glfw` | `SJH::diagnostics` |
 

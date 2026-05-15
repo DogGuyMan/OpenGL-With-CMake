@@ -5,8 +5,6 @@
 #include <glad/glad.h>
 #include "image.h"
 #include <memory>
-#include <string>
-#include <unordered_map>
 
 /**
  * @file texture.h
@@ -30,8 +28,6 @@ namespace SJH
      */
     class Texture
     {
-        friend class ResourceManagement;
-
     public:
         /**
          * @brief 디코드된 Image 로부터 GL 텍스처를 생성하고 GPU 에 업로드.

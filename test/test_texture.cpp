@@ -1,12 +1,15 @@
 /**
  * @file test_texture.cpp
- * @brief @c SJH::Image / @c SJH::Texture / @c SJH::ResourceManagement 검증.
+ * @brief @c SJH::Image / @c SJH::Texture / @c SJH::ResourceRegistry 검증.
  *
  * @details
  *  ### 영역
  *  - **Image**: 파일 로드 성공/실패, dimensions/data 유효성.
  *  - **Texture**: Image 로부터 GL 텍스처 생성, @c Bind 의 상태 머신 변경, 이동 의미론.
- *  - **ResourceManagement**: 팩토리 (CreateRM), 두 캐시 (images/textures) 의 히트/미스/Clear.
+ *  - **ResourceRegistry**: 팩토리 (Create), 텍스처 캐시 의 히트/미스/Clear.
+ *    - @c CreateTexture — 생성 후 @c FindTexture 가 같은 인스턴스 반환.
+ *    - @c FindTexture   — 미생성 미스 / 생성 후 히트.
+ *    - @c Clear         — 텍스처 캐시 비움 (@c FindTexture 미스로 검증).
  *  - **GL 계약**: sampler uniform 은 @c glUseProgram 이후에만 적용된다는 spec 검증.
  *
  *  ### 비영역
@@ -14,7 +17,7 @@
  *  - 빌드 신선도 (stale binary) 같은 *환경* 결함은 본 테스트로 잡지 못함 — 빌드 위생 별도 영역.
  *
  *  ### 회귀 가드 (`[regression]` 태그)
- *  - @c CreateRM 이 *빈* @c unique_ptr 을 반환하지 않는지 — null deref 회귀 방지.
+ *  - @c ResourceRegistry::Create 이 *빈* @c unique_ptr 을 반환하지 않는지 — null deref 회귀 방지.
  *  - @c Texture::operator= 가 source 의 핸들을 0 으로 비우는지 — double-delete 회귀 방지.
  *  - @c glUniform1i 가 @c glUseProgram 전에 호출되면 silently 실패 — sampler 미설정 회귀 방지.
  *
@@ -26,7 +29,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "support/gl_test_fixture.h"
-#include "resource_management/resource_management.h"
+#include "resource_registry/resource_registry.h"
 
 #include <glad/glad.h>
 
@@ -151,124 +154,108 @@ TEST_CASE("Texture::operator= (move) — source 의 핸들이 0 으로 비워져
 }
 
 // =====================================================================
-// ResourceManagement  — 팩토리 + 두 캐시
+// ResourceRegistry  — 팩토리 + 두 캐시
 // =====================================================================
 
 /**
- * @brief 회귀 가드 — @c CreateRM 이 *빈* unique_ptr 을 반환해선 안 됨.
+ * @brief 회귀 가드 — @c Create 이 *빈* unique_ptr 을 반환해선 안 됨.
  *
  * @details 흔한 실수: @c std::unique_ptr<RM>() (default ctor) 으로 빈 포인터를 만들면
  *  반환값은 항상 nullptr -> 모든 호출자에서 즉시 null deref. 본 테스트는 단 한 줄로 그 회귀를 잡음.
  */
-TEST_CASE("ResourceManagement::CreateRM — 유효한 인스턴스 반환",
+TEST_CASE("ResourceRegistry::Create — 유효한 인스턴스 반환",
           "[rm][regression]")
 {
-    auto rm = SJH::ResourceManagement::CreateRM();
+    auto rm = SJH::ResourceRegistry::Create();
     REQUIRE(rm != nullptr);
 }
 
-TEST_CASE("ResourceManagement::LoadImage — 같은 image_name 캐시 히트", "[rm]")
-{
-    if (!SampleImageAvailable()) SKIP("샘플 이미지 없음");
-    SJH::test::GLContextFixture ctx;
-
-    auto rm = SJH::ResourceManagement::CreateRM();
-    REQUIRE(rm != nullptr);
-
-    auto* first  = rm->LoadImage(kImageName, kSampleImage.string());
-    auto* second = rm->LoadImage(kImageName, kSampleImage.string());
-
-    REQUIRE(first  != nullptr);
-    REQUIRE(second != nullptr);
-    REQUIRE(first == second);   // 캐시 히트 — 동일 인스턴스 반환
-}
-
-TEST_CASE("ResourceManagement::LoadImage — 미존재 경로는 nullptr", "[rm]")
-{
-    SJH::test::GLContextFixture ctx;
-    auto rm = SJH::ResourceManagement::CreateRM();
-    REQUIRE(rm != nullptr);
-
-    auto* image = rm->LoadImage(kMissingPath, "x");
-    REQUIRE(image == nullptr);
-}
-
-TEST_CASE("ResourceManagement::LoadTextureFromImage — 같은 Image 두 번 -> 캐시 히트",
+TEST_CASE("ResourceRegistry::CreateTexture — 생성 후 FindTexture 가 같은 인스턴스 반환",
           "[rm][texture][gl]")
 {
     if (!SampleImageAvailable()) SKIP("샘플 이미지 없음");
     SJH::test::GLContextFixture ctx;
 
-    auto rm = SJH::ResourceManagement::CreateRM();
+    auto rm = SJH::ResourceRegistry::Create();
     REQUIRE(rm != nullptr);
 
-    auto* image = rm->LoadImage(kImageName, kSampleImage.string());
+    auto image = SJH::Image::Load(kImageName, kSampleImage.string());
     REQUIRE(image != nullptr);
 
-    auto* tex1 = rm->LoadTextureFromImage(image);
-    auto* tex2 = rm->LoadTextureFromImage(image);
+    auto* created = rm->CreateTexture(kImageName, image.get());
+    REQUIRE(created != nullptr);
 
-    REQUIRE(tex1 != nullptr);
-    REQUIRE(tex2 != nullptr);
-    REQUIRE(tex1 == tex2);   // 캐시 키 = image_name -> 동일 인스턴스
-    REQUIRE(tex1->GetTextureID() == tex2->GetTextureID());
+    // 같은 키로 CreateTexture 재호출 — 엄격 분리: 실패(nullptr).
+    REQUIRE(rm->CreateTexture(kImageName, image.get()) == nullptr);
+
+    // 조회는 FindTexture — 같은 인스턴스.
+    REQUIRE(rm->FindTexture(kImageName) == created);
 }
 
-TEST_CASE("ResourceManagement::LoadTextureWithName — 미로드 미스 / 로드 후 히트",
+TEST_CASE("ResourceRegistry::FindTexture — 미생성 미스 / 생성 후 히트",
           "[rm][texture][gl]")
 {
     if (!SampleImageAvailable()) SKIP("샘플 이미지 없음");
     SJH::test::GLContextFixture ctx;
 
-    auto rm = SJH::ResourceManagement::CreateRM();
+    auto rm = SJH::ResourceRegistry::Create();
     REQUIRE(rm != nullptr);
 
-    // 미로드 — nullptr.
-    REQUIRE(rm->LoadTextureWithName(kImageName) == nullptr);
+    REQUIRE(rm->FindTexture(kImageName) == nullptr);   // 미생성 — 미스
 
-    // 텍스처 로드 후 같은 이름으로 lookup — 히트.
-    auto* image = rm->LoadImage(kImageName, kSampleImage.string());
+    auto image = SJH::Image::Load(kImageName, kSampleImage.string());
     REQUIRE(image != nullptr);
-    auto* tex = rm->LoadTextureFromImage(image);
+    auto* tex = rm->CreateTexture(kImageName, image.get());
     REQUIRE(tex != nullptr);
 
-    auto* lookup = rm->LoadTextureWithName(kImageName);
-    REQUIRE(lookup == tex);
+    REQUIRE(rm->FindTexture(kImageName) == tex);        // 생성 후 — 히트
 }
 
 /**
- * @brief @c Clear 는 두 캐시를 모두 비운다 — lookup 미스로 검증.
+ * @brief @c Clear 는 텍스처 캐시를 비운다 — @c FindTexture 미스로 검증.
  *
  * @note *주소 비교* 로 "다른 객체" 를 단언하지 않는 것이 정석:
  *  Clear 후 새 emplace 시 allocator 가 freelist 의 *같은 슬롯* 을 재사용해 raw 포인터가
  *  우연히 동일해질 수 있음. dangling-pointer-reuse 함정 — 단언이 *조용히 통과* 해 회귀를 놓침.
- *  Clear 의 진짜 계약은 "캐시 항목이 사라진다" -> @c LoadTextureWithName 이 미스를 반환.
+ *  Clear 의 진짜 계약은 "캐시 항목이 사라진다" -> @c FindTexture 가 미스를 반환.
  */
-TEST_CASE("ResourceManagement::Clear — 두 캐시 모두 비움 (lookup 미스로 검증)",
+TEST_CASE("ResourceRegistry::Clear — 캐시를 비움 (FindTexture 미스로 검증)",
           "[rm][texture][gl]")
 {
     if (!SampleImageAvailable()) SKIP("샘플 이미지 없음");
     SJH::test::GLContextFixture ctx;
 
-    auto rm = SJH::ResourceManagement::CreateRM();
+    auto rm = SJH::ResourceRegistry::Create();
     REQUIRE(rm != nullptr);
 
-    auto* image = rm->LoadImage(kImageName, kSampleImage.string());
+    auto image = SJH::Image::Load(kImageName, kSampleImage.string());
     REQUIRE(image != nullptr);
-    REQUIRE(rm->LoadTextureFromImage(image) != nullptr);
-
-    // Clear 전 — 텍스처 캐시 히트.
-    REQUIRE(rm->LoadTextureWithName(kImageName) != nullptr);
+    REQUIRE(rm->CreateTexture(kImageName, image.get()) != nullptr);
+    REQUIRE(rm->FindTexture(kImageName) != nullptr);
 
     rm->Clear();
+    REQUIRE(rm->FindTexture(kImageName) == nullptr);
 
-    // Clear 후 — 같은 이름 lookup 미스 (캐시 비어있음).
-    REQUIRE(rm->LoadTextureWithName(kImageName) == nullptr);
-
-    // 재로드 가능 — 정상 동작 복귀.
-    auto* image2 = rm->LoadImage(kImageName, kSampleImage.string());
+    // 재생성 가능 — 정상 복귀.
+    auto image2 = SJH::Image::Load(kImageName, kSampleImage.string());
     REQUIRE(image2 != nullptr);
-    REQUIRE(rm->LoadTextureFromImage(image2) != nullptr);
+    REQUIRE(rm->CreateTexture(kImageName, image2.get()) != nullptr);
+}
+
+TEST_CASE("ResourceRegistry::FindModel — 미생성은 미스(nullptr)", "[rm][model]")
+{
+    auto rm = SJH::ResourceRegistry::Create();
+    REQUIRE(rm != nullptr);
+    REQUIRE(rm->FindModel("any_key") == nullptr);
+}
+
+TEST_CASE("ResourceRegistry::CreateModel — 미존재 파일은 nullptr", "[rm][model]")
+{
+    SJH::test::GLContextFixture ctx;   // assimp 로드 경로가 GL 텍스처 생성까지 진행
+    auto rm = SJH::ResourceRegistry::Create();
+    REQUIRE(rm != nullptr);
+    REQUIRE(rm->CreateModel("missing", "./__no_such_model__.obj") == nullptr);
+    REQUIRE(rm->FindModel("missing") == nullptr);   // 실패 시 캐시에 안 들어감
 }
 
 // =====================================================================

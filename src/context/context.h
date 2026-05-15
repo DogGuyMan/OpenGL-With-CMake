@@ -7,6 +7,7 @@
 #include "object/camera.h"
 #include "object/light.h"
 #include "object/mesh.h"
+#include "object/model.h"
 #include "shader/material.h"
 #include "program/program.h"
 #include "resource_management/resource_management.h"
@@ -108,6 +109,8 @@ namespace SJH
         ProgramUPtr mSimpleProgram;
 
         MeshUPtr mBox;
+
+        ModelUPtr mModel;
 
         /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
         bool mAnimation{true};

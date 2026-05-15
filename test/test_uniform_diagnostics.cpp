@@ -27,7 +27,7 @@ TEST_CASE("UniformDiagnostics::NotifyMissing 다중 호출 — warn-once 트래�
 
     SJH::test::SpdlogCapture cap;
 
-    // (program=42, name="uMissingA") 첫 호출 → warn 출력
+    // (program=42, name="uMissingA") 첫 호출 -> warn 출력
     UniformDiagnostics::NotifyMissing(42, "uMissingA");
     REQUIRE(cap.Contains("uMissingA"));
     REQUIRE(cap.Contains("42"));        // 메시지에 program 핸들도 포함

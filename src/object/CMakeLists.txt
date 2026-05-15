@@ -12,6 +12,7 @@ target_link_libraries(sjhopengl_object
             SJH::layout      # mesh.h: VertexLayout / VertexLayoutUPtr 필드
             glad::glad       # mesh.h: <glad/glad.h>, GLuint
             glm::glm         # mesh.h / camera.h / light.h: glm::vec3 등
+            assimp::assimp
 )
 
 target_compile_features(sjhopengl_object PUBLIC cxx_std_17)

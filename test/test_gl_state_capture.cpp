@@ -71,7 +71,7 @@ TEST_CASE("CaptureGLState 후 GL_NO_ERROR", "[diagnostics][capture]")
 TEST_CASE("fresh fixture default — VAO=0, program=0, viewport는 actual GL 상태와 일치",
           "[diagnostics][capture]")
 {
-    // viewport: macOS Retina에서는 logical 256 → physical 512 (HiDPI 2x). plan 원안의
+    // viewport: macOS Retina에서는 logical 256 -> physical 512 (HiDPI 2x). plan 원안의
     // (256,256) 직접 비교는 Retina에서 깨짐. *capture가 actual GL 상태를 그대로 반영*하는지를
     // 검증하는 게 더 본질적 (사보타지 잡는 데 충분).
     SJH::test::GLContextFixture ctx(256, 256);
@@ -113,7 +113,7 @@ TEST_CASE("CaptureGLState — VAO 바인딩 후 fields.vao 반영", "[diagnostic
 TEST_CASE("attribute_layouts — fresh fixture (VAO=0)에서 16개 모두 disabled",
           "[diagnostics][capture][attribute_layouts]")
 {
-    // macOS GL 3.3 core profile: VAO=0 상태에서는 default VAO가 valid 하지 않음 →
+    // macOS GL 3.3 core profile: VAO=0 상태에서는 default VAO가 valid 하지 않음 ->
     // glGetVertexAttribiv 반환값이 driver-dependent (Apple은 size=0 등 반환).
     // 따라서 VAO=0 상태에서 검증 가능한 *유일한 invariant*는 enabled=false 뿐.
     // 다른 필드의 spec default는 별도 테스트 (VAO 바인딩 후)에서 검증.
@@ -134,7 +134,7 @@ TEST_CASE("attribute_layouts — fresh fixture (VAO=0)에서 16개 모두 disabl
 TEST_CASE("attribute_layouts — VAO 바인딩 직후 spec default (size=4, type=GL_FLOAT)",
           "[diagnostics][capture][attribute_layouts]")
 {
-    // VAO 바인딩 후 (attribute 미설정) → GL spec 명시 default가 적용된다:
+    // VAO 바인딩 후 (attribute 미설정) -> GL spec 명시 default가 적용된다:
     //   enabled=false, size=4, type=GL_FLOAT, normalized=false, stride=0, buffer=0.
     // VAO=0 케이스(macOS core profile)와 다르게 *spec이 보장*하는 default.
     SJH::test::GLContextFixture ctx;

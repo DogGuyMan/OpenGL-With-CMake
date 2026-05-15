@@ -26,7 +26,7 @@ TEST_CASE("SymbolicName 사전 적중", "[diagnostics][state_fields]")
     REQUIRE_THAT(SymbolicName(GL_SRC_ALPHA), Equals("GL_SRC_ALPHA"));
 }
 
-TEST_CASE("SymbolicName(0) → GL_ZERO 정책 (blend factor 컨텍스트)", "[diagnostics][state_fields]")
+TEST_CASE("SymbolicName(0) -> GL_ZERO 정책 (blend factor 컨텍스트)", "[diagnostics][state_fields]")
 {
     // 본 프로젝트 17개 캡처 필드 한정 시 0이 enum 값으로 합법 발생하는 곳은
     // blend_src_rgb / blend_dst_rgb 뿐 — GL_ZERO 가 정확.
@@ -34,7 +34,7 @@ TEST_CASE("SymbolicName(0) → GL_ZERO 정책 (blend factor 컨텍스트)", "[di
     REQUIRE_THAT(SymbolicName(0), Equals("GL_ZERO"));
 }
 
-TEST_CASE("SymbolicName 미적중 → hex fallback", "[diagnostics][state_fields]")
+TEST_CASE("SymbolicName 미적중 -> hex fallback", "[diagnostics][state_fields]")
 {
     REQUIRE_THAT(SymbolicName(0xDEAD),  Equals("0xDEAD"));
     REQUIRE_THAT(SymbolicName(0xBEEF),  Equals("0xBEEF"));
@@ -100,13 +100,13 @@ TEST_CASE("VertexAttribInfo operator== — 단일 필드 변화 감지 (사보�
         VertexAttribInfo a{}; VertexAttribInfo b{}; b.enabled = true;
         REQUIRE(a != b);
     }
-    SECTION("size 변화 (vec3 → vec2 사보타지 — 카테고리 C2)")
+    SECTION("size 변화 (vec3 -> vec2 사보타지 — 카테고리 C2)")
     {
         VertexAttribInfo a{}; a.size = 3;
         VertexAttribInfo b{}; b.size = 2;
         REQUIRE(a != b);
     }
-    SECTION("type 변화 (GL_FLOAT → GL_INT)")
+    SECTION("type 변화 (GL_FLOAT -> GL_INT)")
     {
         VertexAttribInfo a{}; a.type = GL_FLOAT;
         VertexAttribInfo b{}; b.type = GL_INT;

@@ -23,7 +23,7 @@
 #include "diagnostics/uniform_diagnostics.h"
 #include "object/light.h"   // DirLight/PointLight/SpotLight + GetAttenuationCoeff (헤더는 forward decl 만)
 
-#include <cmath>            // cosf — SpotLight degree→cosine 변환
+#include <cmath>            // cosf — SpotLight degree->cosine 변환
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -180,7 +180,7 @@ namespace SJH::Uniforms
         return e.location;
     }
 
-    // === 광원 struct → uniform block 일괄 전송 helpers ==========================
+    // === 광원 struct -> uniform block 일괄 전송 helpers ==========================
     // 책임 분리: 셰이더 struct 멤버 이름과의 *문자열 결합* 만 본 TU 가 담당, 실제
     // GL 호출은 SetVec3/SetFloat 가 재사용 — 캐시/진단/타입체크 경로 그대로 통과.
 

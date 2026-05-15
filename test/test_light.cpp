@@ -125,13 +125,13 @@ TEST_CASE("SJH::SpotLight — outer > inner 가 spec (페이드 구간 양수)",
           "[spotlight][geometry]")
 {
     SJH::SpotLight s;
-    // outerCutoff angle 이 cutoff angle 보다 커야 inner→outer 페이드 구간 > 0.
+    // outerCutoff angle 이 cutoff angle 보다 커야 inner->outer 페이드 구간 > 0.
     // (cos 값으로 변환하면 cosf(outer) < cosf(inner) — 역전 주의)
     REQUIRE(s.mOuterCutoffAngleDeg > s.mCutoffAngleDeg);
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// GetAttenuationCoeff — 거리 → (Kc, Kl, Kq) 다항계수
+// GetAttenuationCoeff — 거리 -> (Kc, Kl, Kq) 다항계수
 // ──────────────────────────────────────────────────────────────────────────
 
 TEST_CASE("GetAttenuationCoeff — distance=32 에서 Kc=1 (상수항 보존)",

@@ -8,7 +8,7 @@
  *
  *  ### 테스트 구조
  *  - Cat A: CPU only (GL ctx 불필요)
- *  - Cat B/C/D/F: 인라인 VS/FS 컴파일 → program 생성 → 검증
+ *  - Cat B/C/D/F: 인라인 VS/FS 컴파일 -> program 생성 -> 검증
  *  - Cat E: GLContextFixture + 의도적 glEnable(invalid)
  *  - RunFullSweep: clean state 통합 검증
  */
@@ -118,7 +118,7 @@ TEST_CASE("Cat A — duplicate triangle 보고 (회전/반사 무관, sorted 비
     REQUIRE(cap.Contains("duplicate"));
 }
 
-TEST_CASE("Cat A — empty indices → 위반", "[gl_validate][cat_a]")
+TEST_CASE("Cat A — empty indices -> 위반", "[gl_validate][cat_a]")
 {
     std::vector<uint32_t> indices;
     REQUIRE(CheckIndices(indices, 4, "empty") == 1);
@@ -167,7 +167,7 @@ TEST_CASE("Cat E — 같은 (코드 + tag) 는 1회만 보고 (rate limit)",
     CaptureGLError("rl");    // 두 번째 — silent (rate limit)
     REQUIRE(cap.Lines().size() == sizeAfterFirst);
 
-    // 다른 tag면 별도 키 → 다시 보고
+    // 다른 tag면 별도 키 -> 다시 보고
     glEnable(0xDEADu);
     CaptureGLError("rl2");
     REQUIRE(cap.Lines().size() > sizeAfterFirst);
@@ -207,7 +207,7 @@ TEST_CASE("Cat F — clean program 은 출력 거의 없음 (smoke)",
     DumpShaderInfoLogs(prog, "clean_f");
 
     // info log가 비어있으면 출력 없음. crash 없이 완료되는지가 핵심.
-    // 일부 driver는 "No errors" 같은 텍스트를 info log에 박기도 함 → 양쪽 모두 PASS.
+    // 일부 driver는 "No errors" 같은 텍스트를 info log에 박기도 함 -> 양쪽 모두 PASS.
     SUCCEED();  // smoke — driver-dependent 출력
 
     glDeleteProgram(prog);
@@ -251,7 +251,7 @@ TEST_CASE("Cat B — VS attribute ↔ VAO layout 정합 시 0 위반",
     glDeleteProgram(prog);
 }
 
-TEST_CASE("Cat B — loc 2 가 VS=vec2 인데 VAO=vec3 으로 잘못 설정 → 위반",
+TEST_CASE("Cat B — loc 2 가 VS=vec2 인데 VAO=vec3 으로 잘못 설정 -> 위반",
           "[gl_validate][cat_b]")
 {
     SJH::test::GLContextFixture ctx;
@@ -286,7 +286,7 @@ TEST_CASE("Cat B — loc 2 가 VS=vec2 인데 VAO=vec3 으로 잘못 설정 → 
     glDeleteProgram(prog);
 }
 
-TEST_CASE("Cat B — VS 가 쓰는 location이 VAO에서 disabled → 위반",
+TEST_CASE("Cat B — VS 가 쓰는 location이 VAO에서 disabled -> 위반",
           "[gl_validate][cat_b]")
 {
     SJH::test::GLContextFixture ctx;
@@ -321,7 +321,7 @@ TEST_CASE("Cat B — VS 가 쓰는 location이 VAO에서 disabled → 위반",
 // Cat C — CheckUniformCoverage
 // ──────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("Cat C — declared uniform이 default-zero → 위반 (CPU setter 누락 의심)",
+TEST_CASE("Cat C — declared uniform이 default-zero -> 위반 (CPU setter 누락 의심)",
           "[gl_validate][cat_c]")
 {
     SJH::test::GLContextFixture ctx;
@@ -354,7 +354,7 @@ TEST_CASE("Cat C — declared uniform이 default-zero → 위반 (CPU setter 누
 // Cat D — CheckSamplerBindings
 // ──────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("Cat D — sampler set 후 texture bind 누락 → 위반",
+TEST_CASE("Cat D — sampler set 후 texture bind 누락 -> 위반",
           "[gl_validate][cat_d]")
 {
     SJH::test::GLContextFixture ctx;
@@ -362,7 +362,7 @@ TEST_CASE("Cat D — sampler set 후 texture bind 누락 → 위반",
     REQUIRE(prog != 0);
     glUseProgram(prog);
 
-    // sampler tex0 → unit 3 으로 설정만 (texture bind X)
+    // sampler tex0 -> unit 3 으로 설정만 (texture bind X)
     const GLint loc = glGetUniformLocation(prog, "tex0");
     REQUIRE(loc >= 0);
     glUniform1i(loc, 3);
@@ -377,7 +377,7 @@ TEST_CASE("Cat D — sampler set 후 texture bind 누락 → 위반",
     glDeleteProgram(prog);
 }
 
-TEST_CASE("Cat D — sampler set + texture bind 완료 → 0 위반",
+TEST_CASE("Cat D — sampler set + texture bind 완료 -> 0 위반",
           "[gl_validate][cat_d]")
 {
     SJH::test::GLContextFixture ctx;

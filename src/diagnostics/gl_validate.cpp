@@ -3,7 +3,7 @@
  * @brief @c GLValidate 6 카테고리 구현.
  *
  * @details
- *  doc/inst.md §6 구현 순서: A → E → F → B → D → C (단순 → 복잡).
+ *  doc/inst.md §6 구현 순서: A -> E -> F -> B -> D -> C (단순 -> 복잡).
  *  본 파일은 같은 순서로 함수 배치.
  */
 
@@ -40,7 +40,7 @@ namespace SJH::Diagnostics::GLValidate
             }
         }
 
-        /// GLSL 타입 → vec 컴포넌트 수 (Cat B 비교용)
+        /// GLSL 타입 -> vec 컴포넌트 수 (Cat B 비교용)
         int GLTypeComponents(GLenum type)
         {
             switch (type)
@@ -268,7 +268,7 @@ namespace SJH::Diagnostics::GLValidate
             }
         }
 
-        // 추가: VAO가 enable 했지만 VS가 안 쓰는 location → warning (info 레벨 — 의도일 수도)
+        // 추가: VAO가 enable 했지만 VS가 안 쓰는 location -> warning (info 레벨 — 의도일 수도)
         for (GLint loc = 0; loc < 16; ++loc)
         {
             if (usedLocations.count(loc)) continue;
@@ -315,7 +315,7 @@ namespace SJH::Diagnostics::GLValidate
             glGetUniformiv(program, loc, &unit);
             if (unit < 0 || unit >= 16)
             {
-                spdlog::warn("[GLValidate/{}/Cat D] sampler '{}' → out-of-range unit {}",
+                spdlog::warn("[GLValidate/{}/Cat D] sampler '{}' -> out-of-range unit {}",
                              tag, nameBuf.data(), unit);
                 ++violations;
                 continue;
@@ -331,7 +331,7 @@ namespace SJH::Diagnostics::GLValidate
             glGetIntegerv(bindingEnum, &texId);
             if (texId == 0)
             {
-                spdlog::warn("[GLValidate/{}/Cat D] sampler '{}' → unit {} but no texture bound",
+                spdlog::warn("[GLValidate/{}/Cat D] sampler '{}' -> unit {} but no texture bound",
                              tag, nameBuf.data(), unit);
                 ++violations;
             }
@@ -367,7 +367,7 @@ namespace SJH::Diagnostics::GLValidate
             // sampler — unit 0이 의도된 default일 수 있으므로 Cat D에서 별도 처리
             if (IsSamplerType(type)) continue;
 
-            // type별 값 query → 모두 0이면 "값 미설정 의심"
+            // type별 값 query -> 모두 0이면 "값 미설정 의심"
             bool isZero = false;
             if (type == GL_FLOAT)
             {

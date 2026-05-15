@@ -239,7 +239,7 @@ namespace SJH
                 Uniforms::SetPointLight(*mProgram, base.c_str(), mPointLights[i]);
             }
 
-            // --- SpotLight 1개 (점광원 + 콘 cutoff — degree→cosine 변환은 helper 내부) ---
+            // --- SpotLight 1개 (점광원 + 콘 cutoff — degree->cosine 변환은 helper 내부) ---
             Uniforms::SetSpotLight(*mProgram, "spotLight", mSpotLight);
 
             // --- Material — diffuse/specular 텍스처 unit + shininess ---
@@ -276,8 +276,8 @@ namespace SJH
     bool Context::Init()
     {
         // === Light Casters 초기화 (사용자 제공 reference 값) ===
-        // 거리감쇠 c1=0.09 / c2=0.032 → learnopengl 표 distance≈50 행에 대응하므로 mDistance=50 로 설정.
-        // (project 의 GetAttenuationCoeff 가 distance→(Kc,Kl,Kq) 변환을 담당)
+        // 거리감쇠 c1=0.09 / c2=0.032 -> learnopengl 표 distance≈50 행에 대응하므로 mDistance=50 로 설정.
+        // (project 의 GetAttenuationCoeff 가 distance->(Kc,Kl,Kq) 변환을 담당)
 
         mDirLight.mDirection = glm::vec3(0.0f, -1.0f, 0.0f);
         mDirLight.mAmbient   = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -358,7 +358,7 @@ namespace SJH
         // 큐브 메시 1개 — VAO/VBO/EBO 는 Mesh 가 캡슐화. unbind 도 Mesh::Init 내부에서 처리됨.
         // (직전: 여기서 glBindVertexArray(0) / glBindBuffer 3종을 직접 호출했지만 Mesh 캡슐화 후 redundant.
         //  마찬가지로 unit 0/1 에 white 텍스처를 바인딩하고 lighting.fs 의 tex0/tex1 sampler 에 SetInt 까지 했지만,
-        //  multi-light 마이그레이션 후 두 sampler 가 셰이더에서 제거되었고 simple.fs 는 sampler 자체가 없음 →
+        //  multi-light 마이그레이션 후 두 sampler 가 셰이더에서 제거되었고 simple.fs 는 sampler 자체가 없음 ->
         //  unit 0/1 바인딩, tex0/tex1 SetInt, checkerboard/awesomeface 주석 블록 모두 dead code 로 일괄 제거.)
         mBox = Mesh::CreateBox();
 

@@ -82,7 +82,7 @@ TEST_CASE("GLStateLog::EnableAutoOnError — KHR_debug 미지원 환경에서 1�
     GLStateLog::EnableAutoOnError(true);
 
 #if defined(__APPLE__)
-    // macOS 환경: KHR_debug 콜백 함수 포인터가 nullptr → no-op + warn
+    // macOS 환경: KHR_debug 콜백 함수 포인터가 nullptr -> no-op + warn
     REQUIRE((cap.Contains("KHR_debug") || cap.Contains("no-op")));
 #endif
     // 다른 환경에서는 정상 등록되어 다른 메시지 출력 가능 — 본 케이스는 macOS 한정.

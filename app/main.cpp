@@ -128,7 +128,7 @@ int main()
     SJH::Diagnostics::GLStateLog::Dump("startup");
 
     // 4.2 KHR_debug 콜백 자동 Dump 활성화 시도.
-    //     macOS GL 3.3 core profile은 KHR_debug 미지원 → 1회 warn 후 no-op (의도된 동작).
+    //     macOS GL 3.3 core profile은 KHR_debug 미지원 -> 1회 warn 후 no-op (의도된 동작).
     //     Windows/Linux/llvmpipe에서는 GL 에러 발생 시 자동 Dump.
     SJH::Diagnostics::GLStateLog::EnableAutoOnError(true);
 

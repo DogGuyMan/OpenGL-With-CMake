@@ -38,7 +38,7 @@ TEST_CASE("Diff — handle 변화는 raw 정수 (비대칭 정책)", "[snapshot]
     REQUIRE_THAT(d, ContainsSubstring("vao:"));
     REQUIRE_THAT(d, ContainsSubstring("3"));
     REQUIRE_THAT(d, ContainsSubstring("5"));
-    REQUIRE_THAT(d, ContainsSubstring("→"));
+    REQUIRE_THAT(d, ContainsSubstring("->"));
 }
 
 TEST_CASE("Diff — enum 변화는 SymbolicName (비대칭 정책)", "[snapshot][diff]")
@@ -130,7 +130,7 @@ TEST_CASE("Diff — attribute slot 변화 시 slot 번호 + before/after 출력"
     REQUIRE_THAT(d, ContainsSubstring("vbo=5"));
 }
 
-TEST_CASE("Diff — attribute size 변화 (vec3 → vec2 사보타지 가시화)",
+TEST_CASE("Diff — attribute size 변화 (vec3 -> vec2 사보타지 가시화)",
           "[snapshot][diff][attribute_layouts]")
 {
     // STUDY_NOTE Ex6 R-3 회귀 가시화 — UV가 size=4로 잘못 읽혀지는 사건
@@ -169,7 +169,7 @@ TEST_CASE("Diff — disabled인 다른 slot은 출력 안 됨", "[snapshot][diff
 TEST_CASE("Diff — attribute 모든 필드 동일하면 변화 출력 안 됨",
           "[snapshot][diff][attribute_layouts]")
 {
-    // operator== 가 모든 필드를 비교 → 동일 시 침묵 (sanity)
+    // operator== 가 모든 필드를 비교 -> 동일 시 침묵 (sanity)
     GLStateSnapshot a{}, b{};
     a.fields.attribute_layouts[0].enabled = true;
     a.fields.attribute_layouts[0].size = 3;
@@ -194,7 +194,7 @@ TEST_CASE("Capture — production CaptureGLState에 위임", "[snapshot][capture
 {
     SJH::test::GLContextFixture ctx;
 
-    // 두 번 캡처 → 동일 결과 (production CaptureGLState의 결정성 의존)
+    // 두 번 캡처 -> 동일 결과 (production CaptureGLState의 결정성 의존)
     auto a = GLStateSnapshot::Capture();
     auto b = GLStateSnapshot::Capture();
 

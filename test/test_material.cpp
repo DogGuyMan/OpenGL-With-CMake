@@ -6,7 +6,7 @@
  *  GL context 불필요 — 순수 value class (@c GLuint/@c GLint 는 타입 별칭일 뿐, GL 호출 없음).
  *
  *  본 테스트가 잡는 회귀 카테고리:
- *  - 디폴트 값 손상 (예: @c mShininess 32 → 0 으로 잘못 변경 시 specular 무력화).
+ *  - 디폴트 값 손상 (예: @c mShininess 32 -> 0 으로 잘못 변경 시 specular 무력화).
  *  - 이름 setter 의 *핸들 무효화* 누락 — 이름과 핸들이 어긋난 stale 상태.
  *  - @c SetShininess 의 clamp 범위 ([2, 256]) 손상.
  *
@@ -43,7 +43,7 @@ TEST_CASE("Material::SetTextureNames — 두 이름 동시 설정, 핸들은 미
 
     REQUIRE(m.GetDiffuseTextureName()  == "container2");
     REQUIRE(m.GetSpecularTextureName() == "container2_specular");
-    // 이름만 설정 — 아직 resolve 안 함 → 핸들 0.
+    // 이름만 설정 — 아직 resolve 안 함 -> 핸들 0.
     REQUIRE(m.GetDiffuseTexture()  == 0);
     REQUIRE(m.GetSpecularTexture() == 0);
     REQUIRE_FALSE(m.IsResolved());
@@ -59,12 +59,12 @@ TEST_CASE("Material — 이름 변경 시 해석된 핸들 *무효화*", "[mater
     REQUIRE(m.GetDiffuseTexture()  == 10);
     REQUIRE(m.GetSpecularTexture() == 11);
 
-    // 디퓨즈 이름만 바꾸면 → 디퓨즈 핸들 0 으로 무효화. 스페큘러는 그대로.
+    // 디퓨즈 이름만 바꾸면 -> 디퓨즈 핸들 0 으로 무효화. 스페큘러는 그대로.
     m.SetDiffuseTextureName("wood");
     REQUIRE(m.GetDiffuseTextureName() == "wood");
     REQUIRE(m.GetDiffuseTexture()  == 0);   // 무효화됨
     REQUIRE(m.GetSpecularTexture() == 11);  // 영향 없음
-    REQUIRE_FALSE(m.IsResolved());           // 디퓨즈 핸들 0 → 미해석으로 간주
+    REQUIRE_FALSE(m.IsResolved());           // 디퓨즈 핸들 0 -> 미해석으로 간주
 
     // 스페큘러 이름 변경도 동일.
     m.SetSpecularTextureName("metal");

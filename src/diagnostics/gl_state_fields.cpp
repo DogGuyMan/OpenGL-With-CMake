@@ -70,7 +70,7 @@ namespace SJH::Diagnostics
         return buf;
     }
 
-    /// GLStateFields → 사람이 읽는 다중라인. Task 5 본 구현 + audit 트랙 A
+    /// GLStateFields -> 사람이 읽는 다중라인. Task 5 본 구현 + audit 트랙 A
     /// (attribute_layouts 출력) 통합.
     ///
     /// 포맷 정책:

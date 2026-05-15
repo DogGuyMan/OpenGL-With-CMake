@@ -29,7 +29,7 @@ namespace SJH::test
         void DiffField(std::string& out, const char* name, const T& a, const T& b)
         {
             if (a != b) {
-                out += fmt::format("  {}: {} → {}\n", name, a, b);
+                out += fmt::format("  {}: {} -> {}\n", name, a, b);
             }
         }
 
@@ -37,7 +37,7 @@ namespace SJH::test
         void DiffEnum(std::string& out, const char* name, GLenum a, GLenum b)
         {
             if (a != b) {
-                out += fmt::format("  {}: {} → {}\n", name, SymbolicName(a), SymbolicName(b));
+                out += fmt::format("  {}: {} -> {}\n", name, SymbolicName(a), SymbolicName(b));
             }
         }
 
@@ -56,7 +56,7 @@ namespace SJH::test
                                    v.normalized ? "true" : "false",
                                    v.stride, v.buffer_binding);
             };
-            out += fmt::format("  attrib[{}]: ({}) → ({})\n", slot, descr(a), descr(b));
+            out += fmt::format("  attrib[{}]: ({}) -> ({})\n", slot, descr(a), descr(b));
         }
     }
 
@@ -75,11 +75,11 @@ namespace SJH::test
         if (a.element_buffer != b.element_buffer) {
             const bool either_zero = (a.vao == 0 || b.vao == 0);
             if (either_zero) {
-                out += fmt::format("  element_buffer: {} → {}  "
+                out += fmt::format("  element_buffer: {} -> {}  "
                                    "(note: EBO state is per-VAO; with VAO=0, this is always 0)\n",
                                    a.element_buffer, b.element_buffer);
             } else {
-                out += fmt::format("  element_buffer: {} → {}\n",
+                out += fmt::format("  element_buffer: {} -> {}\n",
                                    a.element_buffer, b.element_buffer);
             }
         }
@@ -91,14 +91,14 @@ namespace SJH::test
         // 텍스처 unit — 변화한 unit만
         for (int i = 0; i < 16; ++i) {
             if (a.texture_2d_per_unit[i] != b.texture_2d_per_unit[i]) {
-                out += fmt::format("  tex_2d[unit {}]: {} → {}\n", i,
+                out += fmt::format("  tex_2d[unit {}]: {} -> {}\n", i,
                                    a.texture_2d_per_unit[i], b.texture_2d_per_unit[i]);
             }
         }
 
         // viewport (전체 array가 변하면 한 줄로)
         if (a.viewport != b.viewport) {
-            out += fmt::format("  viewport: [{},{},{},{}] → [{},{},{},{}]\n",
+            out += fmt::format("  viewport: [{},{},{},{}] -> [{},{},{},{}]\n",
                                a.viewport[0], a.viewport[1], a.viewport[2], a.viewport[3],
                                b.viewport[0], b.viewport[1], b.viewport[2], b.viewport[3]);
         }
@@ -123,12 +123,12 @@ namespace SJH::test
                                    m[2] ? 'B' : '-',
                                    m[3] ? 'A' : '-');
             };
-            out += fmt::format("  color_write: {} → {}\n",
+            out += fmt::format("  color_write: {} -> {}\n",
                                fmt4(a.color_write_mask), fmt4(b.color_write_mask));
         }
 
         if (a.clear_color != b.clear_color) {
-            out += fmt::format("  clear_color: [{:.3f},{:.3f},{:.3f},{:.3f}] → "
+            out += fmt::format("  clear_color: [{:.3f},{:.3f},{:.3f},{:.3f}] -> "
                                               "[{:.3f},{:.3f},{:.3f},{:.3f}]\n",
                                a.clear_color[0], a.clear_color[1], a.clear_color[2], a.clear_color[3],
                                b.clear_color[0], b.clear_color[1], b.clear_color[2], b.clear_color[3]);

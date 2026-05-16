@@ -50,11 +50,17 @@ namespace SJH
         glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
     };
 
-    /// @brief 평행광 (태양 등) — 위치 없이 *방향* 만 가짐. 거리 감쇠 없음.
-    /// @note 셰이더 구조체 `DirLight` 와 1:1 매핑 — 같은 이름 유지.
+    /**
+     * @brief 평행광 (태양 등) — 위치 없이 *방향* 만 가짐. 거리 감쇠 없음.
+     * @details
+     *  모든 표면에 동일한 방향에서 평행하게 들어오는 무한원 광원.
+     *  거리 감쇠(attenuation) 없음 — 태양광 모델링에 적합.
+     *  셰이더 구조체 `DirLight` 와 1:1 매핑.
+     */
     class DirLight
     {
     public:
+        /// @brief 평행광 방향 벡터 (world space). 셰이더 uniform `dirLight.direction`. 기본값은 아래-앞 방향.
         glm::vec3 mDirection{glm::vec3(-0.2f, -1.0f, -0.3f)};
 
         /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
@@ -70,10 +76,17 @@ namespace SJH
         glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
     };
 
+    /**
+     * @brief 점 광원 — 위치 + 거리 감쇠 + Phong 3항.
+     * @details
+     *  거리 감쇠(attenuation)를 적용하는 점 광원. 셰이더 구조체 `PointLight` 와 1:1 매핑.
+     *  감쇠 계수(Kc, Kl, Kq)는 @ref GetAttenuationCoeff 가 도달 거리(@ref mDistance)에서 자동 도출.
+     * @note 배열로 다수 인스턴스화 가능 — 셰이더 `pointLights[i].*` 의 `i` 와 배열 인덱스를 동기.
+     */
     class PointLight
     {
     public:
-        /// @brief 거리 감쇠 산출 기준 도달 거리. 셰이더 uniform `pointLights[i].attenuation`(vec3) 는 @ref GetAttenuationCoeff(mDistance) 로 도출.
+        /// @brief 거리 감쇠 산출 기준 도달 거리. 셰이더 uniform `pointLights[i].attenuation`(vec3) 는 @ref GetAttenuationCoeff 로 도출.
         float mDistance{32.0f};
         /// @brief 점 광원 월드 좌표. 셰이더 uniform `pointLights[i].position`. ImGui DragFloat3 위젯이 갱신.
         glm::vec3 mPos{glm::vec3(3.0f, 3.0f, 3.0f)};
@@ -115,7 +128,7 @@ namespace SJH
         float mOuterCutoffAngleDeg{17.5f};
 
         /// @brief 거리 감쇠 산출 기준 도달 거리.
-        /// @details 셰이더 uniform `light.attenuation`(vec3 = Kc, Kl, Kq) 는 @ref GetAttenuationCoeff(mDistance) 로 도출.
+        /// @details 셰이더 uniform `light.attenuation`(vec3 = Kc, Kl, Kq) 는 @ref GetAttenuationCoeff 로 도출.
         float mDistance{32.0f};
 
         /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
@@ -128,6 +141,12 @@ namespace SJH
         glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
     };
 
+    /**
+     * @brief 도달 거리에서 감쇠 계수 (Kc, Kl, Kq) 를 3차 다항식으로 도출.
+     * @param distance 빛이 유의미하게 도달하는 최대 거리 (world unit). 권장 범위 @c 7 ~ @c 600.
+     * @return @c glm::vec3(Kc, Kl, Kq) — @c Kc=1 (상수항 고정), @c Kl (선형 감쇠), @c Kq (이차 감쇠).
+     * @note 계수 다항식은 Ogre3D / LearnOpenGL 거리 테이블에서 회귀 도출. Kl, Kq 는 음수 방지 클램프.
+     */
     static glm::vec3 GetAttenuationCoeff(float distance)
     {
         const auto linear_coeff = glm::vec4(

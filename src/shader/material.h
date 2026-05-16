@@ -10,8 +10,8 @@
  *
  *  ### 캡슐화 — 왜 getter/setter (직접 대입 차단)
  *  - 텍스처 *이름* 과 *해석된 핸들* 은 *짝* — 이름을 함부로 바꾸면 핸들이 stale.
- *    → 이름 setter (@ref SetDiffuseTextureName / @ref SetSpecularTextureName) 가 *해석 캐시 무효화*.
- *  - shininess 는 유효 범위 권장 @c [2, 256] — @ref SetShininess 가 clamp.
+ *    → 이름 setter (@c SetDiffuseTextureName / @c SetSpecularTextureName) 가 *해석 캐시 무효화*.
+ *  - shininess 는 유효 범위 권장 @c [2, 256] — @c SetShininess 가 clamp.
  *  - 모든 멤버 private — 외부는 getter/setter 경유. @c &mMaterial.mShininess 같은 raw 대입 불가.
  *
  *  ### 변경 이력

@@ -161,36 +161,45 @@ digraph ClassDependencyGraph {
     Image; Texture; ResourceRegistry;
   }
 
-  // GL 객체 RAII
+  // GL 객체 RAII + 메시 (Phase 16 — Mesh 가 VAO/VBO/EBO 소유권 흡수)
   subgraph cluster_gl {
-    label="GL Object RAII"; style=dashed; color="#aaaaaa";
-    Shader; Program; Buffer; VertexLayout;
+    label="GL Object RAII + Mesh"; style=dashed; color="#aaaaaa";
+    Shader; Program; Buffer; VertexLayout; Mesh;
   }
 
-  // 씬 + 머티리얼/라이트/모델 (Phase 12+)
+  // 씬 + 라이팅/머티리얼/모델 (Phase 12+)
   subgraph cluster_scene {
-    label="Scene + Material/Light/Model"; style=dashed; color="#aaaaaa";
-    Camera; Light; Material; Model; Context;
+    label="Scene + Light/Material/Model"; style=dashed; color="#aaaaaa";
+    Camera; Light; DirLight; PointLight; SpotLight; Material; Model; Context;
   }
 
   // 소유 관계 (실선) — 멤버로 보유, 수명 결합
-  Context -> Program            [label="UPtr ×2\n(lighting + simple)"];
-  Context -> VertexLayout       [label="UPtr"];
-  Context -> Buffer             [label="UPtr ×2\n(VBO + EBO)"];
-  Context -> ResourceRegistry   [label="UPtr"];
-  Context -> Camera             [label="value"];
-  Context -> Light              [label="value"];
-  Context -> Material           [label="MaterialUPtr"];
+  Context -> Program          [label="UPtr ×2\n(lighting + simple)"];
+  Context -> ResourceRegistry [label="UPtr (mRM)"];
+  Context -> Camera           [label="value"];
+  Context -> DirLight         [label="value (mDirLight)"];
+  Context -> PointLight       [label="value ×2\n(mPointLights)"];
+  Context -> SpotLight        [label="value (mSpotLight)"];
+  Context -> Material         [label="MaterialUPtr"];
+  Context -> Mesh             [label="MeshUPtr (mBox)"];
+  Context -> Model            [label="ModelUPtr"];
+
+  Mesh -> VertexLayout        [label="UPtr"];
+  Mesh -> Buffer              [label="BufferPtr ×2\n(VBO/EBO)"];
 
   ResourceRegistry -> Texture   [label="map<name, UPtr>"];
   ResourceRegistry -> Material  [label="map<name, UPtr>"];
   ResourceRegistry -> Model     [label="map<name, UPtr>"];
 
+  Model -> Mesh     [label="vector<RenderUnit>"];
+  Model -> Material [label="vector<MaterialUPtr>"];
+  Model -> Texture  [label="vector<TextureUPtr>"];
+
   // 입력 의존 (긴 점선) — 멤버 X, 팩토리 인자 / 이름 키 해석 / 비소유 관찰자
   edge [style=dashed, color="#5b6b80"];
-  Program  -> Shader              [label="vector<ShaderPtr>\n(Create 인자)"];
-  Texture  -> Image               [label="Image*\n(CreateTexture 인자)"];
-  Material -> Texture             [label="const Texture*\n관찰자 (비소유)"];
+  Program  -> Shader   [label="vector<ShaderPtr>\n(Create 인자)"];
+  Texture  -> Image    [label="Image*\n(CreateTexture 인자)"];
+  Material -> Texture  [label="const Texture*\n관찰자 (비소유)"];
 
   // 정적 진단 사용 (짧은 점선) — 인스턴스 X
   edge [style=dotted, color="#9aa6b8", fontcolor="#9aa6b8"];

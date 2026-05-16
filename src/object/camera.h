@@ -35,29 +35,29 @@ namespace SJH
     public:
         // === 위치/방향 상태 ===
         /// @brief 월드 공간 카메라 위치. 기본값 @c (0,0,3).
-        glm::vec3 mPos    = glm::vec3(0.0f, 0.0f, 3.0f);
+        glm::vec3 Pos    = glm::vec3(0.0f, 0.0f, 3.0f);
         /// @brief look-at 모드의 응시 지점. forward 모드에서는 무시.
-        glm::vec3 mTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 Target = glm::vec3(0.0f, 0.0f, 0.0f);
         /// @brief 카메라의 위 방향 단위 벡터. 기본값 @c (0,1,0).
-        glm::vec3 mCamUp  = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 CamUp  = glm::vec3(0.0f, 1.0f, 0.0f);
 
         // === 입력 / 회전 ===
         /// @brief 입력으로 카메라를 조작 중인지 여부. 마우스 좌클릭 PRESS/RELEASE 가 토글.
-        bool  mIsCamControl{false};
+        bool  IsCamControl{false};
         /// @brief Pitch (X축 회전, 위/아래). 단위: degree. 호출자가 @c [-89, 89] 로 클램프.
-        float mEulerPitch{0.0f};
+        float EulerPitch{0.0f};
         /// @brief Yaw (Y축 회전, 좌/우). 단위: degree. 호출자가 @c [0, 360) 으로 정규화.
-        float mEulerYaw{0.0f};
+        float EulerYaw{0.0f};
 
         // === 원근 투영 파라미터 ===
         /// @brief 수직 시야각(Field of View). 단위: degree.
-        float mFov       = 60.0f;
+        float Fov       = 60.0f;
         /// @brief 종횡비(width/height). @ref SetAspect 로 갱신, @ref GetProjMatrix 가 사용.
-        float mAspect    = 1.0f;
+        float Aspect    = 1.0f;
         /// @brief 가까운 클리핑 평면. @c 0 보다 커야 함.
-        float mNearPlane = 0.1f;
+        float NearPlane = 0.1f;
         /// @brief 먼 클리핑 평면. @c mNearPlane 보다 커야 함.
-        float mFarPlane  = 1000.0f;
+        float FarPlane  = 1000.0f;
 
         // === 게터 — 모두 @c const, 멤버 변경 없음 ===
 
@@ -69,10 +69,10 @@ namespace SJH
         glm::vec3 GetFront() const
         {
             const auto pitchMat = glm::rotate(glm::mat4(1.0f),
-                                              glm::radians(mEulerPitch),
+                                              glm::radians(EulerPitch),
                                               glm::vec3(1.0f, 0.0f, 0.0f));
             const auto yawMat   = glm::rotate(glm::mat4(1.0f),
-                                              glm::radians(mEulerYaw),
+                                              glm::radians(EulerYaw),
                                               glm::vec3(0.0f, 1.0f, 0.0f));
             return glm::vec3(pitchMat * yawMat * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
         }
@@ -84,7 +84,7 @@ namespace SJH
          */
         glm::mat4 GetLookAtViewMatrix() const
         {
-            return glm::lookAt(mPos, mTarget, mCamUp);
+            return glm::lookAt(Pos, Target, CamUp);
         }
 
         /**
@@ -93,7 +93,7 @@ namespace SJH
          */
         glm::mat4 GetForwardViewMatrix() const
         {
-            return glm::lookAt(mPos, mPos + GetFront(), mCamUp);
+            return glm::lookAt(Pos, Pos + GetFront(), CamUp);
         }
 
         /**
@@ -103,7 +103,7 @@ namespace SJH
          */
         glm::mat4 GetProjMatrix() const
         {
-            return glm::perspective(glm::radians(mFov), mAspect, mNearPlane, mFarPlane);
+            return glm::perspective(glm::radians(Fov), Aspect, NearPlane, FarPlane);
         }
 
         // === 세터 — 멤버 갱신 (의도가 명시적 — Get* 와 분리) ===
@@ -118,7 +118,7 @@ namespace SJH
         {
             if (height <= 0.0f)
                 return;   // 최소화 등 — Aspect 변경 안 함, 이전 유효 값 유지
-            mAspect = width / height;
+            Aspect = width / height;
         }
     };
 } // namespace SJH

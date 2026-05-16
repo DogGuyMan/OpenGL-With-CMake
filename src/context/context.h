@@ -154,6 +154,19 @@ namespace SJH
         bool mPointLightsEnabled[2]{true, true};
         /// @brief SpotLight 사용 여부.
         bool mSpotLightEnabled{true};
+
+        const char* STR_IMAGE_DARK_GRAY = "image_dark_gray";
+        const char* STR_TEXTURE_DARK_GRAY = "texture_dark_gray";
+        const char* STR_IMAGE_GRAY = "image_gray";
+        const char* STR_TEXTURE_GRAY = "texture_gray";
+        const char* STR_IMAGE_MARBLE = "image_marble";
+        const char* STR_TEXTURE_MARBLE = "texture_marble";
+        const char* STR_MATERIAL_PLANE = "material_plane";
+        const char* STR_MATERIAL_BOX1 = "material_box1";
+        const char* STR_IMAGE_BOX2_SPECULAR = "image_box2_specular";
+        const char* STR_TEXTURE_BOX2_SPECULAR = "texture_box2_specular";
+        const char* STR_MATERIAL_BOX2 = "material_box2";
+
     };
 }
 

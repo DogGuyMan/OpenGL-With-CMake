@@ -43,22 +43,22 @@ namespace SJH
         ~ResourceRegistry();
 
         /// @brief Image 로부터 GPU 텍스처를 *생성*하고 @p key 로 캐시. 이미 있으면 실패(nullptr).
-        [[nodiscard]] Texture *CreateTexture(const std::string &key, const Image *image);
+        Texture *CreateTexture(const std::string &key, const Image *image);
 
         /// @brief @p key 로 캐시된 텍스처 *조회* (생성 안 함). 없으면 nullptr.
-        [[nodiscard]] Texture *FindTexture(const std::string &key);
+        Texture *FindTexture(const std::string &key);
 
         /// @brief 파일에서 디퓨즈 텍스처를 로드해 Material 을 *생성*하고 @p key 로 캐시. 이미 있으면 실패(nullptr).
-        [[nodiscard]] Material *CreateMaterial(const std::string &key, const std::string &filepath);
+        Material *CreateMaterial(const std::string &key, const std::string &filepath);
 
         /// @brief @p key 로 캐시된 머티리얼 *조회* (생성 안 함). 없으면 nullptr.
-        [[nodiscard]] Material *FindMaterial(const std::string &key);
+        Material *FindMaterial(const std::string &key);
 
         /// @brief 파일에서 Model 을 *로드*해 @p key 로 캐시. 이미 있으면 실패(nullptr).
-        [[nodiscard]] Model *CreateModel(const std::string &key, const std::string &filename);
+        Model *CreateModel(const std::string &key, const std::string &filename);
 
         /// @brief @p key 로 캐시된 Model *조회* (생성 안 함). 없으면 nullptr.
-        [[nodiscard]] Model *FindModel(const std::string &key);
+        Model *FindModel(const std::string &key);
 
         /// @brief 보유 모든 자원 일괄 해제 (매니저 인스턴스 자체는 유지).
         void Clear();

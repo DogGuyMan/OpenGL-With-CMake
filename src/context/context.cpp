@@ -42,27 +42,27 @@ namespace SJH
 
     void Context::ProcessInput(GLFWwindow *window)
     {
-        if (!mCamera.mIsCamControl)
+        if (!mCamera.IsCamControl)
             return;
         const float cameraSpeed = 0.05f;
         const auto cameraFront = mCamera.GetFront(); // 매 프레임 1회만 계산 — 재사용
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            mCamera.mPos += cameraSpeed * cameraFront;
+            mCamera.Pos += cameraSpeed * cameraFront;
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            mCamera.mPos -= cameraSpeed * cameraFront;
+            mCamera.Pos -= cameraSpeed * cameraFront;
 
-        auto cameraRight = glm::normalize(glm::cross(mCamera.mCamUp, -cameraFront));
+        auto cameraRight = glm::normalize(glm::cross(mCamera.CamUp, -cameraFront));
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            mCamera.mPos += cameraSpeed * cameraRight;
+            mCamera.Pos += cameraSpeed * cameraRight;
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            mCamera.mPos -= cameraSpeed * cameraRight;
+            mCamera.Pos -= cameraSpeed * cameraRight;
 
         auto cameraUp = glm::normalize(glm::cross(-cameraFront, cameraRight));
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-            mCamera.mPos += cameraSpeed * cameraUp;
+            mCamera.Pos += cameraSpeed * cameraUp;
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-            mCamera.mPos -= cameraSpeed * cameraUp;
+            mCamera.Pos -= cameraSpeed * cameraUp;
     }
 
     void Context::Reshape(int width, int height)
@@ -75,24 +75,24 @@ namespace SJH
 
     void Context::MouseMove(double x, double y)
     {
-        if (!mCamera.mIsCamControl)
+        if (!mCamera.IsCamControl)
             return;
         auto pos = glm::vec2((float)x, (float)y);
         auto deltaPos = pos - mPrevMousePos;
 
         const float cameraRotSpeed = -0.1f;
-        mCamera.mEulerYaw -= deltaPos.x * cameraRotSpeed;
-        mCamera.mEulerPitch -= deltaPos.y * cameraRotSpeed;
+        mCamera.EulerYaw -= deltaPos.x * cameraRotSpeed;
+        mCamera.EulerPitch -= deltaPos.y * cameraRotSpeed;
 
-        if (mCamera.mEulerYaw < 0.0f)
-            mCamera.mEulerYaw += 360.0f;
-        if (mCamera.mEulerYaw > 360.0f)
-            mCamera.mEulerYaw -= 360.0f;
+        if (mCamera.EulerYaw < 0.0f)
+            mCamera.EulerYaw += 360.0f;
+        if (mCamera.EulerYaw > 360.0f)
+            mCamera.EulerYaw -= 360.0f;
 
-        if (mCamera.mEulerPitch > 89.0f)
-            mCamera.mEulerPitch = 89.0f;
-        if (mCamera.mEulerPitch < -89.0f)
-            mCamera.mEulerPitch = -89.0f;
+        if (mCamera.EulerPitch > 89.0f)
+            mCamera.EulerPitch = 89.0f;
+        if (mCamera.EulerPitch < -89.0f)
+            mCamera.EulerPitch = -89.0f;
 
         mPrevMousePos = pos;
     }
@@ -111,12 +111,12 @@ namespace SJH
             if (action == GLFW_PRESS)
             {
                 mPrevMousePos = glm::vec2((float)x, (float)y);
-                mCamera.mIsCamControl = true;
+                mCamera.IsCamControl = true;
                 spdlog::info("[MouseButton] IsCamControl=true, mPrevMousePos=({:.1f},{:.1f})", x, y);
             }
             else if (action == GLFW_RELEASE)
             {
-                mCamera.mIsCamControl = false;
+                mCamera.IsCamControl = false;
                 spdlog::info("[MouseButton] IsCamControl=false");
             }
         }
@@ -129,10 +129,10 @@ namespace SJH
             if (ImGui::CollapsingHeader("dirLight"))
             {
                 ImGui::Checkbox("dir.enabled", &mDirLightEnabled);
-                ImGui::DragFloat3("dir.direction", glm::value_ptr(mDirLight.mDirection), 0.01f);
-                ImGui::ColorEdit3("dir.ambient", glm::value_ptr(mDirLight.mAmbient));
-                ImGui::ColorEdit3("dir.diffuse", glm::value_ptr(mDirLight.mDiffuse));
-                ImGui::ColorEdit3("dir.specular", glm::value_ptr(mDirLight.mSpecular));
+                ImGui::DragFloat3("dir.direction", glm::value_ptr(mDirLight.Direction), 0.01f);
+                ImGui::ColorEdit3("dir.ambient", glm::value_ptr(mDirLight.Ambient));
+                ImGui::ColorEdit3("dir.diffuse", glm::value_ptr(mDirLight.Diffuse));
+                ImGui::ColorEdit3("dir.specular", glm::value_ptr(mDirLight.Specular));
             }
 
             for (int i = 0; i < 2; ++i)
@@ -142,11 +142,11 @@ namespace SJH
                 if (ImGui::CollapsingHeader(header.c_str()))
                 {
                     ImGui::Checkbox("p.enabled", &mPointLightsEnabled[i]);
-                    ImGui::DragFloat3("p.position", glm::value_ptr(mPointLights[i].mPos), 0.01f);
-                    ImGui::DragFloat("p.distance", &mPointLights[i].mDistance, 0.5f, 1.0f, 3250.0f);
-                    ImGui::ColorEdit3("p.ambient", glm::value_ptr(mPointLights[i].mAmbient));
-                    ImGui::ColorEdit3("p.diffuse", glm::value_ptr(mPointLights[i].mDiffuse));
-                    ImGui::ColorEdit3("p.specular", glm::value_ptr(mPointLights[i].mSpecular));
+                    ImGui::DragFloat3("p.position", glm::value_ptr(mPointLights[i].Pos), 0.01f);
+                    ImGui::DragFloat("p.distance", &mPointLights[i].Distance, 0.5f, 1.0f, 3250.0f);
+                    ImGui::ColorEdit3("p.ambient", glm::value_ptr(mPointLights[i].Ambient));
+                    ImGui::ColorEdit3("p.diffuse", glm::value_ptr(mPointLights[i].Diffuse));
+                    ImGui::ColorEdit3("p.specular", glm::value_ptr(mPointLights[i].Specular));
                 }
                 ImGui::PopID();
             }
@@ -154,14 +154,14 @@ namespace SJH
             if (ImGui::CollapsingHeader("spotLight", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::Checkbox("s.enabled", &mSpotLightEnabled);
-                ImGui::DragFloat3("s.position", glm::value_ptr(mSpotLight.mPos), 0.01f);
-                ImGui::DragFloat3("s.direction", glm::value_ptr(mSpotLight.mDirection), 0.01f);
-                ImGui::DragFloat("s.cutoff(deg)", &mSpotLight.mCutoffAngleDeg, 0.1f, 0.0f, 89.0f);
-                ImGui::DragFloat("s.outerCutoff(deg)", &mSpotLight.mOuterCutoffAngleDeg, 0.1f, 0.0f, 90.0f);
-                ImGui::DragFloat("s.distance", &mSpotLight.mDistance, 0.5f, 1.0f, 3250.0f);
-                ImGui::ColorEdit3("s.ambient", glm::value_ptr(mSpotLight.mAmbient));
-                ImGui::ColorEdit3("s.diffuse", glm::value_ptr(mSpotLight.mDiffuse));
-                ImGui::ColorEdit3("s.specular", glm::value_ptr(mSpotLight.mSpecular));
+                ImGui::DragFloat3("s.position", glm::value_ptr(mSpotLight.Pos), 0.01f);
+                ImGui::DragFloat3("s.direction", glm::value_ptr(mSpotLight.Direction), 0.01f);
+                ImGui::DragFloat("s.cutoff(deg)", &mSpotLight.CutoffAngleDeg, 0.1f, 0.0f, 89.0f);
+                ImGui::DragFloat("s.outerCutoff(deg)", &mSpotLight.OuterCutoffAngleDeg, 0.1f, 0.0f, 90.0f);
+                ImGui::DragFloat("s.distance", &mSpotLight.Distance, 0.5f, 1.0f, 3250.0f);
+                ImGui::ColorEdit3("s.ambient", glm::value_ptr(mSpotLight.Ambient));
+                ImGui::ColorEdit3("s.diffuse", glm::value_ptr(mSpotLight.Diffuse));
+                ImGui::ColorEdit3("s.specular", glm::value_ptr(mSpotLight.Specular));
                 ImGui::Checkbox("flash light", &mFlashLightMode);
             }
 
@@ -175,15 +175,15 @@ namespace SJH
                 glClearColor(mClearColor.r, mClearColor.g, mClearColor.b, mClearColor.a);
             }
             ImGui::Separator();
-            ImGui::DragFloat3("camera pos", glm::value_ptr(mCamera.mPos), 0.01f);
-            ImGui::DragFloat("camera yaw", &mCamera.mEulerYaw, 0.5f);
-            ImGui::DragFloat("camera pitch", &mCamera.mEulerPitch, 0.5f, -89.0f, 89.0f);
+            ImGui::DragFloat3("camera pos", glm::value_ptr(mCamera.Pos), 0.01f);
+            ImGui::DragFloat("camera yaw", &mCamera.EulerYaw, 0.5f);
+            ImGui::DragFloat("camera pitch", &mCamera.EulerPitch, 0.5f, -89.0f, 89.0f);
             ImGui::Separator();
             if (ImGui::Button("reset camera"))
             {
-                mCamera.mEulerYaw = 0.0f;
-                mCamera.mEulerPitch = 0.0f;
-                mCamera.mPos = glm::vec3(0.0f, 0.0f, 3.0f);
+                mCamera.EulerYaw = 0.0f;
+                mCamera.EulerPitch = 0.0f;
+                mCamera.Pos = glm::vec3(0.0f, 0.0f, 3.0f);
             }
         }
         ImGui::End();
@@ -204,18 +204,21 @@ namespace SJH
         {
             // 두 점광원 + 스포트라이트 = 총 3개 마커 큐브. 각자 자기 diffuse 색으로 출력.
             const glm::vec3 markerPositions[3] = {
-                mPointLights[0].mPos,
-                mPointLights[1].mPos,
-                mSpotLight.mPos,
+                mPointLights[0].Pos,
+                mPointLights[1].Pos,
+                mSpotLight.Pos,
             };
             const glm::vec3 markerColors[3] = {
-                mPointLights[0].mDiffuse,
-                mPointLights[1].mDiffuse,
-                mSpotLight.mDiffuse,
+                mPointLights[0].Diffuse,
+                mPointLights[1].Diffuse,
+                mSpotLight.Diffuse,
             };
             for (int i = 0; i < 3; ++i)
             {
-                if(mFlashLightMode && i >= 2) { continue; }
+                if (mFlashLightMode && i >= 2)
+                {
+                    continue;
+                }
                 auto markerTransform =
                     glm::translate(glm::mat4(1.0f), markerPositions[i]) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
@@ -227,7 +230,7 @@ namespace SJH
 
         mProgram->Use();
         {
-            Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.mPos);
+            Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.Pos);
 
             // --- Light 활성 플래그 — 셰이더가 enabled==0 슬롯의 Calc* 호출을 건너뜀.
             //     ImGui 체크박스로 토글된 광원은 화면에 기여 안 함.
@@ -238,9 +241,10 @@ namespace SJH
                 const std::string name = "pointLightsEnabled[" + std::to_string(i) + "]";
                 Uniforms::SetInt(*mProgram.get(), name.c_str(), mPointLightsEnabled[i] ? 1 : 0);
             }
-            if(mFlashLightMode) {
-                mSpotLight.mPos = mCamera.mPos;
-                mSpotLight.mDirection = mCamera.GetFront();
+            if (mFlashLightMode)
+            {
+                mSpotLight.Pos = mCamera.Pos;
+                mSpotLight.Direction = mCamera.GetFront();
             }
             Uniforms::SetSpotLight(*mProgram.get(), "spotLight", mSpotLight);
             // --- DirLight 1개 (평행광 / 거리감쇠 없음) ---
@@ -254,29 +258,51 @@ namespace SJH
             }
 
             // --- SpotLight 1개 (점광원 + 콘 cutoff — degree->cosine 변환은 helper 내부) ---
-            Uniforms::SetSpotLight(*mProgram, "spotLight", mSpotLight);
+            {
+                Uniforms::SetSpotLight(*mProgram, "spotLight", mSpotLight);
+                auto modelTransform = glm::mat4(1.0f);
+                auto transform = projMat * viewMat * modelTransform;
+                Uniforms::SetMat4(*mProgram.get(), "transformMat", transform);
+                Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelTransform);
+            }
 
-            // Material — sampler 유닛 + shininess. 유닛 번호는 SetResolvedTextures 가 Init 에서 확정.
-            // Uniforms::SetInt(*mProgram.get(), "material.diffuse", mMaterial->GetDiffuseUnit());
-            // Uniforms::SetInt(*mProgram.get(), "material.specular", mMaterial->GetSpecularUnit());
-            // Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial->GetShininess());
+            {
+                auto modelTransform =
+                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)) *
+                    glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
+                auto transform = projMat * viewMat * modelTransform;
+                Uniforms::SetMat4(*mProgram, "transformMat", transform);
+                Uniforms::SetMat4(*mProgram, "modelTransformMat", modelTransform);
+                auto planeMaterial = mRM->FindMaterial(STR_MATERIAL_PLANE);
+                planeMaterial->Apply();
+                mBox->Draw();
+            }
 
-            // Material 의 해석된 관찰자를 자기 유닛에 바인딩.
-            // if (const Texture *dt = mMaterial->GetDiffuseTexture())
-            // {
-            //     glActiveTexture(GL_TEXTURE0 + mMaterial->GetDiffuseUnit());
-            //     glBindTexture(GL_TEXTURE_2D, dt->GetTextureID());
-            // }
-            // if (const Texture *st = mMaterial->GetSpecularTexture())
-            // {
-            //     glActiveTexture(GL_TEXTURE0 + mMaterial->GetSpecularUnit());
-            //     glBindTexture(GL_TEXTURE_2D, st->GetTextureID());
-            // }
+            {
+                auto modelTransform =
+                    glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.75f, -4.0f)) *
+                    glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+                    glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+                auto transform = projMat * viewMat * modelTransform;
+                Uniforms::SetMat4(*mProgram, "transformMat", transform);
+                Uniforms::SetMat4(*mProgram, "modelTransformMat", modelTransform);
+                auto box1Material = mRM->FindMaterial(STR_MATERIAL_BOX1);
+                box1Material->Apply();
+                mBox->Draw();
+            }
 
-            auto modelTransform = glm::mat4(1.0f);
-            auto transform = projMat * viewMat * modelTransform;
-            Uniforms::SetMat4(*mProgram.get(), "transformMat", transform);
-            Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelTransform);
+            {
+                auto modelTransform =
+                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
+                    glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+                    glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+                auto transform = projMat * viewMat * modelTransform;
+                Uniforms::SetMat4(*mProgram, "transformMat", transform);
+                Uniforms::SetMat4(*mProgram, "modelTransformMat", modelTransform);
+                auto box2Material = mRM->FindMaterial(STR_MATERIAL_BOX2);
+                box2Material->Apply();
+                mBox->Draw();
+            }
         }
 
         // glPointSize(50.0f);
@@ -289,31 +315,37 @@ namespace SJH
         // 거리감쇠 c1=0.09 / c2=0.032 -> learnopengl 표 distance≈50 행에 대응하므로 mDistance=50 로 설정.
         // (project 의 GetAttenuationCoeff 가 distance->(Kc,Kl,Kq) 변환을 담당)
 
-        mDirLight.mDirection = glm::vec3(0.0f, -1.0f, 0.0f);
-        mDirLight.mAmbient = glm::vec3(1.0f, 1.0f, 1.0f);
-        mDirLight.mDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-        mDirLight.mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+        mDirLight = {
+            .Direction = glm::vec3(0.0f, -1.0f, 0.0f),
+            .Ambient = glm::vec3(1.0f, 1.0f, 1.0f),
+            .Diffuse = glm::vec3(1.0f, 1.0f, 1.0f),
+            .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mPointLights[0].mPos = glm::vec3(1.2f, 1.0f, 1.0f);
-        mPointLights[0].mDistance = 50.0f;
-        mPointLights[0].mAmbient = glm::vec3(0.05f, 0.05f, 0.05f);
-        mPointLights[0].mDiffuse = glm::vec3(0.8f, 0.4f, 0.2f);
-        mPointLights[0].mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+        mPointLights[0] = {.Pos = glm::vec3(1.2f, 1.0f, 1.0f),
+                           .Distance = 50.0f,
+                           .Ambient = glm::vec3(0.05f, 0.05f, 0.05f),
+                           .Diffuse = glm::vec3(0.8f, 0.4f, 0.2f),
+                           .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mPointLights[1].mPos = glm::vec3(-1.2f, 1.0f, -1.0f);
-        mPointLights[1].mDistance = 50.0f;
-        mPointLights[1].mAmbient = glm::vec3(0.05f, 0.05f, 0.05f);
-        mPointLights[1].mDiffuse = glm::vec3(0.2f, 0.4f, 0.8f);
-        mPointLights[1].mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+        mPointLights[1] = {.Pos = glm::vec3(-1.2f, 1.0f, -1.0f),
+                           .Distance = 50.0f,
+                           .Ambient = glm::vec3(0.05f, 0.05f, 0.05f),
+                           .Diffuse = glm::vec3(0.2f, 0.4f, 0.8f),
+                           .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mSpotLight.mPos = glm::vec3(0.0f, 1.5f, 0.0f);
-        mSpotLight.mDirection = glm::vec3(0.0f, -1.0f, 0.0f);
-        mSpotLight.mCutoffAngleDeg = 12.5f;
-        mSpotLight.mOuterCutoffAngleDeg = 17.5f;
-        mSpotLight.mDistance = 50.0f;
-        mSpotLight.mAmbient = glm::vec3(0.0f, 0.0f, 0.0f);
-        mSpotLight.mDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-        mSpotLight.mSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+        mSpotLight = {.Pos = glm::vec3(1.0f, 4.0f, 4.0f),
+                      .Direction = glm::vec3(0.0f, -1.0f, 0.0f),
+                      .CutoffAngleDeg = 120.0f,
+                      .OuterCutoffAngleDeg = 5.0f,
+                      .Distance = 128.0f,
+                      .Ambient = glm::vec3(0.0f, 0.0f, 0.0f),
+                      .Diffuse = glm::vec3(1.0f, 1.0f, 1.0f),
+                      .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
+
+        mCamera = {
+            .Pos = glm::vec3(0.0f, 2.5f, 8.0f),
+            .EulerPitch = -20.f,
+        };
 
         mProgram = Program::CreateWithVSFS("./resources/shader/lighting.vs", "./resources/shader/lighting.fs");
         if (!mProgram)
@@ -328,43 +360,42 @@ namespace SJH
 
         mRM = ResourceRegistry::Create();
 
-        // 이미지는 스코프 한정 — CreateTexture 가 GPU 업로드를 마치면 즉시 소멸.
-        struct TexSpec { const char *key; const char *path; };
-        const TexSpec fileTextures[] = {
-            {"container",           "./resources/texture/container.jpg"},
-            {"awesomeface",         "./resources/texture/awesomeface.png"},
-            {"container2",          "./resources/texture/container2.png"},
-            {"container2_specular", "./resources/texture/container2_specular.png"},
-        };
-        for (const auto &spec : fileTextures)
-        {
-            auto image = Image::Load(spec.key, spec.path);
-            if (image == nullptr)
-                return false;
-            if (mRM->CreateTexture(spec.key, image.get()) == nullptr)
-                return false;
-        }
+        auto imageDarkGary = Image::Create(STR_IMAGE_DARK_GRAY, 4, 4, 4);
+        imageDarkGary->SetSingleColorImage(glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
 
-        auto checkerImg = Image::Create("checkerboard", 512, 512);
-        if (checkerImg == nullptr)
-            return false;
-        checkerImg->SetCheckImage(16, 16);
-        if (mRM->CreateTexture("checkerboard", checkerImg.get()) == nullptr)
-            return false;
+        auto textureDarkGray = mRM->CreateTexture(
+            STR_TEXTURE_DARK_GRAY, imageDarkGary.get());
 
-        auto whiteImg = Image::Create("white", 32, 32);
-        if (whiteImg == nullptr)
-            return false;
-        whiteImg->SetWhiteImage();
-        if (mRM->CreateTexture("white", whiteImg.get()) == nullptr)
-            return false;
+        auto imageGray = Image::Create(STR_IMAGE_GRAY, 4, 4, 4);
+        imageGray->SetSingleColorImage(glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
 
-        auto grayImg = Image::Create("gray", 32, 32);
-        if (grayImg == nullptr)
-            return false;
-        grayImg->SetSingleColorImage({0.5f, 0.5f, 0.5f, 1.0f});
-        if (mRM->CreateTexture("gray", grayImg.get()) == nullptr)
-            return false;
+        auto textureGray = mRM->CreateTexture(
+            STR_TEXTURE_GRAY, imageGray.get());
+
+        auto imageMarble = Image::Load(STR_IMAGE_MARBLE, "./resources/texture/marble.jpg");
+        auto textureMarble = mRM->CreateTexture(
+            STR_TEXTURE_MARBLE, imageMarble.get());
+
+        // plane — diffuse: 그레이, specular: marble, shininess 128. RM 이 소유.
+        auto planeMaterial = mRM->CreateMaterial(STR_MATERIAL_PLANE, "./resources/texture/marble.jpg");
+        planeMaterial->SetResolvedTextures(textureGray, 0, textureMarble, 1);
+        planeMaterial->SetShininess(128.0f);
+        planeMaterial->SetProgram(mProgram.get());
+
+        // box1 — diffuse: container.jpg, specular: 다크 그레이, shininess 16.
+        // CreateMaterial 이 diffuse 를 파일에서 만들어 두므로, 그 관찰자를 읽어 specular 만 덧붙인다.
+        auto box1Material = mRM->CreateMaterial(STR_MATERIAL_BOX1, "./resources/texture/container.jpg");
+        box1Material->SetResolvedTextures(box1Material->GetDiffuseTexture(), 0, textureDarkGray, 1);
+        box1Material->SetShininess(16.0f);
+        box1Material->SetProgram(mProgram.get());
+
+        // box2 — diffuse/specular 둘 다 파일. specular 텍스처는 별도 등록 후 주입.
+        auto imageBox2Specular = Image::Load(STR_IMAGE_BOX2_SPECULAR, "./resources/texture/container2_specular.png");
+        auto textureBox2Specular = mRM->CreateTexture(STR_TEXTURE_BOX2_SPECULAR, imageBox2Specular.get());
+        auto box2Material = mRM->CreateMaterial(STR_MATERIAL_BOX2, "./resources/texture/container2.png");
+        box2Material->SetResolvedTextures(box2Material->GetDiffuseTexture(), 0, textureBox2Specular, 1);
+        box2Material->SetShininess(64.0f);
+        box2Material->SetProgram(mProgram.get());
         /*
         순서
             1. VAO

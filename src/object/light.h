@@ -35,19 +35,19 @@ namespace SJH
     {
     public:
         /// @brief 점 광원 월드 좌표. 셰이더 uniform `light.position`. ImGui DragFloat3 위젯이 갱신.
-        glm::vec3 mPos{glm::vec3(3.0f, 3.0f, 3.0f)};
+        glm::vec3 Pos{glm::vec3(3.0f, 3.0f, 3.0f)};
 
         /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
         /// @details 광원과 무관한 기본 밝기. 일반적으로 매우 작은 값 (예: @c (0.1, 0.1, 0.1)) 으로 그림자 영역에도 약간의 색.
-        glm::vec3 mAmbient{glm::vec3(0.1f, 0.1f, 0.1f)};
+        glm::vec3 Ambient{glm::vec3(0.1f, 0.1f, 0.1f)};
 
         /// @brief Diffuse 항 색상 (RGB, 0~1). 셰이더 uniform `light.diffuse`.
         /// @details Lambertian 항의 광원 색. 광원의 *주된 색상* — 일반적으로 흰색 근처.
-        glm::vec3 mDiffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
+        glm::vec3 Diffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
 
         /// @brief Specular 항 색상 (RGB, 0~1). 셰이더 uniform `light.specular`.
         /// @details 하이라이트 색. 일반적으로 흰색 — 금속이 아닌 표면은 광원 색을 그대로 반사.
-        glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
+        glm::vec3 Specular{glm::vec3(1.0f, 1.0f, 1.0f)};
     };
 
     /**
@@ -61,19 +61,19 @@ namespace SJH
     {
     public:
         /// @brief 평행광 방향 벡터 (world space). 셰이더 uniform `dirLight.direction`. 기본값은 아래-앞 방향.
-        glm::vec3 mDirection{glm::vec3(-0.2f, -1.0f, -0.3f)};
+        glm::vec3 Direction{glm::vec3(-0.2f, -1.0f, -0.3f)};
 
         /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
         /// @details 광원과 무관한 기본 밝기. 일반적으로 매우 작은 값 (예: @c (0.1, 0.1, 0.1)) 으로 그림자 영역에도 약간의 색.
-        glm::vec3 mAmbient{glm::vec3(0.1f, 0.1f, 0.1f)};
+        glm::vec3 Ambient{glm::vec3(0.1f, 0.1f, 0.1f)};
 
         /// @brief Diffuse 항 색상 (RGB, 0~1). 셰이더 uniform `light.diffuse`.
         /// @details Lambertian 항의 광원 색. 광원의 *주된 색상* — 일반적으로 흰색 근처.
-        glm::vec3 mDiffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
+        glm::vec3 Diffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
 
         /// @brief Specular 항 색상 (RGB, 0~1). 셰이더 uniform `light.specular`.
         /// @details 하이라이트 색. 일반적으로 흰색 — 금속이 아닌 표면은 광원 색을 그대로 반사.
-        glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
+        glm::vec3 Specular{glm::vec3(1.0f, 1.0f, 1.0f)};
     };
 
     /**
@@ -86,59 +86,60 @@ namespace SJH
     class PointLight
     {
     public:
-        /// @brief 거리 감쇠 산출 기준 도달 거리. 셰이더 uniform `pointLights[i].attenuation`(vec3) 는 @ref GetAttenuationCoeff 로 도출.
-        float mDistance{32.0f};
         /// @brief 점 광원 월드 좌표. 셰이더 uniform `pointLights[i].position`. ImGui DragFloat3 위젯이 갱신.
-        glm::vec3 mPos{glm::vec3(3.0f, 3.0f, 3.0f)};
+        glm::vec3 Pos{glm::vec3(3.0f, 3.0f, 3.0f)};
+
+        /// @brief 거리 감쇠 산출 기준 도달 거리. 셰이더 uniform `pointLights[i].attenuation`(vec3) 는 @ref GetAttenuationCoeff 로 도출.
+        float Distance{32.0f};
 
         /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
         /// @details 광원과 무관한 기본 밝기. 일반적으로 매우 작은 값 (예: @c (0.1, 0.1, 0.1)) 으로 그림자 영역에도 약간의 색.
-        glm::vec3 mAmbient{glm::vec3(0.1f, 0.1f, 0.1f)};
+        glm::vec3 Ambient{glm::vec3(0.1f, 0.1f, 0.1f)};
 
         /// @brief Diffuse 항 색상 (RGB, 0~1). 셰이더 uniform `light.diffuse`.
         /// @details Lambertian 항의 광원 색. 광원의 *주된 색상* — 일반적으로 흰색 근처.
-        glm::vec3 mDiffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
+        glm::vec3 Diffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
 
         /// @brief Specular 항 색상 (RGB, 0~1). 셰이더 uniform `light.specular`.
         /// @details 하이라이트 색. 일반적으로 흰색 — 금속이 아닌 표면은 광원 색을 그대로 반사.
-        glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
+        glm::vec3 Specular{glm::vec3(1.0f, 1.0f, 1.0f)};
     };
 
     /// @brief 스포트라이트 — 위치 + 콘 축 방향 + inner/outer 컷오프 + 거리 감쇠 + Phong 3항.
-    /// @details PointLight 에 방향(@ref mDirection)과 콘 컷오프(@ref mCutoffAngleDeg, @ref mOuterCutoffAngleDeg)
+    /// @details PointLight 에 방향(@ref Direction)과 콘 컷오프(@ref CutoffAngleDeg, @ref OuterCutoffAngleDeg)
     ///          가 추가된 형태. 콘 안쪽은 fully lit, 바깥쪽은 fully dark,
     ///          inner~outer 구간은 부드럽게 감쇠(soft edge) 시키는 데 사용.
     class SpotLight
     {
     public:
         /// @brief 광원 월드 좌표. 셰이더 uniform `light.position`. ImGui DragFloat3 위젯이 갱신.
-        glm::vec3 mPos{glm::vec3(3.0f, 3.0f, 3.0f)};
+        glm::vec3 Pos{glm::vec3(3.0f, 3.0f, 3.0f)};
 
         /// @brief 스포트 콘 축 방향 (world space, 정규화 권장). 셰이더 uniform `light.direction`.
         /// @details `normalize(-mDirection)` 과 lightDir 의 dot 으로 `theta` 계산 → cutoff 비교.
-        glm::vec3 mDirection{glm::vec3(0.0f, -1.0f, 0.0f)};
+        glm::vec3 Direction{glm::vec3(0.0f, -1.0f, 0.0f)};
 
         /// @brief 콘 안쪽 컷오프 각도 (degree). 이 각도 이내는 fully lit.
         /// @details degree 로 보관 — 셰이더 송신 시 `cosf(glm::radians(mCutoffAngleDeg))` 변환 후 push.
-        float mCutoffAngleDeg{12.5f};
+        float CutoffAngleDeg{12.5f};
 
         /// @brief 콘 바깥쪽 컷오프 각도 (degree). 이 각도 바깥은 fully dark.
-        /// @details mCutoffAngleDeg ~ mOuterCutoffAngleDeg 구간은 smoothstep 으로 부드럽게 감쇠.
+        /// @details CutoffAngleDeg ~ OuterCutoffAngleDeg 구간은 smoothstep 으로 부드럽게 감쇠.
         ///          현재 셰이더(lighting.fs) 는 `light.cutoff` 단일 float 만 사용 — outer 는 향후 확장용.
-        float mOuterCutoffAngleDeg{17.5f};
+        float OuterCutoffAngleDeg{17.5f};
 
         /// @brief 거리 감쇠 산출 기준 도달 거리.
         /// @details 셰이더 uniform `light.attenuation`(vec3 = Kc, Kl, Kq) 는 @ref GetAttenuationCoeff 로 도출.
-        float mDistance{32.0f};
+        float Distance{32.0f};
 
         /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
-        glm::vec3 mAmbient{glm::vec3(0.1f, 0.1f, 0.1f)};
+        glm::vec3 Ambient{glm::vec3(0.1f, 0.1f, 0.1f)};
 
         /// @brief Diffuse 항 색상 (RGB, 0~1). 셰이더 uniform `light.diffuse`.
-        glm::vec3 mDiffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
+        glm::vec3 Diffuse{glm::vec3(0.5f, 0.5f, 0.5f)};
 
         /// @brief Specular 항 색상 (RGB, 0~1). 셰이더 uniform `light.specular`.
-        glm::vec3 mSpecular{glm::vec3(1.0f, 1.0f, 1.0f)};
+        glm::vec3 Specular{glm::vec3(1.0f, 1.0f, 1.0f)};
     };
 
     /**

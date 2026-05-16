@@ -116,6 +116,7 @@ namespace SJH
 
         /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
         bool mAnimation{true};
+        bool mFlashLightMode{true};
 
         /// @brief Texture/Material/Model 을 이름 키로 캐시·조회하는 리소스 레지스트리.
         ResourceRegistryUPtr mRM;

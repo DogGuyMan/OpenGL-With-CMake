@@ -136,4 +136,18 @@ namespace SJH
             mat = mMaterials[mesh->mMaterialIndex].get();
         mRenderUnit.push_back({std::move(glMesh), mat});
     }
+
+    void Model::Draw(const Program *program) const
+    {
+        for (auto &unit : mRenderUnit)
+        {
+            const auto &vao = unit.mesh->GetVertexLayout();
+            vao->Bind();
+            unit.material->SetToProgram(program);
+            glDrawElements(
+                unit.mesh->GetPrimitiveType(),
+                unit.mesh->GetIndexBuffer()->GetCount(),
+                GL_UNSIGNED_INT, 0);
+        }
+    };
 }

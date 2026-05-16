@@ -18,7 +18,6 @@
 #define __MESH_H__
 
 #include "buffer/buffer.h"
-#include "shader/material.h"
 #include "common/common.h"
 #include "layout/vertex_layout.h"
 #include <glad/glad.h>

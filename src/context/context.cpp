@@ -162,6 +162,7 @@ namespace SJH
                 ImGui::ColorEdit3("s.ambient", glm::value_ptr(mSpotLight.mAmbient));
                 ImGui::ColorEdit3("s.diffuse", glm::value_ptr(mSpotLight.mDiffuse));
                 ImGui::ColorEdit3("s.specular", glm::value_ptr(mSpotLight.mSpecular));
+                ImGui::Checkbox("flash light", &mFlashLightMode);
             }
 
             if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen))
@@ -220,6 +221,7 @@ namespace SJH
             };
             for (int i = 0; i < 3; ++i)
             {
+                if(mFlashLightMode && i >= 2) { continue; }
                 auto markerTransform =
                     glm::translate(glm::mat4(1.0f), markerPositions[i]) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
@@ -242,7 +244,10 @@ namespace SJH
                 const std::string name = "pointLightsEnabled[" + std::to_string(i) + "]";
                 Uniforms::SetInt(*mProgram.get(), name.c_str(), mPointLightsEnabled[i] ? 1 : 0);
             }
-
+            if(mFlashLightMode) {
+                mSpotLight.mPos = mCamera.mPos;
+                mSpotLight.mDirection = mCamera.GetFront();
+            }
             Uniforms::SetSpotLight(*mProgram.get(), "spotLight", mSpotLight);
             // --- DirLight 1개 (평행광 / 거리감쇠 없음) ---
             Uniforms::SetDirLight(*mProgram, "dirLight", mDirLight);

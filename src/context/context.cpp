@@ -189,8 +189,8 @@ namespace SJH
         ImGui::End();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        // glEnable(GL_DEPTH_TEST); // 깊이 테스트 사용하기
-        glDisable(GL_DEPTH_TEST); // 깊이 테스트 사용하지 않기.
+        glEnable(GL_DEPTH_TEST); // 깊이 테스트 사용하기
+        // glDisable(GL_DEPTH_TEST); // 깊이 테스트 사용하지 않기.
         // glDepthMask(GL_FALSE); // depth buffer의 업데이트 막기
         // glClearDepth(1.0f); // depth buffer의 초기값 설정하기
 
@@ -207,8 +207,17 @@ namespace SJH
         auto viewMat = mCamera.GetForwardViewMatrix();
 
         {
-            mCamera.FarPlane = 10.f;
-            mCamera.NearPlane = 0.5f;
+            /* perspective projection을 적용하면 깊이값을 0~1 사이로 정규화하면서 w값으로 나누는 과정을 거침
+            정규화된 z값은 1/z 꼴의 함수 형태로 분포가 나타남
+
+            깊이 값의 왜곡 멀리 있는 픽셀 간에 z값의 오차가 크지 않아서 문제가 발생할 수 있음 z-fighting
+            예방법 :
+                면과 면을 너무 붙어있게 하지 않을 것
+                near의 값을 너무 작게 하지 말것
+                좀더 정확한 depth buffer를 설정하여 사용할 것
+            */
+            // mCamera.FarPlane = 10.f;
+            // mCamera.NearPlane = 0.5f;
         }
         auto projMat = mCamera.GetProjMatrix(); // mAspect 멤버 사용 (Reshape 에서 갱신)
 
@@ -308,7 +317,7 @@ namespace SJH
 
             {
                 auto modelTransform =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
+                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.749f, 2.0f)) *
                     glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
                 auto transform = projMat * viewMat * modelTransform;

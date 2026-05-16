@@ -189,12 +189,27 @@ namespace SJH
         ImGui::End();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
+        // glEnable(GL_DEPTH_TEST); // 깊이 테스트 사용하기
+        glDisable(GL_DEPTH_TEST); // 깊이 테스트 사용하지 않기.
+        // glDepthMask(GL_FALSE); // depth buffer의 업데이트 막기
+        // glClearDepth(1.0f); // depth buffer의 초기값 설정하기
+
+        /* 사용 가능한 비교 연산자
+            GL_ALWAYS, GL_NEVER
+            GL_LESS, GL_LEQUAL
+            GL_GREATER, GL_GEQUAL
+            GL_EQUAL, GL_NOTEQUAL */
+        // glDepthFunc(GL_LESS); // depth test 비교 연산자 변경하기
 
         float t = sinf((float)glfwGetTime()) * 0.5f + 0.5f;
 
         // 카메라: z=3 위치에서 원점을 바라봄. 인자 없는 const 게터 — 멤버 직접 사용.
         auto viewMat = mCamera.GetForwardViewMatrix();
+
+        {
+            mCamera.FarPlane = 10.f;
+            mCamera.NearPlane = 0.5f;
+        }
         auto projMat = mCamera.GetProjMatrix(); // mAspect 멤버 사용 (Reshape 에서 갱신)
 
         // glm::vec4 baseColor(t * t, 2.0f * t * (1.0f - t), (1.0f - t) * (1.0f - t), 1.0f);

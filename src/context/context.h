@@ -8,7 +8,7 @@
 #include "object/light.h"
 #include "object/mesh.h"
 #include "object/model.h"
-#include "shader/material.h"
+#include "material/material.h"
 #include "program/program.h"
 #include "resource_registry/resource_registry.h"
 #include "shader/shader.h"

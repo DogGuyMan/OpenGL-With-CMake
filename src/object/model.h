@@ -4,8 +4,7 @@
 #include "common/common.h"
 #include "object/mesh.h"
 #include "resource_registry/texture.h"   // TextureUPtr — 모델이 보유하는 텍스처 lifetime
-#include "shader/material.h"
-#include "program/program.h"
+#include "material/material.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -40,9 +39,14 @@ namespace SJH
         int GetMeshCount() const { return (int)mRenderUnit.size(); }
         /// @brief index 번째 메시의 비소유 관찰자. Model 보다 오래 보관 금지 — owner 는 RenderUnit.
         Mesh *GetMesh(int index) const { return mRenderUnit[index].mesh.get(); }
-        /// @brief 모든 RenderUnit 메시를 순서대로 드로우.
 
-        void Draw(const Program* program) const;
+        /// @brief 보유 머티리얼 개수.
+        int GetMaterialCount() const { return (int)mMaterials.size(); }
+        /// @brief index 번째 머티리얼의 비소유 관찰자 — 셋업 시 @c SetProgram 주입용.
+        Material *GetMaterial(int index) const { return mMaterials[index].get(); }
+
+        /// @brief 모든 RenderUnit 을 순서대로 — 머티리얼 Apply 후 메시 드로우.
+        void Draw() const;
 
     private:
         Model() = default;

@@ -192,12 +192,12 @@ target_link_libraries(test_gl_validate PRIVATE
 target_compile_features(test_gl_validate PRIVATE cxx_std_17)
 catch_discover_tests(test_gl_validate)
 
-#  shader 모듈 — Material POD 클래스 회귀 (default values + 레이아웃)
-# GL context 불필요. SJH::shader 가 glm::glm 을 PUBLIC 으로 가져옴.
+#  material 모듈 — Material 값 클래스 회귀 (default values + setter 불변식 + Clone)
+# GL context 불필요 — Material 은 Texture*/Program* 를 저장/반환만 함.
 add_executable(test_material test_material.cpp)
 target_link_libraries(test_material PRIVATE
     Catch2::Catch2WithMain
-    SJH::shader     # "shader/material.h" 접근 + glm
+    SJH::material   # "material/material.h" 접근
 )
 target_compile_features(test_material PRIVATE cxx_std_17)
 catch_discover_tests(test_material)

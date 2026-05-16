@@ -80,7 +80,7 @@ namespace SJH
         void SetInt  (const Program &prog, const char *name, const int& v);             ///< GL_INT / GL_SAMPLER_*
 
         /// @brief 캐시된 location 반환. 미존재면 -1 (+ 첫 호출 시 diagnostics 가 warn).
-        GLint Get(Program &prog, const char *name);
+        GLint Get(const Program &prog, const char *name);
 
         // --- 광원 struct → uniform block 일괄 전송 helpers ----------------------------
         // 각 helper 는 `<prefix>.<field>` 형태로 셰이더 struct 멤버에 1:1 대응. 내부적으로
@@ -88,18 +88,18 @@ namespace SJH
 
         /// @brief DirLight → `<prefix>.{direction,ambient,diffuse,specular}` 4 uniform 전송.
         /// @details 평행광 — 위치/거리감쇠 없음. @c prefix 예: @c "dirLight".
-        void SetDirLight(const  Program &prog, const char *prefix, const DirLight &light);
+        void SetDirLight(const Program &prog, const char *prefix, const DirLight &light);
 
         /// @brief PointLight → `<prefix>.{position,attenuation,ambient,diffuse,specular}` 5 uniform 전송.
         /// @details @c mDistance → (Kc,Kl,Kq) 변환은 @c GetAttenuationCoeff 가 내부 수행.
         ///          @c prefix 예: @c "pointLights[0]".
-        void SetPointLight(const  Program &prog, const char *prefix, const PointLight &light);
+        void SetPointLight(const Program &prog, const char *prefix, const PointLight &light);
 
         /// @brief SpotLight → 8 uniform 전송
         ///        (`<prefix>.{position,direction,cutoff,outerCutoff,attenuation,ambient,diffuse,specular}`).
         /// @details CPU 는 degree 보관 / 셰이더는 cosine 비교 — 송신 시점에 @c cosf(glm::radians(...)) 변환.
         ///          거리감쇠도 @c GetAttenuationCoeff(mDistance) 로 도출.
-        void SetSpotLight(const  Program &prog, const char *prefix, const SpotLight &light);
+        void SetSpotLight(const Program &prog, const char *prefix, const SpotLight &light);
     }
 }
 

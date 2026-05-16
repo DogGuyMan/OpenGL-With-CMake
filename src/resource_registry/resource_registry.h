@@ -17,7 +17,7 @@
 #include "image.h"
 #include "texture.h"
 #include "object/model.h"
-#include "shader/material.h"
+#include "material/material.h"
 #include <glad/glad.h>
 #include <memory>
 #include <string>

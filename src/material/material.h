@@ -1,41 +1,40 @@
 /**
  * @file material.h
- * @brief 표면 머티리얼 — 디퓨즈/스페큘러 텍스처 *이름 키* + 해석된 GL 핸들/유닛 + Phong shininess.
+ * @brief 표면 머티리얼 — 디퓨즈/스페큘러 텍스처 관찰자 + sampler 유닛 + Phong shininess.
  *
  * @details
  *  ### 책임
- *  - 텍스처 *논리 이름* 보관 (실제 GPU 텍스처는 @c SJH::ResourceRegistry 가 캐시).
- *  - 이름으로부터 *해석된* GL 핸들 + sampler 유닛 보관 (Context 가 resolve 후 설정).
+ *  - 텍스처 *논리 이름* + *해석된 비소유 관찰자*(@c const @c Texture*) 보관.
+ *  - uniform 전송 대상 셰이더 프로그램 참조 보관 (@ref SetProgram 으로 주입).
+ *  - @ref Apply — 보유 프로그램에 sampler 슬롯/shininess uniform + 텍스처 바인딩 일괄 적용.
  *  - Phong shininess 지수 (specular highlight 집중도).
  *
- *  ### 캡슐화 — 왜 getter/setter (직접 대입 차단)
- *  - 텍스처 *이름* 과 *해석된 핸들* 은 *짝* — 이름을 함부로 바꾸면 핸들이 stale.
- *    → 이름 setter (@c SetDiffuseTextureName / @c SetSpecularTextureName) 가 *해석 캐시 무효화*.
- *  - shininess 는 유효 범위 권장 @c [2, 256] — @c SetShininess 가 clamp.
- *  - 모든 멤버 private — 외부는 getter/setter 경유. @c &mMaterial.mShininess 같은 raw 대입 불가.
+ *  ### 모듈 위치 — 왜 `shader` 가 아니라 독립 `material` 모듈인가
+ *  - @c Material 은 셰이더(@c SJH::shader)·프로그램(@c SJH::program) *위* 계층.
+ *  - @c shader/material.h 에 두면 `shader ← program ← material` 이 `shader` 한 노드로 접혀
+ *    `shader ↔ program` 순환이 됨. 독립 모듈로 분리해 단방향 DAG 유지.
  *
- *  ### 변경 이력
- *  - **Phase 12 (02bd90e)**: 처음 도입 — `mAmbient` / `mDiffuse` / `mSpecular` *색상 vec3* 보관.
- *  - **Phase 14 (2444fbe)**: 텍스처 기반으로 완전히 교체 — 색상 vec3 제거, 텍스처 이름 키 추가.
- *  - **(이번 리팩토링)**: public 멤버 → private + getter/setter. 이름 변경 시 핸들 무효화.
+ *  ### 캡슐화 — 왜 getter/setter (직접 대입 차단)
+ *  - 텍스처 *이름* 과 *해석된 관찰자* 는 *짝* — 이름을 함부로 바꾸면 관찰자가 stale.
+ *    → 이름 setter 가 *해석 캐시 무효화*(@c nullptr).
+ *  - shininess 는 유효 범위 권장 @c [2, 256] — @ref SetShininess 가 clamp.
  *
  *  ### 비-책임
- *  - ❌ 텍스처 *데이터 보유* — @c SJH::ResourceRegistry (이름 → @c Texture 캐시) 의 책임.
- *  - ❌ uniform 전송 — @c Context::Render 가 @c Uniforms::SetInt 로 sampler 슬롯, @c SetFloat 로 shininess 전달.
- *
+ *  - ❌ 텍스처 *데이터 보유* — @c SJH::ResourceRegistry / @c Model 의 책임 (Material 은 관찰자만).
+ *  - ❌ 셰이더 프로그램 *소유* — @c mProgram 은 비소유 관찰자, 외부가 수명 보장.
  */
 #ifndef __SJH_MATERIAL_H__
 #define __SJH_MATERIAL_H__
 
-#include "program/program_uniforms.h"
-#include "resource_registry/texture.h" // SetToProgram 이 Texture::Bind() 호출 → 완전한 타입 필요
 #include "common/common.h" // CLASS_PTR 매크로 + 스마트 포인터 별칭 alias
 #include <glad/glad.h>
 #include <string>
 
 namespace SJH
 {
-    // Texture 는 resource_registry/texture.h 에서 완전 정의 (SetToProgram 이 Bind() 호출).
+    class Texture; // 비소유 관찰자 — 완전 정의는 material.cpp 만 필요 (Apply)
+    class Program; // 비소유 관찰자 — 완전 정의는 material.cpp 만 필요 (Apply)
+
     CLASS_PTR(Material);
     /// @brief 텍스처 기반 Phong 머티리얼 (디퓨즈 + 스페큘러 맵 + shininess).
     class Material
@@ -54,7 +53,7 @@ namespace SJH
             SetSpecularTextureName(specularName);
         }
 
-        /// @brief 디퓨즈 맵 이름 키 갱신 — *해석된 핸들 무효화* (재 resolve 필요).
+        /// @brief 디퓨즈 맵 이름 키 갱신 — *해석된 관찰자 무효화* (재 resolve 필요).
         /// @details 이름이 바뀌면 기존 @c mDiffuseTexture 포인터는 stale → nullptr 로 되돌려 강제 재해석 유도.
         void SetDiffuseTextureName(const std::string &name)
         {
@@ -62,7 +61,7 @@ namespace SJH
             mDiffuseTexture = nullptr;
         }
 
-        /// @brief 스페큘러 맵 이름 키 갱신 — *해석된 핸들 무효화*.
+        /// @brief 스페큘러 맵 이름 키 갱신 — *해석된 관찰자 무효화*.
         void SetSpecularTextureName(const std::string &name)
         {
             mSpecularTextureName = name;
@@ -92,26 +91,14 @@ namespace SJH
             mShininess = (v < 2.0f) ? 2.0f : (v > 256.0f ? 256.0f : v);
         }
 
-        void SetToProgram(const Program *program) const
-        {
-            int textureCount = 0;
-            if (mDiffuseTexture)
-            {
-                glActiveTexture(GL_TEXTURE0 + mDiffuseUnit);
-                Uniforms::SetInt(*program, "material.diffuse", mDiffuseUnit);
-                mDiffuseTexture->Bind();
-                textureCount++;
-            }
-            if (mSpecularTexture)
-            {
-                glActiveTexture(GL_TEXTURE0 + mSpecularUnit);
-                Uniforms::SetInt(*program, "material.specular", mDiffuseUnit);
-                mSpecularTexture->Bind();
-                textureCount++;
-            }
-            glActiveTexture(GL_TEXTURE0);
-            Uniforms::SetFloat(*program, "material.shininess", mShininess);
-        }
+        /// @brief uniform 을 전송할 셰이더 프로그램을 주입 (생성 후 셋업 시점 1회).
+        /// @details 비소유 관찰자 — @p program 의 수명은 외부가 보장. @ref Apply 가 이 프로그램을 사용.
+        void SetProgram(const Program *program) { mProgram = program; }
+
+        /// @brief 보유 프로그램에 머티리얼 상태(텍스처 바인딩 + sampler/shininess uniform)를 일괄 적용.
+        /// @details @c mProgram 이 nullptr 이면 no-op. 정의는 @c material.cpp —
+        ///          @c Program / @c Texture 의 완전 정의가 필요해 헤더 inline 을 회피한다.
+        void Apply() const;
 
         // === Getters — 모두 const, 읽기 전용 ===
         const std::string &GetDiffuseTextureName() const { return mDiffuseTextureName; }
@@ -131,6 +118,7 @@ namespace SJH
         std::string mSpecularTextureName;         ///< 스페큘러 맵 이름 키 — 비어 있으면 셰이더 측 default 가정
         const Texture *mDiffuseTexture{nullptr};  ///< 이름으로부터 해석된 비소유 텍스처 관찰자
         const Texture *mSpecularTexture{nullptr}; ///< 스페큘러 맵 관찰자
+        const Program *mProgram{nullptr};         ///< uniform 전송 대상 — 비소유 관찰자. @ref SetProgram 으로 주입.
         GLint mDiffuseUnit{0};                    ///< 디퓨즈 sampler2D 에 넣을 텍스처 이미지 유닛 번호
         GLint mSpecularUnit{1};                   ///< 스페큘러 sampler2D 의 유닛 번호
         float mShininess{32.0f};                  ///< Phong shininess — 셰이더 uniform `material.shininess`. 권장 [2,256]

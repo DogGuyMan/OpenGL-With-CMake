@@ -1,6 +1,6 @@
 #include "model.h"
 #include "resource_registry/texture.h"
-#include "shader/material.h"
+#include "material/material.h"
 #include <spdlog/spdlog.h>
 
 namespace SJH
@@ -137,17 +137,14 @@ namespace SJH
         mRenderUnit.push_back({std::move(glMesh), mat});
     }
 
-    void Model::Draw(const Program *program) const
+    void Model::Draw() const
     {
         for (auto &unit : mRenderUnit)
         {
-            const auto &vao = unit.mesh->GetVertexLayout();
-            vao->Bind();
-            unit.material->SetToProgram(program);
-            glDrawElements(
-                unit.mesh->GetPrimitiveType(),
-                unit.mesh->GetIndexBuffer()->GetCount(),
-                GL_UNSIGNED_INT, 0);
+            // 머티리얼이 uniform/텍스처를 자기 프로그램에 적용 → 그 다음 메시 기하 드로우.
+            if (unit.material)
+                unit.material->Apply();
+            unit.mesh->Draw();
         }
-    };
+    }
 }

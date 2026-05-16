@@ -283,7 +283,7 @@ namespace SJH
             auto transform = projMat * viewMat * modelTransform;
             Uniforms::SetMat4(*mProgram.get(), "transformMat", transform);
             Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelTransform);
-            mModel->Draw(mProgram.get());
+            mModel->Draw();
         }
 
         // glPointSize(50.0f);
@@ -396,6 +396,10 @@ namespace SJH
         mModel = Model::Load("./resources/model/backpack/backpack.obj");
         if (!mModel)
             return false;
+
+        // 모델의 각 머티리얼에 uniform 전송 대상 프로그램 주입 — Material::Apply 가 이 프로그램을 사용.
+        for (int i = 0; i < mModel->GetMaterialCount(); ++i)
+            mModel->GetMaterial(i)->SetProgram(mProgram.get());
 
         // Init 끝 — Mesh/program/textures 모두 설정 완료 시점의 *온전한 GL 상태* 1회 덤프.
         // Render() 안에서 의도치 않은 상태 변화가 의심되면 본 baseline과 비교 가능.

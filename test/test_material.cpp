@@ -15,7 +15,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include "shader/material.h"
+#include "material/material.h"
 
 // Material 은 Texture* 를 저장/반환만 하고 deref 하지 않음 — 센티넬 포인터로 충분 (GL 불요).
 static const SJH::Texture* const kDiffuseA = reinterpret_cast<const SJH::Texture*>(0xD1FFA);

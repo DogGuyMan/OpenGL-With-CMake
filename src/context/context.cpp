@@ -258,27 +258,27 @@ namespace SJH
             Uniforms::SetSpotLight(*mProgram, "spotLight", mSpotLight);
 
             // Material — sampler 유닛 + shininess. 유닛 번호는 SetResolvedTextures 가 Init 에서 확정.
-            Uniforms::SetInt(*mProgram.get(), "material.diffuse", mMaterial->GetDiffuseUnit());
-            Uniforms::SetInt(*mProgram.get(), "material.specular", mMaterial->GetSpecularUnit());
-            Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial->GetShininess());
+            // Uniforms::SetInt(*mProgram.get(), "material.diffuse", mMaterial->GetDiffuseUnit());
+            // Uniforms::SetInt(*mProgram.get(), "material.specular", mMaterial->GetSpecularUnit());
+            // Uniforms::SetFloat(*mProgram.get(), "material.shininess", mMaterial->GetShininess());
 
             // Material 의 해석된 관찰자를 자기 유닛에 바인딩.
-            if (const Texture *dt = mMaterial->GetDiffuseTexture())
-            {
-                glActiveTexture(GL_TEXTURE0 + mMaterial->GetDiffuseUnit());
-                glBindTexture(GL_TEXTURE_2D, dt->GetTextureID());
-            }
-            if (const Texture *st = mMaterial->GetSpecularTexture())
-            {
-                glActiveTexture(GL_TEXTURE0 + mMaterial->GetSpecularUnit());
-                glBindTexture(GL_TEXTURE_2D, st->GetTextureID());
-            }
+            // if (const Texture *dt = mMaterial->GetDiffuseTexture())
+            // {
+            //     glActiveTexture(GL_TEXTURE0 + mMaterial->GetDiffuseUnit());
+            //     glBindTexture(GL_TEXTURE_2D, dt->GetTextureID());
+            // }
+            // if (const Texture *st = mMaterial->GetSpecularTexture())
+            // {
+            //     glActiveTexture(GL_TEXTURE0 + mMaterial->GetSpecularUnit());
+            //     glBindTexture(GL_TEXTURE_2D, st->GetTextureID());
+            // }
 
             auto modelTransform = glm::mat4(1.0f);
             auto transform = projMat * viewMat * modelTransform;
             Uniforms::SetMat4(*mProgram.get(), "transformMat", transform);
             Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelTransform);
-            mModel->Draw();
+            mModel->Draw(mProgram.get());
         }
 
         // glPointSize(50.0f);

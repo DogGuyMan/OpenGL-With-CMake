@@ -18,6 +18,7 @@
 #define __MESH_H__
 
 #include "buffer/buffer.h"
+#include "shader/material.h"
 #include "common/common.h"
 #include "layout/vertex_layout.h"
 #include <glad/glad.h>
@@ -67,6 +68,7 @@ namespace SJH
         BufferPtr GetVertexBuffer() const { return mVertexBuffer; }
         /// @brief EBO 공유 포인터 — 인덱스 데이터 버퍼.
         BufferPtr GetIndexBuffer() const { return mIndexBuffer; }
+        GLuint GetPrimitiveType() const { return mPrimitiveType; }
 
         /// @brief VAO 바인딩 후 @c glDrawElements 호출. @c mPrimitiveType 에 따라 토폴로지 결정.
         void Draw() const;

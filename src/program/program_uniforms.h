@@ -72,12 +72,12 @@ namespace SJH
         void Forget(GLuint programId);
 
         // --- setter family — 캐시 히트 시 lookup 비용 0. 미존재 이름은 첫 호출 1회 warn ---
-        void SetMat4 (Program &prog, const char *name, const glm::mat4& m4); ///< GL_FLOAT_MAT4
-        void SetVec4 (Program &prog, const char *name, const glm::vec4& v4);   ///< GL_FLOAT_VEC4
-        void SetVec3 (Program &prog, const char *name, const glm::vec3& v3);   ///< GL_FLOAT_VEC3
-        void SetVec2 (Program &prog, const char *name, const glm::vec2& v2);   ///< GL_FLOAT_VEC2
-        void SetFloat(Program &prog, const char *name, const float& v);           ///< GL_FLOAT
-        void SetInt  (Program &prog, const char *name, const int& v);             ///< GL_INT / GL_SAMPLER_*
+        void SetMat4 (const Program &prog, const char *name, const glm::mat4& m4); ///< GL_FLOAT_MAT4
+        void SetVec4 (const Program &prog, const char *name, const glm::vec4& v4);   ///< GL_FLOAT_VEC4
+        void SetVec3 (const Program &prog, const char *name, const glm::vec3& v3);   ///< GL_FLOAT_VEC3
+        void SetVec2 (const Program &prog, const char *name, const glm::vec2& v2);   ///< GL_FLOAT_VEC2
+        void SetFloat(const Program &prog, const char *name, const float& v);           ///< GL_FLOAT
+        void SetInt  (const Program &prog, const char *name, const int& v);             ///< GL_INT / GL_SAMPLER_*
 
         /// @brief 캐시된 location 반환. 미존재면 -1 (+ 첫 호출 시 diagnostics 가 warn).
         GLint Get(Program &prog, const char *name);
@@ -88,18 +88,18 @@ namespace SJH
 
         /// @brief DirLight → `<prefix>.{direction,ambient,diffuse,specular}` 4 uniform 전송.
         /// @details 평행광 — 위치/거리감쇠 없음. @c prefix 예: @c "dirLight".
-        void SetDirLight(Program &prog, const char *prefix, const DirLight &light);
+        void SetDirLight(const  Program &prog, const char *prefix, const DirLight &light);
 
         /// @brief PointLight → `<prefix>.{position,attenuation,ambient,diffuse,specular}` 5 uniform 전송.
         /// @details @c mDistance → (Kc,Kl,Kq) 변환은 @c GetAttenuationCoeff 가 내부 수행.
         ///          @c prefix 예: @c "pointLights[0]".
-        void SetPointLight(Program &prog, const char *prefix, const PointLight &light);
+        void SetPointLight(const  Program &prog, const char *prefix, const PointLight &light);
 
         /// @brief SpotLight → 8 uniform 전송
         ///        (`<prefix>.{position,direction,cutoff,outerCutoff,attenuation,ambient,diffuse,specular}`).
         /// @details CPU 는 degree 보관 / 셰이더는 cosine 비교 — 송신 시점에 @c cosf(glm::radians(...)) 변환.
         ///          거리감쇠도 @c GetAttenuationCoeff(mDistance) 로 도출.
-        void SetSpotLight(Program &prog, const char *prefix, const SpotLight &light);
+        void SetSpotLight(const  Program &prog, const char *prefix, const SpotLight &light);
     }
 }
 

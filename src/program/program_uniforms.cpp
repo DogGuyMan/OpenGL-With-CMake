@@ -92,7 +92,7 @@ namespace SJH::Uniforms
         sCacheRegistry.erase(programId);
     }
 
-    void SetMat4(Program &prog, const char *name, const glm::mat4& m4)
+    void SetMat4(const Program &prog, const char *name, const glm::mat4& m4)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -105,7 +105,7 @@ namespace SJH::Uniforms
         glUniformMatrix4fv(e.location, 1, GL_FALSE, glm::value_ptr(m4));
     }
 
-    void SetVec4(Program &prog, const char *name, const glm::vec4& v4)
+    void SetVec4(const Program &prog, const char *name, const glm::vec4& v4)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -118,7 +118,7 @@ namespace SJH::Uniforms
         glUniform4fv(e.location, 1, glm::value_ptr(v4));
     }
 
-    void SetVec3(Program &prog, const char *name, const glm::vec3& v3)
+    void SetVec3(const Program &prog, const char *name, const glm::vec3& v3)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -131,7 +131,7 @@ namespace SJH::Uniforms
         glUniform3fv(e.location, 1, glm::value_ptr(v3));
     }
 
-    void SetVec2(Program &prog, const char *name, const glm::vec2& v2)
+    void SetVec2(const Program &prog, const char *name, const glm::vec2& v2)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -144,7 +144,7 @@ namespace SJH::Uniforms
         glUniform2fv(e.location, 1, glm::value_ptr(v2));
     }
 
-    void SetFloat(Program &prog, const char *name, const float& v)
+    void SetFloat(const Program &prog, const char *name, const float& v)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -157,7 +157,7 @@ namespace SJH::Uniforms
         glUniform1f(e.location, v);
     }
 
-    void SetInt(Program &prog, const char *name, const int& v)
+    void SetInt(const Program &prog, const char *name, const int& v)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -171,7 +171,7 @@ namespace SJH::Uniforms
         glUniform1i(e.location, v);
     }
 
-    GLint Get(Program &prog, const char *name)
+    GLint Get(const Program &prog, const char *name)
     {
         const GLuint pid = prog.GetProgramAddr();
         const auto &e = LookupOrInsert(pid, sCacheRegistry[pid], name);
@@ -184,7 +184,7 @@ namespace SJH::Uniforms
     // 책임 분리: 셰이더 struct 멤버 이름과의 *문자열 결합* 만 본 TU 가 담당, 실제
     // GL 호출은 SetVec3/SetFloat 가 재사용 — 캐시/진단/타입체크 경로 그대로 통과.
 
-    void SetDirLight(Program &prog, const char *prefix, const DirLight &light)
+    void SetDirLight(const Program &prog, const char *prefix, const DirLight &light)
     {
         const std::string base = prefix;
         SetVec3(prog, (base + ".direction").c_str(), light.mDirection);
@@ -193,7 +193,7 @@ namespace SJH::Uniforms
         SetVec3(prog, (base + ".specular").c_str(),  light.mSpecular);
     }
 
-    void SetPointLight(Program &prog, const char *prefix, const PointLight &light)
+    void SetPointLight(const Program &prog, const char *prefix, const PointLight &light)
     {
         const std::string base = prefix;
         SetVec3(prog, (base + ".position").c_str(),    light.mPos);
@@ -203,7 +203,7 @@ namespace SJH::Uniforms
         SetVec3(prog, (base + ".specular").c_str(),    light.mSpecular);
     }
 
-    void SetSpotLight(Program &prog, const char *prefix, const SpotLight &light)
+    void SetSpotLight(const Program &prog, const char *prefix, const SpotLight &light)
     {
         const std::string base = prefix;
         SetVec3 (prog, (base + ".position").c_str(),    light.mPos);

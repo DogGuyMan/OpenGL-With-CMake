@@ -5,6 +5,7 @@
 #include "object/mesh.h"
 #include "resource_registry/texture.h"   // TextureUPtr — 모델이 보유하는 텍스처 lifetime
 #include "shader/material.h"
+#include "program/program.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -40,7 +41,18 @@ namespace SJH
         /// @brief index 번째 메시의 비소유 관찰자. Model 보다 오래 보관 금지 — owner 는 RenderUnit.
         Mesh *GetMesh(int index) const { return mRenderUnit[index].mesh.get(); }
         /// @brief 모든 RenderUnit 메시를 순서대로 드로우.
-        void Draw() const { for (auto &unit : mRenderUnit) unit.mesh->Draw(); };
+        void Draw(const Program* program) const {
+            for (auto &unit : mRenderUnit) {
+                const auto& vao = unit.mesh->GetVertexLayout();
+                vao->Bind();
+                unit.material->SetToProgram(program);
+                glDrawElements(
+                    unit.mesh->GetPrimitiveType(),
+                    unit.mesh->GetIndexBuffer()->GetCount(),
+                    GL_UNSIGNED_INT, 0
+                );
+            }
+        };
 
     private:
         Model() = default;

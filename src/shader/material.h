@@ -27,13 +27,15 @@
 #ifndef __SJH_MATERIAL_H__
 #define __SJH_MATERIAL_H__
 
-#include "common/common.h"   // CLASS_PTR 매크로 + 스마트 포인터 별칭 alias
+#include "program/program_uniforms.h"
+#include "resource_registry/texture.h" // SetToProgram 이 Texture::Bind() 호출 → 완전한 타입 필요
+#include "common/common.h" // CLASS_PTR 매크로 + 스마트 포인터 별칭 alias
 #include <glad/glad.h>
 #include <string>
 
 namespace SJH
 {
-    class Texture;   // 비소유 관찰자 — full include 불요
+    // Texture 는 resource_registry/texture.h 에서 완전 정의 (SetToProgram 이 Bind() 호출).
     CLASS_PTR(Material);
     /// @brief 텍스처 기반 Phong 머티리얼 (디퓨즈 + 스페큘러 맵 + shininess).
     class Material
@@ -90,6 +92,27 @@ namespace SJH
             mShininess = (v < 2.0f) ? 2.0f : (v > 256.0f ? 256.0f : v);
         }
 
+        void SetToProgram(const Program *program) const
+        {
+            int textureCount = 0;
+            if (mDiffuseTexture)
+            {
+                glActiveTexture(GL_TEXTURE0 + mDiffuseUnit);
+                Uniforms::SetInt(*program, "material.diffuse", mDiffuseUnit);
+                mDiffuseTexture->Bind();
+                textureCount++;
+            }
+            if (mSpecularTexture)
+            {
+                glActiveTexture(GL_TEXTURE0 + mSpecularUnit);
+                Uniforms::SetInt(*program, "material.specular", mDiffuseUnit);
+                mSpecularTexture->Bind();
+                textureCount++;
+            }
+            glActiveTexture(GL_TEXTURE0);
+            Uniforms::SetFloat(*program, "material.shininess", mShininess);
+        }
+
         // === Getters — 모두 const, 읽기 전용 ===
         const std::string &GetDiffuseTextureName() const { return mDiffuseTextureName; }
         const std::string &GetSpecularTextureName() const { return mSpecularTextureName; }
@@ -104,13 +127,13 @@ namespace SJH
 
     private:
         Material() = default;
-        std::string mDiffuseTextureName;  ///< 디퓨즈 맵 이름 키 — @c ResourceRegistry::FindTexture 조회
-        std::string mSpecularTextureName; ///< 스페큘러 맵 이름 키 — 비어 있으면 셰이더 측 default 가정
+        std::string mDiffuseTextureName;          ///< 디퓨즈 맵 이름 키 — @c ResourceRegistry::FindTexture 조회
+        std::string mSpecularTextureName;         ///< 스페큘러 맵 이름 키 — 비어 있으면 셰이더 측 default 가정
         const Texture *mDiffuseTexture{nullptr};  ///< 이름으로부터 해석된 비소유 텍스처 관찰자
         const Texture *mSpecularTexture{nullptr}; ///< 스페큘러 맵 관찰자
-        GLint mDiffuseUnit{0};            ///< 디퓨즈 sampler2D 에 넣을 텍스처 이미지 유닛 번호
-        GLint mSpecularUnit{1};           ///< 스페큘러 sampler2D 의 유닛 번호
-        float mShininess{32.0f};          ///< Phong shininess — 셰이더 uniform `material.shininess`. 권장 [2,256]
+        GLint mDiffuseUnit{0};                    ///< 디퓨즈 sampler2D 에 넣을 텍스처 이미지 유닛 번호
+        GLint mSpecularUnit{1};                   ///< 스페큘러 sampler2D 의 유닛 번호
+        float mShininess{32.0f};                  ///< Phong shininess — 셰이더 uniform `material.shininess`. 권장 [2,256]
     };
 }
 

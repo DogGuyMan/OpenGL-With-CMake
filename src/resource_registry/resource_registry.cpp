@@ -47,35 +47,15 @@ namespace SJH
         return (it != textures.end()) ? it->second.get() : nullptr;
     }
 
-    Material *ResourceRegistry::CreateMaterial(const std::string &key, const std::string &filepath)
+    Material *ResourceRegistry::CreateMaterial(const std::string &key)
     {
-        if (materials.find(key) != materials.end() || textures.find(key) != textures.end())
+        // 텍스처 독립 — 빈 Material 만 생성·캐시. 텍스처/프로그램 배선은 호출자 책임.
+        if (materials.find(key) != materials.end())
         {
             spdlog::warn("CreateMaterial: 키 '{}' 가 이미 존재 — Find 를 먼저 호출하라", key);
             return nullptr;
         }
-
-        auto image = Image::Load(key, filepath);   // 스코프 한정 — 이 함수 끝에서 소멸
-        if (image == nullptr)
-            return nullptr;
-
-        auto texture = Texture::CreateTexture(image.get());
-        if (texture == nullptr)
-        {
-            spdlog::error("CreateMaterial: 텍스처 생성 실패 — key '{}'", key);
-            return nullptr;
-        }
-        // 텍스처를 registry 캐시에 보관 — Material 핸들의 lifetime owner (co-location).
-        // 진입부 검사로 키 충돌이 없음이 보장되므로 emplace 는 항상 성공.
-        auto texIt = textures.emplace(key, std::move(texture)).first;
-        const Texture *diffusePtr = texIt->second.get();
-
-        auto material = Material::Create();
-        material->SetDiffuseTextureName(key);
-        material->SetResolvedTextures(diffusePtr, /*diffuseUnit*/ 0,
-                                      /*specular*/ nullptr, /*specularUnit*/ 1);
-
-        auto insertedIt = materials.emplace(key, std::move(material)).first;
+        auto insertedIt = materials.emplace(key, Material::Create()).first;
         return insertedIt->second.get();
     }
 

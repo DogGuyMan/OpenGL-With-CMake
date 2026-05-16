@@ -31,7 +31,6 @@ namespace SJH
             glBindTexture(GL_TEXTURE_2D, mSpecularTexture->GetTextureID());
             Uniforms::SetInt(*mProgram, "material.specular", mSpecularUnit);
         }
-        glActiveTexture(GL_TEXTURE0);
         Uniforms::SetFloat(*mProgram, "material.shininess", mShininess);
     }
 }

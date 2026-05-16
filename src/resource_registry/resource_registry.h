@@ -48,8 +48,9 @@ namespace SJH
         /// @brief @p key 로 캐시된 텍스처 *조회* (생성 안 함). 없으면 nullptr.
         Texture *FindTexture(const std::string &key);
 
-        /// @brief 파일에서 디퓨즈 텍스처를 로드해 Material 을 *생성*하고 @p key 로 캐시. 이미 있으면 실패(nullptr).
-        Material *CreateMaterial(const std::string &key, const std::string &filepath);
+        /// @brief 빈 Material 을 *생성*하고 @p key 로 캐시. 이미 있으면 실패(nullptr).
+        /// @details 텍스처 독립 — 호출자가 이후 @c Material::SetResolvedTextures / @c SetProgram 으로 배선.
+        Material *CreateMaterial(const std::string &key);
 
         /// @brief @p key 로 캐시된 머티리얼 *조회* (생성 안 함). 없으면 nullptr.
         Material *FindMaterial(const std::string &key);

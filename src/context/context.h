@@ -163,6 +163,10 @@ namespace SJH
         const char* STR_TEXTURE_MARBLE = "texture_marble";
         const char* STR_MATERIAL_PLANE = "material_plane";
         const char* STR_MATERIAL_BOX1 = "material_box1";
+        const char* STR_IMAGE_BOX1_DIFFUSE = "image_box1_diffuse";
+        const char* STR_TEXTURE_BOX1_DIFFUSE = "texture_box1_diffuse";
+        const char* STR_IMAGE_BOX2_DIFFUSE = "image_box2_diffuse";
+        const char* STR_TEXTURE_BOX2_DIFFUSE = "texture_box2_diffuse";
         const char* STR_IMAGE_BOX2_SPECULAR = "image_box2_specular";
         const char* STR_TEXTURE_BOX2_SPECULAR = "texture_box2_specular";
         const char* STR_MATERIAL_BOX2 = "material_box2";

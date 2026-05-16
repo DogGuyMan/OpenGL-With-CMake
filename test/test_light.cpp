@@ -31,14 +31,14 @@ TEST_CASE("SJH::Light default — 위치 (3,3,3) + Phong 3항 기본 비율", "[
     SJH::Light l;
 
     // 점 광원 default 위치 (3, 3, 3) — 카메라 (0,0,3) 기준 우상단 위에서 비추는 형태
-    REQUIRE_THAT(l.mPos.x, WithinAbs(3.0f, 1e-6f));
-    REQUIRE_THAT(l.mPos.y, WithinAbs(3.0f, 1e-6f));
-    REQUIRE_THAT(l.mPos.z, WithinAbs(3.0f, 1e-6f));
+    REQUIRE_THAT(l.Pos.x, WithinAbs(3.0f, 1e-6f));
+    REQUIRE_THAT(l.Pos.y, WithinAbs(3.0f, 1e-6f));
+    REQUIRE_THAT(l.Pos.z, WithinAbs(3.0f, 1e-6f));
 
     // Phong 3항 권장 비율: ambient < diffuse < specular = (0.1, 0.5, 1.0)
-    REQUIRE_THAT(l.mAmbient.x,  WithinAbs(0.1f, 1e-6f));
-    REQUIRE_THAT(l.mDiffuse.x,  WithinAbs(0.5f, 1e-6f));
-    REQUIRE_THAT(l.mSpecular.x, WithinAbs(1.0f, 1e-6f));
+    REQUIRE_THAT(l.Ambient.x,  WithinAbs(0.1f, 1e-6f));
+    REQUIRE_THAT(l.Diffuse.x,  WithinAbs(0.5f, 1e-6f));
+    REQUIRE_THAT(l.Specular.x, WithinAbs(1.0f, 1e-6f));
 }
 
 TEST_CASE("SJH::Light — ambient 가 0이면 그림자 영역 완전 검정 (lighting 로직 계약)",
@@ -47,10 +47,10 @@ TEST_CASE("SJH::Light — ambient 가 0이면 그림자 영역 완전 검정 (li
     // lighting.fs CalcAmbient(): vec3 ambient = light.ambient * texture(material.diffuse, ...).rgb
     // light.ambient == 0 이면 그림자 영역이 완전히 검정. C++ 측 직접 검증.
     SJH::Light l;
-    l.mAmbient = glm::vec3(0.0f);
+    l.Ambient = glm::vec3(0.0f);
 
     glm::vec3 texDiffuse(1.0f, 1.0f, 1.0f);
-    glm::vec3 ambient = l.mAmbient * texDiffuse;
+    glm::vec3 ambient = l.Ambient * texDiffuse;
     REQUIRE_THAT(ambient.x, WithinAbs(0.0f, 1e-6f));
     REQUIRE_THAT(ambient.y, WithinAbs(0.0f, 1e-6f));
     REQUIRE_THAT(ambient.z, WithinAbs(0.0f, 1e-6f));
@@ -59,13 +59,13 @@ TEST_CASE("SJH::Light — ambient 가 0이면 그림자 영역 완전 검정 (li
 TEST_CASE("SJH::Light — 복사 시멘틱 (POD-like)", "[light][copy]")
 {
     SJH::Light a;
-    a.mPos = glm::vec3(10.0f, 20.0f, 30.0f);
+    a.Pos = glm::vec3(10.0f, 20.0f, 30.0f);
 
     SJH::Light b = a;
-    REQUIRE_THAT(b.mPos.x, WithinAbs(10.0f, 1e-6f));
+    REQUIRE_THAT(b.Pos.x, WithinAbs(10.0f, 1e-6f));
 
-    a.mPos = glm::vec3(0.0f);
-    REQUIRE_THAT(b.mPos.x, WithinAbs(10.0f, 1e-6f));
+    a.Pos = glm::vec3(0.0f);
+    REQUIRE_THAT(b.Pos.x, WithinAbs(10.0f, 1e-6f));
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -78,13 +78,13 @@ TEST_CASE("SJH::DirLight default — direction (-0.2, -1.0, -0.3) + Phong 3항",
     SJH::DirLight d;
 
     // 위에서 비추는 태양 — Y 음의 방향이 dominant
-    REQUIRE_THAT(d.mDirection.x, WithinAbs(-0.2f, 1e-6f));
-    REQUIRE_THAT(d.mDirection.y, WithinAbs(-1.0f, 1e-6f));
-    REQUIRE_THAT(d.mDirection.z, WithinAbs(-0.3f, 1e-6f));
+    REQUIRE_THAT(d.Direction.x, WithinAbs(-0.2f, 1e-6f));
+    REQUIRE_THAT(d.Direction.y, WithinAbs(-1.0f, 1e-6f));
+    REQUIRE_THAT(d.Direction.z, WithinAbs(-0.3f, 1e-6f));
 
-    REQUIRE_THAT(d.mAmbient.x,  WithinAbs(0.1f, 1e-6f));
-    REQUIRE_THAT(d.mDiffuse.x,  WithinAbs(0.5f, 1e-6f));
-    REQUIRE_THAT(d.mSpecular.x, WithinAbs(1.0f, 1e-6f));
+    REQUIRE_THAT(d.Ambient.x,  WithinAbs(0.1f, 1e-6f));
+    REQUIRE_THAT(d.Diffuse.x,  WithinAbs(0.5f, 1e-6f));
+    REQUIRE_THAT(d.Specular.x, WithinAbs(1.0f, 1e-6f));
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -97,10 +97,10 @@ TEST_CASE("SJH::PointLight default — mDistance 32 + position (3,3,3)",
     SJH::PointLight p;
 
     // 거리 감쇠 산출 기준 — 셰이더의 attenuation vec3 도출용
-    REQUIRE_THAT(p.mDistance, WithinAbs(32.0f, 1e-6f));
+    REQUIRE_THAT(p.Distance, WithinAbs(32.0f, 1e-6f));
 
-    REQUIRE_THAT(p.mPos.x, WithinAbs(3.0f, 1e-6f));
-    REQUIRE_THAT(p.mAmbient.x, WithinAbs(0.1f, 1e-6f));
+    REQUIRE_THAT(p.Pos.x, WithinAbs(3.0f, 1e-6f));
+    REQUIRE_THAT(p.Ambient.x, WithinAbs(0.1f, 1e-6f));
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -113,12 +113,12 @@ TEST_CASE("SJH::SpotLight default — 콘 cutoff 12.5°/17.5° (inner/outer)",
     SJH::SpotLight s;
 
     // 손전등 — inner 콘 안쪽은 100% 밝기, outer 바깥은 0%, 사이는 soft edge
-    REQUIRE_THAT(s.mCutoffAngleDeg,      WithinAbs(12.5f, 1e-6f));
-    REQUIRE_THAT(s.mOuterCutoffAngleDeg, WithinAbs(17.5f, 1e-6f));
+    REQUIRE_THAT(s.CutoffAngleDeg,      WithinAbs(12.5f, 1e-6f));
+    REQUIRE_THAT(s.OuterCutoffAngleDeg, WithinAbs(17.5f, 1e-6f));
 
-    REQUIRE_THAT(s.mPos.x, WithinAbs(3.0f, 1e-6f));
-    REQUIRE_THAT(s.mDirection.y, WithinAbs(-1.0f, 1e-6f));   // 아래 향해
-    REQUIRE_THAT(s.mDistance, WithinAbs(32.0f, 1e-6f));
+    REQUIRE_THAT(s.Pos.x, WithinAbs(3.0f, 1e-6f));
+    REQUIRE_THAT(s.Direction.y, WithinAbs(-1.0f, 1e-6f));   // 아래 향해
+    REQUIRE_THAT(s.Distance, WithinAbs(32.0f, 1e-6f));
 }
 
 TEST_CASE("SJH::SpotLight — outer > inner 가 spec (페이드 구간 양수)",
@@ -127,7 +127,7 @@ TEST_CASE("SJH::SpotLight — outer > inner 가 spec (페이드 구간 양수)",
     SJH::SpotLight s;
     // outerCutoff angle 이 cutoff angle 보다 커야 inner->outer 페이드 구간 > 0.
     // (cos 값으로 변환하면 cosf(outer) < cosf(inner) — 역전 주의)
-    REQUIRE(s.mOuterCutoffAngleDeg > s.mCutoffAngleDeg);
+    REQUIRE(s.OuterCutoffAngleDeg > s.CutoffAngleDeg);
 }
 
 // ──────────────────────────────────────────────────────────────────────────

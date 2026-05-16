@@ -335,8 +335,8 @@ namespace SJH
 
         mSpotLight = {.Pos = glm::vec3(1.0f, 4.0f, 4.0f),
                       .Direction = glm::vec3(0.0f, -1.0f, 0.0f),
-                      .CutoffAngleDeg = 120.0f,
-                      .OuterCutoffAngleDeg = 5.0f,
+                      .CutoffAngleDeg = 5.0f,
+                      .OuterCutoffAngleDeg = 120.0f,
                       .Distance = 128.0f,
                       .Ambient = glm::vec3(0.0f, 0.0f, 0.0f),
                       .Diffuse = glm::vec3(1.0f, 1.0f, 1.0f),
@@ -376,24 +376,28 @@ namespace SJH
         auto textureMarble = mRM->CreateTexture(
             STR_TEXTURE_MARBLE, imageMarble.get());
 
-        // plane — diffuse: 그레이, specular: marble, shininess 128. RM 이 소유.
-        auto planeMaterial = mRM->CreateMaterial(STR_MATERIAL_PLANE, "./resources/texture/marble.jpg");
-        planeMaterial->SetResolvedTextures(textureGray, 0, textureMarble, 1);
+        // plane — diffuse: 그레이, specular: marble, shininess 128.
+        // CreateMaterial 은 빈 Material 만 — 텍스처는 위에서 만든 것을 여기서 명시 주입.
+        auto planeMaterial = mRM->CreateMaterial(STR_MATERIAL_PLANE);
+        planeMaterial->SetResolvedTextures(textureMarble, 0, textureGray, 1);
         planeMaterial->SetShininess(128.0f);
         planeMaterial->SetProgram(mProgram.get());
 
         // box1 — diffuse: container.jpg, specular: 다크 그레이, shininess 16.
-        // CreateMaterial 이 diffuse 를 파일에서 만들어 두므로, 그 관찰자를 읽어 specular 만 덧붙인다.
-        auto box1Material = mRM->CreateMaterial(STR_MATERIAL_BOX1, "./resources/texture/container.jpg");
-        box1Material->SetResolvedTextures(box1Material->GetDiffuseTexture(), 0, textureDarkGray, 1);
+        auto imageBox1Diffuse = Image::Load(STR_IMAGE_BOX1_DIFFUSE, "./resources/texture/container.jpg");
+        auto textureBox1Diffuse = mRM->CreateTexture(STR_TEXTURE_BOX1_DIFFUSE, imageBox1Diffuse.get());
+        auto box1Material = mRM->CreateMaterial(STR_MATERIAL_BOX1);
+        box1Material->SetResolvedTextures(textureBox1Diffuse, 0, textureDarkGray, 1);
         box1Material->SetShininess(16.0f);
         box1Material->SetProgram(mProgram.get());
 
-        // box2 — diffuse/specular 둘 다 파일. specular 텍스처는 별도 등록 후 주입.
+        // box2 — diffuse: container2.png, specular: container2_specular.png, shininess 64.
+        auto imageBox2Diffuse = Image::Load(STR_IMAGE_BOX2_DIFFUSE, "./resources/texture/container2.png");
+        auto textureBox2Diffuse = mRM->CreateTexture(STR_TEXTURE_BOX2_DIFFUSE, imageBox2Diffuse.get());
         auto imageBox2Specular = Image::Load(STR_IMAGE_BOX2_SPECULAR, "./resources/texture/container2_specular.png");
         auto textureBox2Specular = mRM->CreateTexture(STR_TEXTURE_BOX2_SPECULAR, imageBox2Specular.get());
-        auto box2Material = mRM->CreateMaterial(STR_MATERIAL_BOX2, "./resources/texture/container2.png");
-        box2Material->SetResolvedTextures(box2Material->GetDiffuseTexture(), 0, textureBox2Specular, 1);
+        auto box2Material = mRM->CreateMaterial(STR_MATERIAL_BOX2);
+        box2Material->SetResolvedTextures(textureBox2Diffuse, 0, textureBox2Specular, 1);
         box2Material->SetShininess(64.0f);
         box2Material->SetProgram(mProgram.get());
         /*

@@ -111,11 +111,9 @@ namespace SJH
         /// @brief 박스(큐브) 메시 — 기본 씬 오브젝트. @c Mesh::CreateBox() 로 Init 에서 생성.
         MeshUPtr mBox;
 
-        /// @brief Assimp 로 로드한 외부 3D 모델. @c ResourceRegistry::CreateModel 로 Init 에서 로드.
-        ModelUPtr mModel;
-
         /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
         bool mAnimation{true};
+
         bool mFlashLightMode{true};
 
         /// @brief Texture/Material/Model 을 이름 키로 캐시·조회하는 리소스 레지스트리.
@@ -156,9 +154,6 @@ namespace SJH
         bool mPointLightsEnabled[2]{true, true};
         /// @brief SpotLight 사용 여부.
         bool mSpotLightEnabled{true};
-
-        /// @brief 표면 머티리얼. Material::Create() 로 Init 에서 초기화.
-        MaterialUPtr mMaterial;
     };
 }
 

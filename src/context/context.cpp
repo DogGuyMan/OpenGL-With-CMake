@@ -165,14 +165,8 @@ namespace SJH
                 ImGui::Checkbox("flash light", &mFlashLightMode);
             }
 
-            if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen))
-            {
-                // ImGui 는 float* 를 요구 — 임시 변수로 편집 후 setter 로 clamp 적용.
-                float shininess = mMaterial->GetShininess();
-                if (ImGui::DragFloat("m.shininess", &shininess, 1.0f, 2.0f, 256.0f))
-                    mMaterial->SetShininess(shininess);
-            }
             ImGui::Checkbox("animation", &mAnimation);
+
             // 함수 하나가 UI component 하나에 대응
             // 리턴 값이 true인 경우 해당 UI가 조작되었음을 의미
             // UI 조작 이벤트에 대한 액션 로직을 if으로 작성할 수 있음
@@ -283,7 +277,6 @@ namespace SJH
             auto transform = projMat * viewMat * modelTransform;
             Uniforms::SetMat4(*mProgram.get(), "transformMat", transform);
             Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelTransform);
-            mModel->Draw();
         }
 
         // glPointSize(50.0f);
@@ -372,13 +365,6 @@ namespace SJH
         grayImg->SetSingleColorImage({0.5f, 0.5f, 0.5f, 1.0f});
         if (mRM->CreateTexture("gray", grayImg.get()) == nullptr)
             return false;
-
-        mMaterial = Material::Create();
-        mMaterial->SetTextureNames("white", "gray");
-        mMaterial->SetResolvedTextures(
-            mRM->FindTexture("white"), 0,
-            mRM->FindTexture("gray"), 1);
-
         /*
         순서
             1. VAO
@@ -392,14 +378,6 @@ namespace SJH
         //  multi-light 마이그레이션 후 두 sampler 가 셰이더에서 제거되었고 simple.fs 는 sampler 자체가 없음 ->
         //  unit 0/1 바인딩, tex0/tex1 SetInt, checkerboard/awesomeface 주석 블록 모두 dead code 로 일괄 제거.)
         mBox = Mesh::CreateBox();
-
-        mModel = Model::Load("./resources/model/backpack/backpack.obj");
-        if (!mModel)
-            return false;
-
-        // 모델의 각 머티리얼에 uniform 전송 대상 프로그램 주입 — Material::Apply 가 이 프로그램을 사용.
-        for (int i = 0; i < mModel->GetMaterialCount(); ++i)
-            mModel->GetMaterial(i)->SetProgram(mProgram.get());
 
         // Init 끝 — Mesh/program/textures 모두 설정 완료 시점의 *온전한 GL 상태* 1회 덤프.
         // Render() 안에서 의도치 않은 상태 변화가 의심되면 본 baseline과 비교 가능.

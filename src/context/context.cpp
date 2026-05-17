@@ -221,7 +221,8 @@ namespace SJH
         }
         ImGui::End();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // 1. ★ 매 프레임 stencil buffer 를 0 으로 리셋 ★
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST); // 깊이 테스트 사용하기
         // glDisable(GL_DEPTH_TEST); // 깊이 테스트 사용하지 않기.
         // glDepthMask(GL_FALSE); // depth buffer의 업데이트 막기
@@ -268,9 +269,7 @@ namespace SJH
             for (int i = 0; i < 3; ++i)
             {
                 if (mFlashLightMode && i >= 2)
-                {
                     continue;
-                }
                 auto markerTransform =
                     glm::translate(glm::mat4(1.0f), markerPositions[i]) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
@@ -343,172 +342,208 @@ namespace SJH
                 mBox->Draw();
             }
 
+            // 2. 본체 그릴 때 stencil=1 도장
+            glEnable(GL_STENCIL_TEST);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glStencilMask(0xFF);
+
+            // 3. 본체 렌더 (lighting program)
             {
                 auto modelTransform =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.749f, 2.0f)) *
+                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
                     glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
                 auto transform = projMat * viewMat * modelTransform;
                 Uniforms::SetMat4(*mProgram, "transformMat", transform);
                 Uniforms::SetMat4(*mProgram, "modelTransformMat", modelTransform);
+
                 auto box2Material = mRM->FindMaterial(STR_MATERIAL_BOX2);
                 box2Material->Apply();
                 mBox->Draw();
             }
+
+            // 4. outline 단계 — stencil!=1 만, stencil 쓰기 잠금,
+            //      depth off
+            glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+            glStencilMask(0x00);
+            glDisable(GL_DEPTH_TEST);
+
+            // 5. 키운 박스 + outline 셰이더 렌더
+            mSimpleProgram->Use();
+            {
+                auto modelTransform =
+                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
+                    glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+                    glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+                auto transform = projMat * viewMat * modelTransform;
+                Uniforms::SetVec4(*mSimpleProgram.get(), "baseColor", glm::vec4(1.0f, 1.0f, 0.5f, 1.0f));
+                Uniforms::SetMat4(*mSimpleProgram.get(), "transformMat", transform * glm::scale(glm::mat4(1.0f), glm::vec3(1.05f, 1.05f, 1.05f)));
+                mBox->Draw();
+            }
+
+            // 6. 복원
+            glEnable(GL_DEPTH_TEST);
+            glDisable(GL_STENCIL_TEST);
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glStencilMask(0xFF);
         }
-
-        // glPointSize(50.0f);
-        // glDrawArrays(GL_POINTS, 0, 1);
     }
 
-    /*********************************************************************************
-     *
-     * # GL state (enum=symbolic, handle=raw integer)
-     * vao:            0
-     * program:        0
-     * array_buffer:   0
-     * element_buffer: 0  (note: EBO state is per-VAO; with VAO=0, this is always 0)
-     * draw_fbo:       0
-     * read_fbo:       0
-     * active_texture: GL_TEXTURE0
-     * tex_2d[*]:      (all units empty)
-     * viewport:       [0, 0, 1600, 1200]
-     * depth_test:     disabled
-     * depth_func:     GL_LESS
-     * depth_write:    true
-     * blend:          disabled
-     * blend_src_rgb:  GL_ONE
-     * blend_dst_rgb:  GL_ZERO
-     * cull_face:      disabled
-     * cull_face_mode: GL_BACK
-     * front_face:     GL_CCW
-     * color_write:    [R, G, B, A]
-     * clear_color:    [0.000, 0.000, 0.000, 0.000]
-     * attrib[*]:      (all disabled)
-     *
-     *********************************************************************************/
-    bool Context::Init()
-    {
-        // === Light Casters 초기화 (사용자 제공 reference 값) ===
-        // 거리감쇠 c1=0.09 / c2=0.032 -> learnopengl 표 distance≈50 행에 대응하므로 mDistance=50 로 설정.
-        // (project 의 GetAttenuationCoeff 가 distance->(Kc,Kl,Kq) 변환을 담당)
+    // glPointSize(50.0f);
+    // glDrawArrays(GL_POINTS, 0, 1);
+}
 
-        mDirLight = {
-            .Direction = glm::vec3(0.0f, -1.0f, 0.0f),
-            .Ambient = glm::vec3(1.0f, 1.0f, 1.0f),
-            .Diffuse = glm::vec3(1.0f, 1.0f, 1.0f),
-            .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
+/*********************************************************************************
+ *
+ * # GL state (enum=symbolic, handle=raw integer)
+ * vao:            0
+ * program:        0
+ * array_buffer:   0
+ * element_buffer: 0  (note: EBO state is per-VAO; with VAO=0, this is always 0)
+ * draw_fbo:       0
+ * read_fbo:       0
+ * active_texture: GL_TEXTURE0
+ * tex_2d[*]:      (all units empty)
+ * viewport:       [0, 0, 1600, 1200]
+ * depth_test:     disabled
+ * depth_func:     GL_LESS
+ * depth_write:    true
+ * blend:          disabled
+ * blend_src_rgb:  GL_ONE
+ * blend_dst_rgb:  GL_ZERO
+ * cull_face:      disabled
+ * cull_face_mode: GL_BACK
+ * front_face:     GL_CCW
+ * color_write:    [R, G, B, A]
+ * clear_color:    [0.000, 0.000, 0.000, 0.000]
+ * attrib[*]:      (all disabled)
+ *
+ *********************************************************************************/
+namespace SJH
+{
+bool Context::Init()
+{
+    // === Light Casters 초기화 (사용자 제공 reference 값) ===
+    // 거리감쇠 c1=0.09 / c2=0.032 -> learnopengl 표 distance≈50 행에 대응하므로 mDistance=50 로 설정.
+    // (project 의 GetAttenuationCoeff 가 distance->(Kc,Kl,Kq) 변환을 담당)
 
-        mPointLights[0] = {.Pos = glm::vec3(1.2f, 1.0f, 1.0f),
-                           .Distance = 50.0f,
-                           .Ambient = glm::vec3(0.05f, 0.05f, 0.05f),
-                           .Diffuse = glm::vec3(0.8f, 0.4f, 0.2f),
-                           .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
+    mDirLight = {
+        .Direction = glm::vec3(0.0f, -1.0f, 0.0f),
+        .Ambient = glm::vec3(1.0f, 1.0f, 1.0f),
+        .Diffuse = glm::vec3(1.0f, 1.0f, 1.0f),
+        .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mPointLights[1] = {.Pos = glm::vec3(-1.2f, 1.0f, -1.0f),
-                           .Distance = 50.0f,
-                           .Ambient = glm::vec3(0.05f, 0.05f, 0.05f),
-                           .Diffuse = glm::vec3(0.2f, 0.4f, 0.8f),
-                           .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
+    mPointLights[0] = {.Pos = glm::vec3(1.2f, 1.0f, 1.0f),
+                       .Distance = 50.0f,
+                       .Ambient = glm::vec3(0.05f, 0.05f, 0.05f),
+                       .Diffuse = glm::vec3(0.8f, 0.4f, 0.2f),
+                       .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mSpotLight = {.Pos = glm::vec3(1.0f, 4.0f, 4.0f),
-                      .Direction = glm::vec3(0.0f, -1.0f, 0.0f),
-                      .CutoffAngleDeg = 5.0f,
-                      .OuterCutoffAngleDeg = 120.0f,
-                      .Distance = 128.0f,
-                      .Ambient = glm::vec3(0.0f, 0.0f, 0.0f),
-                      .Diffuse = glm::vec3(1.0f, 1.0f, 1.0f),
-                      .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
+    mPointLights[1] = {.Pos = glm::vec3(-1.2f, 1.0f, -1.0f),
+                       .Distance = 50.0f,
+                       .Ambient = glm::vec3(0.05f, 0.05f, 0.05f),
+                       .Diffuse = glm::vec3(0.2f, 0.4f, 0.8f),
+                       .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mCamera = {
-            .Pos = glm::vec3(0.0f, 2.5f, 8.0f),
-            .EulerPitch = -20.f,
-        };
+    mSpotLight = {.Pos = glm::vec3(1.0f, 4.0f, 4.0f),
+                  .Direction = glm::vec3(0.0f, -1.0f, 0.0f),
+                  .CutoffAngleDeg = 5.0f,
+                  .OuterCutoffAngleDeg = 120.0f,
+                  .Distance = 128.0f,
+                  .Ambient = glm::vec3(0.0f, 0.0f, 0.0f),
+                  .Diffuse = glm::vec3(1.0f, 1.0f, 1.0f),
+                  .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mProgram = Program::CreateWithVSFS("./resources/shader/lighting.vs", "./resources/shader/lighting.fs");
-        if (!mProgram)
-            return false;
+    mCamera = {
+        .Pos = glm::vec3(0.0f, 2.5f, 8.0f),
+        .EulerPitch = -20.f,
+    };
 
-        mSimpleProgram = Program::CreateWithVSFS("./resources/shader/simple.vs", "./resources/shader/simple.fs");
-        if (!mSimpleProgram)
-            return false;
+    mProgram = Program::CreateWithVSFS("./resources/shader/lighting.vs", "./resources/shader/lighting.fs");
+    if (!mProgram)
+        return false;
 
-        spdlog::info("program id: {}", mProgram->GetProgramAddr());
-        glClearColor(0.0, 0.1f, 0.2f, 0.0f);
+    mSimpleProgram = Program::CreateWithVSFS("./resources/shader/simple.vs", "./resources/shader/simple.fs");
+    if (!mSimpleProgram)
+        return false;
 
-        mRM = ResourceRegistry::Create();
+    spdlog::info("program id: {}", mProgram->GetProgramAddr());
+    glClearColor(0.0, 0.1f, 0.2f, 0.0f);
 
-        auto imageDarkGary = Image::Create(STR_IMAGE_DARK_GRAY, 4, 4, 4);
-        imageDarkGary->SetSingleColorImage(glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+    mRM = ResourceRegistry::Create();
 
-        auto textureDarkGray = mRM->CreateTexture(
-            STR_TEXTURE_DARK_GRAY, imageDarkGary.get());
+    auto imageDarkGary = Image::Create(STR_IMAGE_DARK_GRAY, 4, 4, 4);
+    imageDarkGary->SetSingleColorImage(glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
 
-        auto imageGray = Image::Create(STR_IMAGE_GRAY, 4, 4, 4);
-        imageGray->SetSingleColorImage(glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+    auto textureDarkGray = mRM->CreateTexture(
+        STR_TEXTURE_DARK_GRAY, imageDarkGary.get());
 
-        auto textureGray = mRM->CreateTexture(
-            STR_TEXTURE_GRAY, imageGray.get());
+    auto imageGray = Image::Create(STR_IMAGE_GRAY, 4, 4, 4);
+    imageGray->SetSingleColorImage(glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
 
-        auto imageMarble = Image::Load(STR_IMAGE_MARBLE, "./resources/texture/marble.jpg");
-        auto textureMarble = mRM->CreateTexture(
-            STR_TEXTURE_MARBLE, imageMarble.get());
+    auto textureGray = mRM->CreateTexture(
+        STR_TEXTURE_GRAY, imageGray.get());
 
-        // plane — diffuse: 그레이, specular: marble, shininess 128.
-        // CreateMaterial 은 빈 Material 만 — 텍스처는 위에서 만든 것을 여기서 명시 주입.
-        auto planeMaterial = mRM->CreateMaterial(STR_MATERIAL_PLANE);
-        planeMaterial->SetResolvedTextures(textureMarble, 0, textureGray, 1);
-        planeMaterial->SetShininess(128.0f);
-        planeMaterial->SetProgram(mProgram.get());
+    auto imageMarble = Image::Load(STR_IMAGE_MARBLE, "./resources/texture/marble.jpg");
+    auto textureMarble = mRM->CreateTexture(
+        STR_TEXTURE_MARBLE, imageMarble.get());
 
-        // box1 — diffuse: container.jpg, specular: 다크 그레이, shininess 16.
-        auto imageBox1Diffuse = Image::Load(STR_IMAGE_BOX1_DIFFUSE, "./resources/texture/container.jpg");
-        auto textureBox1Diffuse = mRM->CreateTexture(STR_TEXTURE_BOX1_DIFFUSE, imageBox1Diffuse.get());
-        auto box1Material = mRM->CreateMaterial(STR_MATERIAL_BOX1);
-        box1Material->SetResolvedTextures(textureBox1Diffuse, 0, textureDarkGray, 1);
-        box1Material->SetShininess(16.0f);
-        box1Material->SetProgram(mProgram.get());
+    // plane — diffuse: 그레이, specular: marble, shininess 128.
+    // CreateMaterial 은 빈 Material 만 — 텍스처는 위에서 만든 것을 여기서 명시 주입.
+    auto planeMaterial = mRM->CreateMaterial(STR_MATERIAL_PLANE);
+    planeMaterial->SetResolvedTextures(textureMarble, 0, textureGray, 1);
+    planeMaterial->SetShininess(128.0f);
+    planeMaterial->SetProgram(mProgram.get());
 
-        // box2 — diffuse: container2.png, specular: container2_specular.png, shininess 64.
-        auto imageBox2Diffuse = Image::Load(STR_IMAGE_BOX2_DIFFUSE, "./resources/texture/container2.png");
-        auto textureBox2Diffuse = mRM->CreateTexture(STR_TEXTURE_BOX2_DIFFUSE, imageBox2Diffuse.get());
-        auto imageBox2Specular = Image::Load(STR_IMAGE_BOX2_SPECULAR, "./resources/texture/container2_specular.png");
-        auto textureBox2Specular = mRM->CreateTexture(STR_TEXTURE_BOX2_SPECULAR, imageBox2Specular.get());
-        auto box2Material = mRM->CreateMaterial(STR_MATERIAL_BOX2);
-        box2Material->SetResolvedTextures(textureBox2Diffuse, 0, textureBox2Specular, 1);
-        box2Material->SetShininess(64.0f);
-        box2Material->SetProgram(mProgram.get());
-        /*
-        순서
-            1. VAO
-            2. VBO
-            3. Vertex Attribute Setting
-        */
+    // box1 — diffuse: container.jpg, specular: 다크 그레이, shininess 16.
+    auto imageBox1Diffuse = Image::Load(STR_IMAGE_BOX1_DIFFUSE, "./resources/texture/container.jpg");
+    auto textureBox1Diffuse = mRM->CreateTexture(STR_TEXTURE_BOX1_DIFFUSE, imageBox1Diffuse.get());
+    auto box1Material = mRM->CreateMaterial(STR_MATERIAL_BOX1);
+    box1Material->SetResolvedTextures(textureBox1Diffuse, 0, textureDarkGray, 1);
+    box1Material->SetShininess(16.0f);
+    box1Material->SetProgram(mProgram.get());
 
-        // 큐브 메시 1개 — VAO/VBO/EBO 는 Mesh 가 캡슐화. unbind 도 Mesh::Init 내부에서 처리됨.
-        // (직전: 여기서 glBindVertexArray(0) / glBindBuffer 3종을 직접 호출했지만 Mesh 캡슐화 후 redundant.
-        //  마찬가지로 unit 0/1 에 white 텍스처를 바인딩하고 lighting.fs 의 tex0/tex1 sampler 에 SetInt 까지 했지만,
-        //  multi-light 마이그레이션 후 두 sampler 가 셰이더에서 제거되었고 simple.fs 는 sampler 자체가 없음 ->
-        //  unit 0/1 바인딩, tex0/tex1 SetInt, checkerboard/awesomeface 주석 블록 모두 dead code 로 일괄 제거.)
-        mBox = Mesh::CreateBox();
+    // box2 — diffuse: container2.png, specular: container2_specular.png, shininess 64.
+    auto imageBox2Diffuse = Image::Load(STR_IMAGE_BOX2_DIFFUSE, "./resources/texture/container2.png");
+    auto textureBox2Diffuse = mRM->CreateTexture(STR_TEXTURE_BOX2_DIFFUSE, imageBox2Diffuse.get());
+    auto imageBox2Specular = Image::Load(STR_IMAGE_BOX2_SPECULAR, "./resources/texture/container2_specular.png");
+    auto textureBox2Specular = mRM->CreateTexture(STR_TEXTURE_BOX2_SPECULAR, imageBox2Specular.get());
+    auto box2Material = mRM->CreateMaterial(STR_MATERIAL_BOX2);
+    box2Material->SetResolvedTextures(textureBox2Diffuse, 0, textureBox2Specular, 1);
+    box2Material->SetShininess(64.0f);
+    box2Material->SetProgram(mProgram.get());
+    /*
+    순서
+        1. VAO
+        2. VBO
+        3. Vertex Attribute Setting
+    */
 
-        // Init 끝 — Mesh/program/textures 모두 설정 완료 시점의 *온전한 GL 상태* 1회 덤프.
-        // Render() 안에서 의도치 않은 상태 변화가 의심되면 본 baseline과 비교 가능.
-        // (매 프레임 호출 금지 — glGet* stall. Init() 1회 한정.)
-        Diagnostics::GLStateLog::Dump("Context::Init done");
+    // 큐브 메시 1개 — VAO/VBO/EBO 는 Mesh 가 캡슐화. unbind 도 Mesh::Init 내부에서 처리됨.
+    // (직전: 여기서 glBindVertexArray(0) / glBindBuffer 3종을 직접 호출했지만 Mesh 캡슐화 후 redundant.
+    //  마찬가지로 unit 0/1 에 white 텍스처를 바인딩하고 lighting.fs 의 tex0/tex1 sampler 에 SetInt 까지 했지만,
+    //  multi-light 마이그레이션 후 두 sampler 가 셰이더에서 제거되었고 simple.fs 는 sampler 자체가 없음 ->
+    //  unit 0/1 바인딩, tex0/tex1 SetInt, checkerboard/awesomeface 주석 블록 모두 dead code 로 일괄 제거.)
+    mBox = Mesh::CreateBox();
 
-        // GLValidate program-side 진단 — Mesh ↔ Shader contract.
-        // Cat A (CheckIndices) 는 Mesh::Init 이 이미 호출. 본 시점 직전에 Mesh::Draw 가
-        // VAO 를 Bind 해야 Cat B (attribute layout) 가 정확 — 명시적으로 Bind 후 검증.
-        // Cat C (CheckUniformCoverage) 는 Init 직후 모든 uniform이 default-0 인 게 정상이라 skip
-        // (Render 안 setter 호출 후 의미 있음).
-        mBox->GetVertexLayout()->Bind();
-        mProgram->Use();
+    // Init 끝 — Mesh/program/textures 모두 설정 완료 시점의 *온전한 GL 상태* 1회 덤프.
+    // Render() 안에서 의도치 않은 상태 변화가 의심되면 본 baseline과 비교 가능.
+    // (매 프레임 호출 금지 — glGet* stall. Init() 1회 한정.)
+    Diagnostics::GLStateLog::Dump("Context::Init done");
 
-        Diagnostics::GLValidate::CheckAttribLayout(mProgram->GetProgramAddr(), "Context::Init");
-        Diagnostics::GLValidate::CheckSamplerBindings(mProgram->GetProgramAddr(), "Context::Init");
-        Diagnostics::GLValidate::DumpShaderInfoLogs(mProgram->GetProgramAddr(), "Context::Init");
+    // GLValidate program-side 진단 — Mesh ↔ Shader contract.
+    // Cat A (CheckIndices) 는 Mesh::Init 이 이미 호출. 본 시점 직전에 Mesh::Draw 가
+    // VAO 를 Bind 해야 Cat B (attribute layout) 가 정확 — 명시적으로 Bind 후 검증.
+    // Cat C (CheckUniformCoverage) 는 Init 직후 모든 uniform이 default-0 인 게 정상이라 skip
+    // (Render 안 setter 호출 후 의미 있음).
+    mBox->GetVertexLayout()->Bind();
+    mProgram->Use();
 
-        return true;
-    }
+    Diagnostics::GLValidate::CheckAttribLayout(mProgram->GetProgramAddr(), "Context::Init");
+    Diagnostics::GLValidate::CheckSamplerBindings(mProgram->GetProgramAddr(), "Context::Init");
+    Diagnostics::GLValidate::DumpShaderInfoLogs(mProgram->GetProgramAddr(), "Context::Init");
+
+    return true;
+}
 }

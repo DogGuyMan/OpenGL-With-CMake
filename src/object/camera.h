@@ -63,8 +63,12 @@ namespace SJH
 
         /**
          * @brief 현재 Yaw/Pitch 로부터 카메라 *전방* 단위 벡터 산출.
-         * @details Yaw 먼저, Pitch 나중 적용 — FPS 카메라 표준 순서.
-         *          외부 (예: WASD 이동) 에서 카메라 방향이 필요할 때 호출.
+         * @details 합성 순서 @c yawMat*pitchMat — Pitch 를 *먼저* (로컬 right 축 기준) 적용한 뒤
+         *          Yaw 를 (월드 up 축 기준) 적용하는 FPS 카메라 표준 순서.
+         *          결과 front 의 y성분 = @c sin(pitch) 로 yaw 와 독립.
+         * @warning 순서를 뒤집으면 (@c pitchMat*yawMat) Pitch 가 *월드 X축* 기준으로 돌아
+         *          y성분이 @c cos(yaw)*sin(pitch) 가 되어 — yaw 에 따라 상하 회전량이
+         *          달라지는 yaw-pitch 결합 버그가 생긴다.
          */
         glm::vec3 GetFront() const
         {
@@ -74,7 +78,7 @@ namespace SJH
             const auto yawMat   = glm::rotate(glm::mat4(1.0f),
                                               glm::radians(EulerYaw),
                                               glm::vec3(0.0f, 1.0f, 0.0f));
-            return glm::vec3(pitchMat * yawMat * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+            return glm::vec3(yawMat * pitchMat * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
         }
 
         /**

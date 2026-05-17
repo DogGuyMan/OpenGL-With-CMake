@@ -116,6 +116,10 @@ namespace SJH
 
         bool mFlashLightMode{true};
 
+        /// @brief glDepthFunc 비교 연산자 선택 인덱스 — ImGui Combo 가 갱신.
+        ///        Render() 의 DEPTH_FUNC[] 룩업 테이블 인덱스. 기본 2 = GL_LESS (OpenGL 기본값).
+        int mDepthFuncIndex{2};
+
         /// @brief Texture/Material/Model 을 이름 키로 캐시·조회하는 리소스 레지스트리.
         ResourceRegistryUPtr mRM;
 

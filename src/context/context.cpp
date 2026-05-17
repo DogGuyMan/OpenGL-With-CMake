@@ -80,7 +80,10 @@ namespace SJH
         auto pos = glm::vec2((float)x, (float)y);
         auto deltaPos = pos - mPrevMousePos;
 
-        const float cameraRotSpeed = -0.1f;
+        // yaw/pitch 반전 조작 — cameraRotSpeed 부호를 +로 두어 마우스 이동 ↔ 시점 회전을
+        // 반대 방향으로 매핑 (이전 -0.1f 의 부호 반전). 두 축 동시 반전.
+        // const float cameraRotSpeed = -0.1f;
+        const float cameraRotSpeed = 0.1f;
         mCamera.EulerYaw -= deltaPos.x * cameraRotSpeed;
         mCamera.EulerPitch -= deltaPos.y * cameraRotSpeed;
 
@@ -121,7 +124,34 @@ namespace SJH
             }
         }
     }
-
+    /*********************************************************************************
+     *
+     * # GL state (enum=symbolic, handle=raw integer)
+     * vao:            1
+     * program:        0
+     * array_buffer:   3
+     * element_buffer: 4
+     * draw_fbo:       0
+     * read_fbo:       0
+     * active_texture: GL_TEXTURE0
+     * tex_2d[unit 0]: 8
+     * viewport:       [0, 0, 1600, 1200]
+     * depth_test:     disabled
+     * depth_func:     GL_LESS
+     * depth_write:    true
+     * blend:          disabled
+     * blend_src_rgb:  GL_ONE
+     * blend_dst_rgb:  GL_ZERO
+     * cull_face:      disabled
+     * cull_face_mode: GL_BACK
+     * front_face:     GL_CCW
+     * color_write:    [R, G, B, A]
+     * clear_color:    [0.000, 0.100, 0.200, 0.000]
+     * attrib[0]:      vec3 GL_FLOAT, normalized=false, stride=32, vbo=3
+     * attrib[1]:      vec3 GL_FLOAT, normalized=false, stride=32, vbo=3
+     * attrib[2]:      vec2 GL_FLOAT, normalized=false, stride=32, vbo=3
+     *
+     *********************************************************************************/
     void Context::Render()
     {
         if (ImGui::Begin("ui window"))
@@ -185,6 +215,9 @@ namespace SJH
                 mCamera.EulerPitch = 0.0f;
                 mCamera.Pos = glm::vec3(0.0f, 0.0f, 3.0f);
             }
+
+            ImGui::Combo("depth func", &mDepthFuncIndex,
+                         DEPTH_FUNC_LABELS, IM_ARRAYSIZE(DEPTH_FUNC_LABELS));
         }
         ImGui::End();
 
@@ -192,20 +225,11 @@ namespace SJH
         glEnable(GL_DEPTH_TEST); // 깊이 테스트 사용하기
         // glDisable(GL_DEPTH_TEST); // 깊이 테스트 사용하지 않기.
         // glDepthMask(GL_FALSE); // depth buffer의 업데이트 막기
-        // glClearDepth(1.0f); // depth buffer의 초기값 설정하기
+        glClearDepth(1.0f); // depth buffer의 초기값 설정하기
 
-        /* 사용 가능한 비교 연산자
-            GL_ALWAYS, GL_NEVER
-            GL_LESS, GL_LEQUAL
-            GL_GREATER, GL_GEQUAL
-            GL_EQUAL, GL_NOTEQUAL */
-        // glDepthFunc(GL_LESS); // depth test 비교 연산자 변경하기
+        // 비교 연산자 룩업 — 순서는 ImGui Combo 의 DEPTH_FUNC_LABELS[] 와 1:1 동일해야 함.
 
-        float t = sinf((float)glfwGetTime()) * 0.5f + 0.5f;
-
-        // 카메라: z=3 위치에서 원점을 바라봄. 인자 없는 const 게터 — 멤버 직접 사용.
-        auto viewMat = mCamera.GetForwardViewMatrix();
-
+        // ImGui Combo 가 고른 인덱스로 depth test 비교 연산자 적용.
         {
             /* perspective projection을 적용하면 깊이값을 0~1 사이로 정규화하면서 w값으로 나누는 과정을 거침
             정규화된 z값은 1/z 꼴의 함수 형태로 분포가 나타남
@@ -215,13 +239,17 @@ namespace SJH
                 면과 면을 너무 붙어있게 하지 않을 것
                 near의 값을 너무 작게 하지 말것
                 좀더 정확한 depth buffer를 설정하여 사용할 것
+                    예를 들어 DepthBUffer는 24bit, 32bit ... 등등이 있다.
+                    그리고 32bit이 좀더 정교하지 않겠느냐~ 라는것.
             */
             // mCamera.FarPlane = 10.f;
             // mCamera.NearPlane = 0.5f;
         }
-        auto projMat = mCamera.GetProjMatrix(); // mAspect 멤버 사용 (Reshape 에서 갱신)
+        glDepthFunc(DEPTH_FUNC[mDepthFuncIndex]);
 
-        // glm::vec4 baseColor(t * t, 2.0f * t * (1.0f - t), (1.0f - t) * (1.0f - t), 1.0f);
+        // 카메라: z=3 위치에서 원점을 바라봄. 인자 없는 const 게터 — 멤버 직접 사용.
+        auto viewMat = mCamera.GetForwardViewMatrix();
+        auto projMat = mCamera.GetProjMatrix(); // mAspect 멤버 사용 (Reshape 에서 갱신)
 
         // 2. Use Program — 광원 *위치 표시 큐브* 들 (DirLight 는 방향만 가지므로 표시 안 함)
         mSimpleProgram->Use();
@@ -333,6 +361,32 @@ namespace SJH
         // glDrawArrays(GL_POINTS, 0, 1);
     }
 
+    /*********************************************************************************
+     *
+     * # GL state (enum=symbolic, handle=raw integer)
+     * vao:            0
+     * program:        0
+     * array_buffer:   0
+     * element_buffer: 0  (note: EBO state is per-VAO; with VAO=0, this is always 0)
+     * draw_fbo:       0
+     * read_fbo:       0
+     * active_texture: GL_TEXTURE0
+     * tex_2d[*]:      (all units empty)
+     * viewport:       [0, 0, 1600, 1200]
+     * depth_test:     disabled
+     * depth_func:     GL_LESS
+     * depth_write:    true
+     * blend:          disabled
+     * blend_src_rgb:  GL_ONE
+     * blend_dst_rgb:  GL_ZERO
+     * cull_face:      disabled
+     * cull_face_mode: GL_BACK
+     * front_face:     GL_CCW
+     * color_write:    [R, G, B, A]
+     * clear_color:    [0.000, 0.000, 0.000, 0.000]
+     * attrib[*]:      (all disabled)
+     *
+     *********************************************************************************/
     bool Context::Init()
     {
         // === Light Casters 초기화 (사용자 제공 reference 값) ===

@@ -270,3 +270,48 @@ glStencilFunc(GL_ALWAYS, 1, 0xFF);           // 다음 프레임 위해 기본�
 - 본 프로젝트 [context.cpp](../../src/context/context.cpp) `Render()` 의 stencil 블록은 *학습용 골격* — `glEnable(GL_STENCIL_TEST)` + `glStencilFunc` 까지만, `glStencilOp` 와 실제 outline 렌더는 주석. 위 6단계가 완성형.
 - stencil buffer 를 쓰려면 *framebuffer 에 stencil attachment 가 있어야* 한다. GLFW default framebuffer 는 보통 `GLFW_DEPTH_BITS`/`GLFW_STENCIL_BITS` 힌트로 24+8 packed 를 제공 — 별도 설정 없이 대개 사용 가능.
 - `glClear` 시 `GL_STENCIL_BUFFER_BIT` 를 빠뜨리면 — 이전 프레임 도장이 남아 outline 이 깨진다 (depth 의 `GL_DEPTH_BUFFER_BIT` 와 같은 규칙).
+
+---
+
+> ### 📄 블렌딩
+
+![](image/2026-05-17-20-54-59.png)
+
+#### 블랜딩 활성화
+
+`glEnable(GL_BLEND);`
+
+#### 블랜딩 함수
+`glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);`
+
+#### 블렌딩 숫식
+
+
+$$
+C_{result} = (C_{source} * F_{source}) + (C_{destination} * F_{destination})
+$$
+
+* `glBlendFunc`으로 `F` 값을 설정할 수 있음
+* `glBlendEquation`으로 가운데 `+` 연산자 설정 가능
+
+```
+GL_ZERO, GL_ONE
+GL_SRC_COLOR, GL_SRC_ALPHA
+GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA
+GL_DST_COLOR, GL_DST_ALPHA
+GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_DST_ALPHA
+GL_CONSTANT_COLOR, GL_CONSTANT_ALPHA
+GL_ONE_MINUS_CONSTANT_COLOR, GL_ONE_MINUS_CONSTANT_ALPHA
+```
+
+
+#### 알파, Color 분리 함수
+`glBlendFuncSeparate` 
+* color / alpha 별로 별도의 수식 적용 가능
+```
+GL_FUNC_ADD: src + dst
+GL_FUNC_SUBTRACT: src - dst
+GL_FUNC_REVERSE_SUBTRACT: dst - src
+GL_MIN: min(src, dst)
+GL_MAX: max(src, dst)
+```

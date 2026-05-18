@@ -108,8 +108,12 @@ namespace SJH
         /// @brief 단순 셰이더 프로그램 (`simple.vs/fs`). 광원 큐브 등 *라이팅 무관* 객체 그릴 때 사용 — color uniform 직접 출력.
         ProgramUPtr mSimpleProgram;
 
+        ProgramUPtr mTextureProgram;
+
         /// @brief 박스(큐브) 메시 — 기본 씬 오브젝트. @c Mesh::CreateBox() 로 Init 에서 생성.
         MeshUPtr mBox;
+
+        MeshUPtr mPlane;
 
         /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
         bool mAnimation{true};
@@ -160,19 +164,23 @@ namespace SJH
         bool mSpotLightEnabled{true};
 
         const char *STR_IMAGE_DARK_GRAY = "image_dark_gray";
-        const char *STR_TEXTURE_DARK_GRAY = "texture_dark_gray";
         const char *STR_IMAGE_GRAY = "image_gray";
-        const char *STR_TEXTURE_GRAY = "texture_gray";
         const char *STR_IMAGE_MARBLE = "image_marble";
+        const char *STR_IMAGE_BOX1_DIFFUSE = "image_box1_diffuse";
+        const char *STR_IMAGE_BOX2_DIFFUSE = "image_box2_diffuse";
+        const char *STR_IMAGE_BOX2_SPECULAR = "image_box2_specular";
+        const char *STR_IMAGE_PLANE = "image_plane";
+
+        const char *STR_TEXTURE_DARK_GRAY = "texture_dark_gray";
+        const char *STR_TEXTURE_GRAY = "texture_gray";
         const char *STR_TEXTURE_MARBLE = "texture_marble";
+        const char *STR_TEXTURE_BOX1_DIFFUSE = "texture_box1_diffuse";
+        const char *STR_TEXTURE_BOX2_DIFFUSE = "texture_box2_diffuse";
+        const char *STR_TEXTURE_BOX2_SPECULAR = "texture_box2_specular";
+        const char *STR_TEXTURE_WINDOW = "texture_window";
+
         const char *STR_MATERIAL_PLANE = "material_plane";
         const char *STR_MATERIAL_BOX1 = "material_box1";
-        const char *STR_IMAGE_BOX1_DIFFUSE = "image_box1_diffuse";
-        const char *STR_TEXTURE_BOX1_DIFFUSE = "texture_box1_diffuse";
-        const char *STR_IMAGE_BOX2_DIFFUSE = "image_box2_diffuse";
-        const char *STR_TEXTURE_BOX2_DIFFUSE = "texture_box2_diffuse";
-        const char *STR_IMAGE_BOX2_SPECULAR = "image_box2_specular";
-        const char *STR_TEXTURE_BOX2_SPECULAR = "texture_box2_specular";
         const char *STR_MATERIAL_BOX2 = "material_box2";
 
         // depth test 비교 연산자 선택 — 라벨 배열 순서는 아래 DEPTH_FUNC[] 와 동일해야 함.
@@ -193,7 +201,7 @@ namespace SJH
         // │ 6     │ GL_EQUAL    │ 깊이 같을 때만                   │
         // │ 7     │ GL_NOTEQUAL │ 깊이 다를 때만                   │
         // └───────┴─────────────┴──────────────────────────────────┘
-        const char * const DEPTH_FUNC_LABELS[8] = {
+        const char *const DEPTH_FUNC_LABELS[8] = {
             "GL_ALWAYS", "GL_NEVER",
             "GL_LESS", "GL_LEQUAL",
             "GL_GREATER", "GL_GEQUAL",

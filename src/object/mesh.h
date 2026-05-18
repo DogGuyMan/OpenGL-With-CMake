@@ -58,6 +58,8 @@ namespace SJH
         /// @brief 기본 박스(큐브) 메시 생성 — 6면 × 2삼각형, 정점 24개, 법선/UV 포함.
         static MeshUPtr CreateBox();
 
+        static MeshUPtr CreatePlane();
+
         /// @brief 현재 메시의 VAO 관찰자. Mesh 보다 오래 보관 금지 — 소유자는 @c mVertexLayout.
         const VertexLayout *GetVertexLayout() const
         {

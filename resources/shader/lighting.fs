@@ -55,7 +55,7 @@ uniform SpotLight spotLight;
 
 // === Light 활성/비활성 플래그 — runtime toggle (GLSL bool 은 송신 시 int 사용) ===
 // 0 = skip (해당 광원 계산·누적 생략), 1 = active. CPU 가 매 프레임 송신.
-// 셰이더가 receive 안 한 경우 GL default 0 → 의도치 않게 전부 검정 화면이 될 수 있으므로
+// 셰이더가 receive 안 한 경우 GL default 0 -> 의도치 않게 전부 검정 화면이 될 수 있으므로
 // CPU 측은 반드시 매 프레임 3개 모두 SetInt 로 보낼 것 (context.cpp Render).
 uniform int dirLightEnabled;
 uniform int pointLightsEnabled[NUM_POINT_LIGHTS];
@@ -108,7 +108,7 @@ vec3 CalcSpecular(vec3 lightSpecular, vec3 pixelNorm, vec3 lightDir, vec3 viewDi
 
 // 방향광 — 모든 표면이 같은 lightDir, 감쇠 없음 (태양처럼 무한 거리)
 vec3 CalcDirLight(DirLight light, vec3 pixelNorm, vec3 viewDir) {
-    vec3 lightDir = normalize(-light.direction);    // 표면 → 광원 방향
+    vec3 lightDir = normalize(-light.direction);    // 표면 -> 광원 방향
     vec3 ambient  = CalcAmbient(light.ambient);
     vec3 diffuse  = CalcDiffuse(light.diffuse, pixelNorm, lightDir);
     vec3 specular = CalcSpecular(light.specular, pixelNorm, lightDir, viewDir);
@@ -131,7 +131,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 pixelNorm, vec3 viewDir) {
     vec3 lightDir = normalize(light.position - vsPosition);
     float dist = length(light.position - vsPosition);
     float attenuation = CalcAttenuation(light.attenuation, dist);
-    // 콘 축(-direction)과 표면→광원 방향(lightDir) 사이 각도의 cos
+    // 콘 축(-direction)과 표면->광원 방향(lightDir) 사이 각도의 cos
     float theta = dot(lightDir, normalize(-light.direction));
     float intensity = CalcSoftEdge(theta, light.cutoff, light.outerCutoff);
     vec3 ambient  = CalcAmbient(light.ambient);

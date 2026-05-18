@@ -457,11 +457,11 @@ namespace SJH
 
         mPostProgram->Use();
         Uniforms::SetMat4(*mPostProgram, Const::UNI_TRANSFORM_MAT, glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
-        Uniforms::SetFloat(*mPostProgram, Const::UNI_POST_GAMMA, mGamma);
+        Uniforms::SetFloat(*mPostProgram, Const::UNI_POSTPROCESS_GAMMA, mGamma);
         mFramebuffer
             ->GetColorAttachment()
             ->Bind();
-        Uniforms::SetInt(*mPostProgram, Const::UNI_POST_FRAMETEXTURE, 0);
+        Uniforms::SetInt(*mPostProgram, Const::UNI_POSTPROCESS_FRAMETEXTURE, 0);
         mPlane->Draw();
     }
 
@@ -543,7 +543,10 @@ namespace SJH
             return false;
 
         // mPostProgram = Program::CreateWithVSFS(Const::PATH_SHADER_TEXTURE_VS, Const::PATH_SHADER_POST_INVERT_FS);
-        mPostProgram = Program::CreateWithVSFS(Const::PATH_SHADER_TEXTURE_VS, Const::PATH_SHADER_POSTPROCESS_GAMMA_FS);
+        // mPostProgram = Program::CreateWithVSFS(Const::PATH_SHADER_TEXTURE_VS, Const::PATH_SHADER_POSTPROCESS_GAMMA_FS);
+        // mPostProgram = Program::CreateWithVSFS(Const::PATH_SHADER_TEXTURE_VS, Const::PATH_SHADER_POSTPROCESS_SHARPEN_FS);
+        // mPostProgram = Program::CreateWithVSFS(Const::PATH_SHADER_TEXTURE_VS, Const::PATH_SHADER_POSTPROCESS_SOBLE_FS);
+        mPostProgram = Program::CreateWithVSFS(Const::PATH_SHADER_TEXTURE_VS, Const::PATH_SHADER_POSTPROCESS_BLUR_FS);
         if (!mPostProgram)
             return false;
 

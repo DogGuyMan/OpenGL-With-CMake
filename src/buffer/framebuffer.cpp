@@ -14,13 +14,13 @@ namespace SJH
 
     Framebuffer::~Framebuffer()
     {
-        if (mDepthStencilBuffer)
+        if (mRBODepthStencilBuffer)
         {
-            glDeleteRenderbuffers(1, &mDepthStencilBuffer);
+            glDeleteRenderbuffers(1, &mRBODepthStencilBuffer);
         }
-        if (mFramebuffer)
+        if (mFBOFramebuffer)
         {
-            glDeleteFramebuffers(1, &mFramebuffer);
+            glDeleteFramebuffers(1, &mFBOFramebuffer);
         }
     }
 
@@ -31,21 +31,21 @@ namespace SJH
 
     void Framebuffer::Bind() const
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, mFBOFramebuffer);
     }
 
     bool Framebuffer::InitWithColorAttachment(const TexturePtr colorAttachment)
     {
         mColorAttachment = colorAttachment;
-        glGenFramebuffers(1, &mFramebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
+        glGenFramebuffers(1, &mFBOFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, mFBOFramebuffer);
 
         glFramebufferTexture2D(GL_FRAMEBUFFER,
                                GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                                colorAttachment->GetTextureID(), 0);
 
-        glGenRenderbuffers(1, &mDepthStencilBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, mDepthStencilBuffer);
+        glGenRenderbuffers(1, &mRBODepthStencilBuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, mRBODepthStencilBuffer);
         glRenderbufferStorage(
             GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
             colorAttachment->GetWidth(), colorAttachment->GetHeight());
@@ -53,7 +53,7 @@ namespace SJH
 
         glFramebufferRenderbuffer(
             GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-            GL_RENDERBUFFER, mDepthStencilBuffer);
+            GL_RENDERBUFFER, mRBODepthStencilBuffer);
 
         auto result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (result != GL_FRAMEBUFFER_COMPLETE)

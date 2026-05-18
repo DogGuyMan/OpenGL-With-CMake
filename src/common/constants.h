@@ -44,6 +44,9 @@ namespace SJH::Const
     inline constexpr auto PATH_SHADER_TEXTURE_FS = "./resources/shader/texture.fs";
     inline constexpr auto PATH_SHADER_POSTPROCESS_INVERT_FS = "./resources/shader/postprocess/invert.fs";
     inline constexpr auto PATH_SHADER_POSTPROCESS_GAMMA_FS = "./resources/shader/postprocess/gamma.fs";
+    inline constexpr auto PATH_SHADER_POSTPROCESS_SHARPEN_FS = "./resources/shader/postprocess/sharpening.fs";
+    inline constexpr auto PATH_SHADER_POSTPROCESS_BLUR_FS = "./resources/shader/postprocess/blurring.fs";
+    inline constexpr auto PATH_SHADER_POSTPROCESS_SOBLE_FS = "./resources/shader/postprocess/sobel.fs";
 
     // ─── 텍스처 이미지 파일 경로 (Image::Load 인자) ───
     inline constexpr auto PATH_TEX_MARBLE = "./resources/texture/marble.jpg";
@@ -62,8 +65,8 @@ namespace SJH::Const
     inline constexpr auto UNI_DIR_LIGHT_ENABLED = "dirLightEnabled";
     inline constexpr auto UNI_SPOT_LIGHT_ENABLED = "spotLightEnabled";
     inline constexpr auto UNI_TEX = "tex";
-    inline constexpr auto UNI_POST_FRAMETEXTURE = "frameTexture";
-    inline constexpr auto UNI_POST_GAMMA = "gamma";
+    inline constexpr auto UNI_POSTPROCESS_FRAMETEXTURE = "frameTexture";
+    inline constexpr auto UNI_POSTPROCESS_GAMMA = "gamma";
     inline constexpr auto UNI_MATERIAL_DIFFUSE = "material.diffuse";
     inline constexpr auto UNI_MATERIAL_SPECULAR = "material.specular";
     inline constexpr auto UNI_MATERIAL_SHININESS = "material.shininess";

@@ -43,7 +43,7 @@ namespace SJH
         ~Framebuffer();
 
         /// @brief GL FBO 핸들 반환.
-        const uint32_t Get() const { return mFramebuffer; }
+        const uint32_t Get() const { return mFBOFramebuffer; }
 
         /// @brief 이 FBO 를 현재 프레임버퍼로 바인딩 (@c glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer)).
         void Bind() const;
@@ -55,8 +55,8 @@ namespace SJH
         Framebuffer() {}
         bool InitWithColorAttachment(const TexturePtr colorAttachment);
 
-        uint32_t mFramebuffer{0};       ///< GL FBO 핸들 — 0 은 invalid (기본 프레임버퍼).
-        uint32_t mDepthStencilBuffer{0};///< 깊이/스텐실 렌더버퍼 핸들 (@c GL_DEPTH24_STENCIL8).
+        uint32_t mFBOFramebuffer{0};       ///< GL FBO 핸들 — 0 은 invalid (기본 프레임버퍼).
+        uint32_t mRBODepthStencilBuffer{0};///< 깊이/스텐실 렌더버퍼 핸들 (@c GL_DEPTH24_STENCIL8).
         TexturePtr mColorAttachment;    ///< 색상 어태치먼트 텍스처 공유 포인터 — 소멸 순서 주의.
     };
 }

@@ -1,11 +1,11 @@
 #include "context.h"
 #include "buffer/buffer.h"
+#include "common/constants.h"
 #include "diagnostics/gl_log.h"
 #include "diagnostics/gl_state_log.h" // Task 5 — Init() 끝에 1회 상태 덤프
 #include "diagnostics/gl_validate.h"  // GLValidate — Mesh/Shader 정합성 진단
 #include "layout/vertex_layout.h"
 #include "program/program_uniforms.h" // program.h 가 더 이상 transitive 제공 안 함
-#include "common/constants.h"
 #include <imgui.h>
 #include <spdlog/spdlog.h>
 
@@ -74,7 +74,7 @@ namespace SJH
 
         mCamera.SetAspect((float)width, (float)height); // height==0 가드 내장
 
-        m_framebuffer = Framebuffer::Create(Texture::Create(width, height, GL_RGBA));
+        mFramebuffer = Framebuffer::Create(Texture::Create(width, height, GL_RGBA));
     }
 
     void Context::MouseMove(double x, double y)
@@ -128,6 +128,7 @@ namespace SJH
             }
         }
     }
+
     /*********************************************************************************
      *
      * # GL state (enum=symbolic, handle=raw integer)
@@ -156,8 +157,10 @@ namespace SJH
      * attrib[2]:      vec2 GL_FLOAT, normalized=false, stride=32, vbo=3
      *
      *********************************************************************************/
+
     void Context::Render()
     {
+        // ... 기존 ImGui 코드 ...
         if (ImGui::Begin(Const::LBL_UI_WINDOW))
         {
             if (ImGui::CollapsingHeader(Const::LBL_DIRLIGHT))
@@ -225,7 +228,7 @@ namespace SJH
         }
         ImGui::End();
 
-        m_framebuffer->Bind();
+        mFramebuffer->Bind();
 
         // 1. ★ 매 프레임 stencil buffer 를 0 으로 리셋 ★
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -443,10 +446,9 @@ namespace SJH
         mTextureProgram->Use();
         Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
 
-
-        m_framebuffer
+        mFramebuffer
             ->GetColorAttachment() // TexturePtr m_colorAttachment;
-            ->Bind();           // glBindTexture(GL_TEXTURE_2D, mTextureID);
+            ->Bind();              // glBindTexture(GL_TEXTURE_2D, mTextureID);
         Uniforms::SetInt(*mTextureProgram, Const::UNI_TEX, 0);
         mPlane->Draw();
     }

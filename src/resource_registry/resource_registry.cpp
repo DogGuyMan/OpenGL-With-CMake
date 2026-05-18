@@ -26,7 +26,7 @@ namespace SJH
 
     Texture *ResourceRegistry::CreateTexture(const std::string &key, const Image *image)
     {
-        if (textures.find(key) != textures.end())
+        if (mTextures.find(key) != mTextures.end())
         {
             spdlog::warn("CreateTexture: 키 '{}' 가 이미 존재 — Find 를 먼저 호출하라", key);
             return nullptr;
@@ -37,37 +37,37 @@ namespace SJH
             spdlog::error("CreateTexture: GPU 텍스처 생성 실패 — key '{}'", key);
             return nullptr;
         }
-        auto insertedIt = textures.emplace(key, std::move(texture)).first;
+        auto insertedIt = mTextures.emplace(key, std::move(texture)).first;
         return insertedIt->second.get();
     }
 
     Texture *ResourceRegistry::FindTexture(const std::string &key)
     {
-        auto it = textures.find(key);
-        return (it != textures.end()) ? it->second.get() : nullptr;
+        auto it = mTextures.find(key);
+        return (it != mTextures.end()) ? it->second.get() : nullptr;
     }
 
     Material *ResourceRegistry::CreateMaterial(const std::string &key)
     {
         // 텍스처 독립 — 빈 Material 만 생성·캐시. 텍스처/프로그램 배선은 호출자 책임.
-        if (materials.find(key) != materials.end())
+        if (mMaterials.find(key) != mMaterials.end())
         {
             spdlog::warn("CreateMaterial: 키 '{}' 가 이미 존재 — Find 를 먼저 호출하라", key);
             return nullptr;
         }
-        auto insertedIt = materials.emplace(key, Material::Create()).first;
+        auto insertedIt = mMaterials.emplace(key, Material::Create()).first;
         return insertedIt->second.get();
     }
 
     Material *ResourceRegistry::FindMaterial(const std::string &key)
     {
-        auto it = materials.find(key);
-        return (it != materials.end()) ? it->second.get() : nullptr;
+        auto it = mMaterials.find(key);
+        return (it != mMaterials.end()) ? it->second.get() : nullptr;
     }
 
     Model *ResourceRegistry::CreateModel(const std::string &key, const std::string &filename)
     {
-        if (models.find(key) != models.end())
+        if (mModels.find(key) != mModels.end())
         {
             spdlog::warn("CreateModel: 키 '{}' 가 이미 존재 — Find 를 먼저 호출하라", key);
             return nullptr;
@@ -78,21 +78,21 @@ namespace SJH
             spdlog::error("CreateModel: 모델 로드 실패 — key '{}', file '{}'", key, filename);
             return nullptr;
         }
-        auto insertedIt = models.emplace(key, std::move(model)).first;
+        auto insertedIt = mModels.emplace(key, std::move(model)).first;
         return insertedIt->second.get();
     }
 
     Model *ResourceRegistry::FindModel(const std::string &key)
     {
-        auto it = models.find(key);
-        return (it != models.end()) ? it->second.get() : nullptr;
+        auto it = mModels.find(key);
+        return (it != mModels.end()) ? it->second.get() : nullptr;
     }
 
     void ResourceRegistry::Clear()
     {
-        textures.clear();
-        materials.clear();
-        models.clear();
+        mTextures.clear();
+        mMaterials.clear();
+        mModels.clear();
     }
 
 }

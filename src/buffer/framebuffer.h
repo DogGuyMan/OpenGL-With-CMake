@@ -20,17 +20,17 @@ namespace SJH
         static void BindToDefault();
         ~Framebuffer();
 
-        const uint32_t Get() const { return m_framebuffer; }
+        const uint32_t Get() const { return mFramebuffer; }
         void Bind() const;
-        const TexturePtr GetColorAttachment() const { return m_colorAttachment; }
+        const TexturePtr GetColorAttachment() const { return mColorAttachment; }
 
     private:
         Framebuffer() {}
         bool InitWithColorAttachment(const TexturePtr colorAttachment);
 
-        uint32_t m_framebuffer{0};
-        uint32_t m_depthStencilBuffer{0};
-        TexturePtr m_colorAttachment;
+        uint32_t mFramebuffer{0};
+        uint32_t mDepthStencilBuffer{0};
+        TexturePtr mColorAttachment;
     };
 }
 #endif // __SJH_FRAMEBUFFER_H__

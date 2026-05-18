@@ -414,6 +414,28 @@ namespace SJH::Diagnostics::GLValidate
     }
 
     // ──────────────────────────────────────────────────────────────────────
+    // Cat G — CheckViewport (GL viewport ↔ 기대 렌더 타깃 크기)
+    // ──────────────────────────────────────────────────────────────────────
+    size_t CheckViewport(int expectedWidth, int expectedHeight, const char* tag)
+    {
+        GLint vp[4] = {0, 0, 0, 0};
+        glGetIntegerv(GL_VIEWPORT, vp);
+
+        // vp = [x, y, width, height]. 크기(2,3)만 비교 — 원점 오프셋은 정상적으로 0이 아닐 수도.
+        if (vp[2] != expectedWidth || vp[3] != expectedHeight)
+        {
+            spdlog::warn("[GLValidate/{}/Cat G] viewport [{}, {}, {}, {}] != expected {}x{} "
+                         "— viewport 미설정 또는 HiDPI 논리/물리 픽셀 불일치 의심",
+                         tag, vp[0], vp[1], vp[2], vp[3],
+                         expectedWidth, expectedHeight);
+            return 1;
+        }
+        spdlog::info("[GLValidate/{}/Cat G] viewport {}x{} matches expected target",
+                     tag, vp[2], vp[3]);
+        return 0;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
     // RunFullSweep — A + B + C + D + F (E는 별도 호출)
     // ──────────────────────────────────────────────────────────────────────
     size_t RunFullSweep(GLuint program, const std::vector<uint32_t>& indices,

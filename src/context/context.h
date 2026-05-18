@@ -143,7 +143,7 @@ namespace SJH
         // === ImGui / 프레임 클리어 ===
         /// @brief @c glClearColor 인자. ImGui ColorEdit3 위젯이 직접 갱신.
         glm::vec4 mClearColor{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
-        FramebufferUPtr m_framebuffer;
+        FramebufferUPtr mFramebuffer;
 
         // === 라이팅 (Multi Light Caster — Directional + Point[N] + Spot) ===
 

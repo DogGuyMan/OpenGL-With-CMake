@@ -1,15 +1,16 @@
 /**
  * @file gl_validate.h
- * @brief Mesh ↔ Shader 정합성 진단 (Cat A-F) — 호출 시점 명시적.
+ * @brief Mesh <-> Shader 정합성 진단 (Cat A-G) — 호출 시점 명시적.
  *
  * @details
  *  ### 책임
  *  - Cat A: CPU측 EBO indices 검증 (GL 무관)
- *  - Cat B: VS active attribute ↔ VAO enabled attribute layout
+ *  - Cat B: VS active attribute <-> VAO enabled attribute layout
  *  - Cat C: program active uniform 의 값이 default-0 인지 (CPU 미송신 의심)
- *  - Cat D: sampler2D uniform ↔ glActiveTexture 바인딩 정합
+ *  - Cat D: sampler2D uniform <-> glActiveTexture 바인딩 정합
  *  - Cat E: glGetError 폴링 + rate limit
  *  - Cat F: shader/program info log 캡처 (driver warning 포함)
+ *  - Cat G: GL viewport <-> 기대 렌더 타깃 크기 정합 (HiDPI seed / 풀스크린 패스 왜곡)
  *
  *  ### 비-책임
  *  - 본 코드 (mesh.cpp / lighting.fs / context.cpp) 비즈니스 로직 수정 X
@@ -18,7 +19,7 @@
  *
  *  ### 설계 근거
  *  - 기존 `Diagnostics::GLDebug` 는 *per-call low-level* 에러 검사 (e.g. glBufferData 직후)
- *  - 본 모듈은 *Mesh ↔ Shader contract* 영역 — 호출 단위가 program/mesh
+ *  - 본 모듈은 *Mesh <-> Shader contract* 영역 — 호출 단위가 program/mesh
  *  - 두 모듈은 *직교*적 — 통합 X, 둘 다 caller가 명시 호출
  *
  * @see [doc/testplan/2026-05-09-gl-validate-design.md](../../doc/testplan/2026-05-09-gl-validate-design.md)
@@ -46,7 +47,7 @@ namespace SJH::Diagnostics::GLValidate
                         size_t vertexCount,
                         const char* tag);
 
-    /// **Cat B** — VS active attribute ↔ 현재 VAO enabled attribute 정합.
+    /// **Cat B** — VS active attribute <-> 현재 VAO enabled attribute 정합.
     /// @pre  program 이 Use() 된 상태, VAO 가 Bind() 된 상태.
     /// @note program ID 만 인자로 — VAO는 *암묵적*으로 *현재 바인딩된 것* 사용.
     size_t CheckAttribLayout(GLuint program, const char* tag);
@@ -67,6 +68,17 @@ namespace SJH::Diagnostics::GLValidate
     /// **Cat F** — attached shader 와 program의 info log 캡처.
     ///        log 가 비어있지 않으면 spdlog::info (또는 "error"/"warning" 키워드 포함 시 warn).
     void DumpShaderInfoLogs(GLuint program, const char* tag);
+
+    /// **Cat G** — 현재 GL viewport 가 기대 렌더 타깃 크기와 일치하는지 검사.
+    ///        HiDPI/Retina 에서 viewport 를 *논리* 크기로 잘못 잡거나, FBO <-> viewport 가
+    ///        어긋나 풀스크린 블릿이 기울거나 확대되는 버그를 탐지.
+    /// @param expectedWidth   기대 너비 — FBO 패스면 FBO 텍스처 너비,
+    ///                        화면 패스/초기 seed 검증이면 실제 프레임버퍼(윈도우) 너비.
+    /// @param expectedHeight  기대 높이.
+    /// @return 0 = 일치, 1 = 불일치.
+    /// @note 순수 GL — caller 가 ground truth(예: glfwGetFramebufferSize 결과)를 인자로 전달.
+    ///       불일치 시에만 warn, 일치 시 info — 매 프레임 호출해도 mismatch 없으면 조용.
+    size_t CheckViewport(int expectedWidth, int expectedHeight, const char* tag);
 
     /// 통합 진단 — A·B·C·D·F 모두 실행. Init 직후 1회 호출 권장.
     /// @return 0 = 모두 clean, > 0 = 위반 합계 (E 제외 — E는 본 함수 호출 시 1회 실행)

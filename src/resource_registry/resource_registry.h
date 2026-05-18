@@ -65,9 +65,9 @@ namespace SJH
         void Clear();
 
     private:
-        std::unordered_map<std::string, TextureUPtr> textures;
-        std::unordered_map<std::string, MaterialUPtr> materials;
-        std::unordered_map<std::string, ModelUPtr> models;
+        std::unordered_map<std::string, TextureUPtr> mTextures;
+        std::unordered_map<std::string, MaterialUPtr> mMaterials;
+        std::unordered_map<std::string, ModelUPtr> mModels;
         ResourceRegistry() = default;
     };
 }

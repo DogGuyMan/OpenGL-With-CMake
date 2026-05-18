@@ -2,6 +2,7 @@
 #include "config.h"
 #include "context/context.h"
 #include "diagnostics/gl_state_log.h"  // Task 5 도구 — 시작 시 GL 상태 1회 덤프 + auto-error 정책
+#include "diagnostics/gl_validate.h"   // Cat G — viewport ↔ 프레임버퍼 정합 회귀 테스트
 #include "input/glfw_input_utils.h"
 #include "object/camera.h"
 #include "program/program.h"
@@ -154,8 +155,19 @@ int main()
     // 나중에 가져올때는 캐스팅을 통해 가져온다.
     glfwSetWindowUserPointer(window, context.get());
 
-    OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
+    // 초기 Reshape 시드는 *실제 프레임버퍼 크기* 로 — Retina/HiDPI 에서
+    // WINDOW_WIDTH/HEIGHT(논리 크기)와 물리 픽셀이 2배 차이나므로 직접 조회한다.
+    // (이전: 논리 상수를 넘겨 viewport·FBO 가 800x600 으로 잡혀 풀스크린 패스가 어긋남)
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    OnFramebufferSizeChange(window, fbWidth, fbHeight);
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
+
+    // [Test/Cat G] 초기 seed 회귀 가드 — Reshape 시드 직후 GL viewport 가
+    //  *실제 프레임버퍼 크기* 와 일치하는지 1회 검증.
+    //  Retina 에서 논리 크기(WINDOW_WIDTH/HEIGHT)로 seed 하던 회귀가 재발하면
+    //  여기서 Cat G warn 이 떠서 즉시 잡힌다.
+    SJH::Diagnostics::GLValidate::CheckViewport(fbWidth, fbHeight, "startup-seed");
     glfwSetKeyCallback(window, OnKeyEvent);
     glfwSetCharCallback(window, OnCharEvent);
     glfwSetCursorPosCallback(window, OnCursorPos);

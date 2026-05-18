@@ -212,6 +212,34 @@ target_link_libraries(test_light PRIVATE
 target_compile_features(test_light PRIVATE cxx_std_17)
 catch_discover_tests(test_light)
 
+#  object 모듈 — Transform 값 객체 (GetLocalMatrix TRS 합성)
+# GL context 불필요. SJH::object 가 glm 노출.
+add_executable(test_transform test_transform.cpp)
+target_link_libraries(test_transform PRIVATE
+    Catch2::Catch2WithMain
+    SJH::object               # "object/transform.h" 접근 + glm
+)
+target_compile_features(test_transform PRIVATE cxx_std_17)
+catch_discover_tests(test_transform)
+
+#  object 모듈 — SceneNode 노드/계층 (GL 불요)
+add_executable(test_scene_node test_scene_node.cpp)
+target_link_libraries(test_scene_node PRIVATE
+    Catch2::Catch2WithMain
+    SJH::object
+)
+target_compile_features(test_scene_node PRIVATE cxx_std_17)
+catch_discover_tests(test_scene_node)
+
+#  object 모듈 — SceneGraph<TId> enum 인덱싱 파사드 (GL 불요)
+add_executable(test_scene_graph test_scene_graph.cpp)
+target_link_libraries(test_scene_graph PRIVATE
+    Catch2::Catch2WithMain
+    SJH::object
+)
+target_compile_features(test_scene_graph PRIVATE cxx_std_17)
+catch_discover_tests(test_scene_graph)
+
 #  Shader source contract — simple.fs 와 C++ Material/Light 클래스의 약속 검증
 # GL context 불필요. CMake 가 SJH_RESOURCES_DIR 절대 경로 주입 (빌드 디렉토리 위치 무관).
 add_executable(test_shader_uniform_contract test_shader_uniform_contract.cpp)
@@ -269,6 +297,9 @@ add_custom_target(tests DEPENDS
     test_gl_state_snapshot  # Task 6
     test_material           # POD value class regression
     test_light              # POD value class regression
+    test_transform          # Transform 값 객체 (GetLocalMatrix)
+    test_scene_node         # SceneNode 노드/계층
+    test_scene_graph        # SceneGraph enum 인덱싱
     test_shader_uniform_contract  # lighting.fs ↔ Material/Light caster contract
     test_gl_validate        # GLValidate 6 카테고리 (Cat A-F)
     test_program_uniforms

@@ -169,8 +169,9 @@ digraph ClassDependencyGraph {
 
   // 씬 + 라이팅/머티리얼/모델 (Phase 12+)
   subgraph cluster_scene {
-    label="Scene + Light/Material/Model"; style=dashed; color="#aaaaaa";
+    label="Scene + Light/Material/Model + SceneGraph"; style=dashed; color="#aaaaaa";
     Camera; Light; DirLight; PointLight; SpotLight; Material; Model; Context;
+    Transform; SceneNode; SceneGraph;
   }
 
   // 소유 관계 (실선) — 멤버로 보유, 수명 결합
@@ -182,6 +183,7 @@ digraph ClassDependencyGraph {
   Context -> SpotLight        [label="value (mSpotLight)"];
   Context -> Mesh             [label="MeshUPtr ×2\n(mBox + mPlane)"];
   Context -> Framebuffer      [label="FramebufferUPtr"];
+  Context -> SceneGraph       [label="value (mScene)"];
 
   Mesh -> VertexLayout        [label="UPtr"];
   Mesh -> Buffer              [label="BufferPtr ×2\n(VBO/EBO)"];
@@ -196,12 +198,16 @@ digraph ClassDependencyGraph {
 
   Framebuffer -> Texture [label="TexturePtr\n(색상 어태치먼트)"];
 
+  SceneGraph -> SceneNode  [label="array<SceneNode, Count>"];
+  SceneNode  -> Transform  [label="value (mLocal)"];
+
   // 입력 의존 (긴 점선) — 멤버 X, 팩토리 인자 / 이름 키 해석 / 비소유 관찰자
   edge [style=dashed, color="#5b6b80"];
   Program  -> Shader   [label="vector<ShaderPtr>\n(Create 인자)"];
   Texture  -> Image    [label="Image*\n(CreateTexture 인자)"];
   Material -> Texture  [label="const Texture*\n관찰자 (비소유)"];
   Material -> Program  [label="const Program*\n관찰자 (비소유)"];
+  SceneNode -> SceneNode [label="SceneNode* 부모 / vector<SceneNode*> 자식\n(비소유 관찰자)"];
 
   // 정적 진단 사용 (짧은 점선) — 인스턴스 X
   edge [style=dotted, color="#9aa6b8", fontcolor="#9aa6b8"];

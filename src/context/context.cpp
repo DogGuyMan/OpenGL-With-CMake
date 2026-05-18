@@ -280,15 +280,17 @@ namespace SJH
                 mPointLights[1].Diffuse,
                 mSpotLight.Diffuse,
             };
+            const SceneNodeId markerIds[3] = {
+                SceneNodeId::PointMarker0, SceneNodeId::PointMarker1, SceneNodeId::SpotMarker};
             for (int i = 0; i < 3; ++i)
             {
                 if (mFlashLightMode && i >= 2)
                     continue;
-                auto markerTransform =
-                    glm::translate(glm::mat4(1.0f), markerPositions[i]) *
-                    glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+                // 동적 노드 — 광원 위치를 매 프레임 로컬 Translate 로 갱신.
+                mScene.At(markerIds[i]).SetTranslate(markerPositions[i]);
                 Uniforms::SetVec4(*mSimpleProgram.get(), Const::UNI_BASE_COLOR, glm::vec4(markerColors[i], 1.0f));
-                Uniforms::SetMat4(*mSimpleProgram.get(), Const::UNI_TRANSFORM_MAT, projMat * viewMat * markerTransform);
+                Uniforms::SetMat4(*mSimpleProgram.get(), Const::UNI_TRANSFORM_MAT,
+                                  projMat * viewMat * mScene.World(markerIds[i]));
                 mBox->Draw();
             }
         }
@@ -332,9 +334,7 @@ namespace SJH
             }
 
             {
-                auto modelTransform =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)) *
-                    glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
+                auto modelTransform = mScene.World(SceneNodeId::Plane);
                 auto transform = projMat * viewMat * modelTransform;
                 Uniforms::SetMat4(*mProgram, Const::UNI_TRANSFORM_MAT, transform);
                 Uniforms::SetMat4(*mProgram, Const::UNI_MODEL_TRANSFORM_MAT, modelTransform);
@@ -344,10 +344,7 @@ namespace SJH
             }
 
             {
-                auto modelTransform =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.75f, -4.0f)) *
-                    glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
-                    glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+                auto modelTransform = mScene.World(SceneNodeId::Box1);
                 auto transform = projMat * viewMat * modelTransform;
                 Uniforms::SetMat4(*mProgram, Const::UNI_TRANSFORM_MAT, transform);
                 Uniforms::SetMat4(*mProgram, Const::UNI_MODEL_TRANSFORM_MAT, modelTransform);
@@ -364,10 +361,7 @@ namespace SJH
 
             // 3. 본체 렌더 (lighting program)
             {
-                auto modelTransform =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
-                    glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
-                    glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+                auto modelTransform = mScene.World(SceneNodeId::Box2);
                 auto transform = projMat * viewMat * modelTransform;
                 Uniforms::SetMat4(*mProgram, Const::UNI_TRANSFORM_MAT, transform);
                 Uniforms::SetMat4(*mProgram, Const::UNI_MODEL_TRANSFORM_MAT, modelTransform);
@@ -386,13 +380,9 @@ namespace SJH
             // 5. 키운 박스 + outline 셰이더 렌더
             mSimpleProgram->Use();
             {
-                auto modelTransform =
-                    glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
-                    glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
-                    glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
-                auto transform = projMat * viewMat * modelTransform;
+                auto transform = projMat * viewMat * mScene.World(SceneNodeId::Outline);
                 Uniforms::SetVec4(*mSimpleProgram.get(), Const::UNI_BASE_COLOR, glm::vec4(1.0f, 1.0f, 0.5f, 1.0f));
-                Uniforms::SetMat4(*mSimpleProgram.get(), Const::UNI_TRANSFORM_MAT, transform * glm::scale(glm::mat4(1.0f), glm::vec3(1.05f, 1.05f, 1.05f)));
+                Uniforms::SetMat4(*mSimpleProgram.get(), Const::UNI_TRANSFORM_MAT, transform);
 
                 mBox->Draw();
             }
@@ -419,20 +409,17 @@ namespace SJH
                 Uniforms::SetInt(*mTextureProgram, Const::UNI_TEX, 0);
             }
 
-            auto modelTransform =
-                glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 4.0f));
+            auto modelTransform = mScene.World(SceneNodeId::Window0);
             auto transform = projMat * viewMat * modelTransform;
             Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, transform);
             mPlane->Draw();
 
-            modelTransform =
-                glm::translate(glm::mat4(1.0f), glm::vec3(0.2f, 0.5f, 5.0f));
+            modelTransform = mScene.World(SceneNodeId::Window1);
             transform = projMat * viewMat * modelTransform;
             Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, transform);
             mPlane->Draw();
 
-            modelTransform =
-                glm::translate(glm::mat4(1.0f), glm::vec3(0.4f, 0.5f, 6.0f));
+            modelTransform = mScene.World(SceneNodeId::Window2);
             transform = projMat * viewMat * modelTransform;
             Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, transform);
             mPlane->Draw();
@@ -642,6 +629,43 @@ namespace SJH
         Diagnostics::GLValidate::CheckAttribLayout(mTextureProgram->GetProgramAddr(), "Context::Init");
         Diagnostics::GLValidate::CheckSamplerBindings(mTextureProgram->GetProgramAddr(), "Context::Init");
         Diagnostics::GLValidate::DumpShaderInfoLogs(mTextureProgram->GetProgramAddr(), "Context::Init");
+
+        // === Scene Graph 구성 ===
+        // 정적 노드의 로컬 변환 + 계층. 동적 노드(마커)는 Render() 가 매 프레임 갱신.
+        mScene.SetLocal(SceneNodeId::Plane,
+                        Transform{.Translate = {0.0f, -0.5f, 0.0f},
+                                  .Scale = {10.0f, 1.0f, 10.0f}});
+        mScene.SetLocal(SceneNodeId::Box1,
+                        Transform{.Translate = {-1.0f, 0.75f, -4.0f},
+                                  .EulerRot = {0.0f, 30.0f, 0.0f},
+                                  .Scale = {1.5f, 1.5f, 1.5f}});
+        mScene.SetLocal(SceneNodeId::Box2,
+                        Transform{.Translate = {0.0f, 0.75f, 2.0f},
+                                  .EulerRot = {0.0f, 20.0f, 0.0f},
+                                  .Scale = {1.5f, 1.5f, 1.5f}});
+        // Outline 은 Box2 자식 — World(Outline) = World(Box2) * scale(1.05).
+        mScene.SetLocal(SceneNodeId::Outline,
+                        Transform{.Scale = {1.05f, 1.05f, 1.05f}});
+        // Windows 그룹은 identity, 창들은 절대 좌표를 로컬로 — 그룹 이동 시 함께 이동.
+        mScene.SetLocal(SceneNodeId::Window0, Transform{.Translate = {0.0f, 0.5f, 4.0f}});
+        mScene.SetLocal(SceneNodeId::Window1, Transform{.Translate = {0.2f, 0.5f, 5.0f}});
+        mScene.SetLocal(SceneNodeId::Window2, Transform{.Translate = {0.4f, 0.5f, 6.0f}});
+        // 마커는 스케일만 고정 — 위치는 Render() 가 광원 위치로 매 프레임 갱신.
+        mScene.SetLocal(SceneNodeId::PointMarker0, Transform{.Scale = {0.1f, 0.1f, 0.1f}});
+        mScene.SetLocal(SceneNodeId::PointMarker1, Transform{.Scale = {0.1f, 0.1f, 0.1f}});
+        mScene.SetLocal(SceneNodeId::SpotMarker,   Transform{.Scale = {0.1f, 0.1f, 0.1f}});
+
+        mScene.Attach(SceneNodeId::Plane,        SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::Box1,         SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::Box2,         SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::Outline,      SceneNodeId::Box2);
+        mScene.Attach(SceneNodeId::Windows,      SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::Window0,      SceneNodeId::Windows);
+        mScene.Attach(SceneNodeId::Window1,      SceneNodeId::Windows);
+        mScene.Attach(SceneNodeId::Window2,      SceneNodeId::Windows);
+        mScene.Attach(SceneNodeId::PointMarker0, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::PointMarker1, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::SpotMarker,   SceneNodeId::Root);
 
         return true;
     }

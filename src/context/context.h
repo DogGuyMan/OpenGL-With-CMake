@@ -10,6 +10,8 @@
 #include "object/light.h"
 #include "object/mesh.h"
 #include "object/model.h"
+#include "context/scene_node_id.h"
+#include "object/scene_graph.h"
 #include "program/program.h"
 #include "resource_registry/resource_registry.h"
 #include "shader/shader.h"
@@ -145,6 +147,9 @@ namespace SJH
 
         /// @brief 카메라 상태(POD-like). View/Projection 행렬 산출 + 입력 메서드들이 직접 갱신.
         Camera mCamera;
+
+        /// @brief 씬 그래프 — 드로우 대상의 로컬 변환 + 계층. Render 가 World(id) 로 월드 행렬 산출.
+        SceneGraph<SceneNodeId> mScene;
 
         // === ImGui / 프레임 클리어 ===
         /// @brief @c glClearColor 인자. ImGui ColorEdit3 위젯이 직접 갱신.

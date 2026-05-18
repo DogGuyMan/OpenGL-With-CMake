@@ -80,7 +80,7 @@ namespace SJH
      * @brief 점 광원 — 위치 + 거리 감쇠 + Phong 3항.
      * @details
      *  거리 감쇠(attenuation)를 적용하는 점 광원. 셰이더 구조체 `PointLight` 와 1:1 매핑.
-     *  감쇠 계수(Kc, Kl, Kq)는 @ref GetAttenuationCoeff 가 도달 거리(@ref mDistance)에서 자동 도출.
+     *  감쇠 계수(Kc, Kl, Kq)는 @ref GetAttenuationCoeff 가 도달 거리(@c Distance)에서 자동 도출.
      * @note 배열로 다수 인스턴스화 가능 — 셰이더 `pointLights[i].*` 의 `i` 와 배열 인덱스를 동기.
      */
     class PointLight

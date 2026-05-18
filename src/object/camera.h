@@ -12,10 +12,10 @@ namespace SJH
      *
      * @details
      *  ### 책임
-     *  - 카메라 위치/방향 상태 보관 (@c mPos / @c mTarget / @c mCamUp)
-     *  - Yaw/Pitch 회전 각도 보관 (@c mEulerYaw / @c mEulerPitch — 단위: degree)
-     *  - 원근 투영 파라미터 보관 (@c mFov / @c mAspect / @c mNearPlane / @c mFarPlane)
-     *  - 입력 활성 플래그 (@c mIsCamControl)
+     *  - 카메라 위치/방향 상태 보관 (@c Pos / @c Target / @c CamUp)
+     *  - Yaw/Pitch 회전 각도 보관 (@c EulerYaw / @c EulerPitch — 단위: degree)
+     *  - 원근 투영 파라미터 보관 (@c Fov / @c Aspect / @c NearPlane / @c FarPlane)
+     *  - 입력 활성 플래그 (@c IsCamControl)
      *  - View / Projection 행렬 합성 (@ref GetForwardViewMatrix / @ref GetLookAtViewMatrix / @ref GetProjMatrix)
      *
      *  ### 비-책임
@@ -27,7 +27,7 @@ namespace SJH
      *  - 초기 위치 @c (0,0,3), 초기 front @c (0,0,-1) → 원점을 바라봄.
      *
      *  ### 명명 컨벤션
-     *  - 멤버는 @c m-prefix camelCase — 코드베이스 다른 클래스 (Program, Texture 등) 와 통일.
+     *  - 멤버는 PascalCase (m-prefix 없음) — 포인터/레퍼런스 구분 없이 직접 접근 의도.
      *  - 메서드는 PascalCase.
      */
     class Camera
@@ -82,7 +82,7 @@ namespace SJH
         }
 
         /**
-         * @brief look-at 모드 view 행렬 — @c mTarget 응시.
+         * @brief look-at 모드 view 행렬 — @c Target 응시.
          * @details forward 모드와 동시 사용 금지 (모드 추적 안 함 — 호출자 책임).
          *          *추후 mode enum 도입 예정*.
          */
@@ -92,7 +92,7 @@ namespace SJH
         }
 
         /**
-         * @brief forward 모드 view 행렬 — @c mEulerYaw / @c mEulerPitch 기반 front 벡터 응시.
+         * @brief forward 모드 view 행렬 — @c EulerYaw / @c EulerPitch 기반 front 벡터 응시.
          * @note  매 프레임 @c Context::Render 에서 호출.
          */
         glm::mat4 GetForwardViewMatrix() const
@@ -101,9 +101,9 @@ namespace SJH
         }
 
         /**
-         * @brief Perspective Projection 행렬 산출 — 멤버 @c mAspect 사용.
+         * @brief Perspective Projection 행렬 산출 — 멤버 @c Aspect 사용.
          * @return 카메라 공간을 클립 공간으로 투영하는 4x4 행렬.
-         * @pre @c mAspect 가 유효 — @ref SetAspect 가 호출되어 있어야 함.
+         * @pre @c Aspect 가 유효 — @ref SetAspect 가 호출되어 있어야 함.
          */
         glm::mat4 GetProjMatrix() const
         {

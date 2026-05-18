@@ -29,6 +29,13 @@ namespace SJH
     class Texture
     {
     public:
+        /**
+         * @brief 빈 GL 텍스처를 지정 크기와 포맷으로 생성 — FBO 색상 어태치먼트 등 GPU-only 텍스처.
+         * @param width   텍스처 너비 (픽셀).
+         * @param height  텍스처 높이 (픽셀).
+         * @param format  내부 포맷 (@c GL_RGBA, @c GL_RGB, @c GL_DEPTH24_STENCIL8 등).
+         * @return 생성된 텍스처 (@c unique_ptr). 실패 시 @c nullptr.
+         */
         static TextureUPtr Create(int width, int height, uint32_t format);
         /**
          * @brief 디코드된 Image 로부터 GL 텍스처를 생성하고 GPU 에 업로드.
@@ -47,9 +54,9 @@ namespace SJH
         Texture(Texture &&) noexcept; ///< @c noexcept 이동 — STL 컨테이너 재배치 안전.
         Texture &operator=(Texture &&) noexcept;
 
-        int GetWidth() const { return mWidth; }
-        int GetHeight() const { return mHeight; }
-        uint32_t GetFormat() const { return mFormat; }
+        int GetWidth() const { return mWidth; }    ///< @brief 텍스처 너비 (픽셀).
+        int GetHeight() const { return mHeight; }  ///< @brief 텍스처 높이 (픽셀).
+        uint32_t GetFormat() const { return mFormat; } ///< @brief GL 내부 포맷 (@c GL_RGBA 등).
         /// @brief GL 텍스처 핸들 — @c glBindTexture / @c glUniform1i 인자.
         GLuint GetTextureID() const { return mTextureID; }
         /// @brief @c GL_TEXTURE_2D 타깃에 본 텍스처를 바인딩.
@@ -63,11 +70,11 @@ namespace SJH
         Texture() = default;
         void CreateTexture();                         ///< @c glGenTextures + 기본 필터/wrap 설정.
         void SetTextureFromImage(const Image *image); ///< @c glTexImage2D 로 GPU 업로드.
-        void SetTextureFormat(int width, int height, uint32_t format);
-        GLuint mTextureID = 0; ///< GL 텍스처 핸들 — 0 은 invalid.
-        int mWidth{0};
-        int mHeight{0};
-        uint32_t mFormat{GL_RGBA};
+        void SetTextureFormat(int width, int height, uint32_t format); ///< @c glTexImage2D 로 빈 GPU 메모리 할당.
+        GLuint mTextureID = 0;     ///< GL 텍스처 핸들 — 0 은 invalid.
+        int mWidth{0};             ///< 텍스처 너비 (픽셀). @ref Create / @ref SetTextureFromImage 가 설정.
+        int mHeight{0};            ///< 텍스처 높이 (픽셀).
+        uint32_t mFormat{GL_RGBA}; ///< GL 내부 포맷. @ref Create 가 설정; @ref CreateTexture 는 채널 수로 자동 선택.
     };
 
 }

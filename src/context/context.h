@@ -61,7 +61,7 @@ namespace SJH
          *  - @c W / @c S — front 방향 +/-
          *  - @c A / @c D — right 방향 +/- (front × up 외적)
          *  - @c Q / @c E — up 방향 +/- (right × front 외적)
-         *  @c mCamera.mIsCamControl 이 @c true 일 때만 동작.
+         *  @c mCamera.IsCamControl 이 @c true 일 때만 동작.
          * @note 호출자(@c app/main.cpp 메인 루프) 가 매 프레임 직접 호출.
          */
         void ProcessInput(GLFWwindow *window);
@@ -81,7 +81,7 @@ namespace SJH
          *  - yaw   ← @c -deltaX * 0.1
          *  - pitch ← @c -deltaY * 0.1
          *  pitch 는 @c [-89, 89] 로 클램프 (gimbal lock 회피), yaw 는 @c [0, 360) 으로 wrap.
-         *  @c mCamera.mIsCamControl 이 @c true 일 때만 갱신.
+         *  @c mCamera.IsCamControl 이 @c true 일 때만 갱신.
          * @note GLFW @c cursor_pos_callback 에서 위임받는 진입점.
          */
         void MouseMove(double x, double y);
@@ -109,18 +109,22 @@ namespace SJH
         /// @brief 단순 셰이더 프로그램 (`simple.vs/fs`). 광원 큐브 등 *라이팅 무관* 객체 그릴 때 사용 — color uniform 직접 출력.
         ProgramUPtr mSimpleProgram;
 
+        /// @brief 텍스처 패스 셰이더 프로그램 (`texture.vs/fs`). 블렌딩/투명 오브젝트 드로우에 사용.
         ProgramUPtr mTextureProgram;
 
+        /// @brief 포스트프로세스 셰이더 프로그램 (`postprocess/*.fs`). FBO 텍스처를 화면 quad 에 적용.
         ProgramUPtr mPostProgram;
 
         /// @brief 박스(큐브) 메시 — 기본 씬 오브젝트. @c Mesh::CreateBox() 로 Init 에서 생성.
         MeshUPtr mBox;
 
+        /// @brief 평면(quad) 메시 — 바닥면 + 포스트프로세스 화면 quad 겸용.
         MeshUPtr mPlane;
 
         /// @brief 큐브 회전 애니메이션 활성. ImGui Checkbox 토글 — false 시 모든 큐브가 정지.
         bool mAnimation{true};
 
+        /// @brief 스포트라이트를 카메라 위치에 고정하는 손전등 모드. true 이면 SpotLight 가 카메라를 추종.
         bool mFlashLightMode{true};
 
         /// @brief glDepthFunc 비교 연산자 선택 인덱스 — ImGui Combo 가 갱신.
@@ -145,6 +149,7 @@ namespace SJH
         // === ImGui / 프레임 클리어 ===
         /// @brief @c glClearColor 인자. ImGui ColorEdit3 위젯이 직접 갱신.
         glm::vec4 mClearColor{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
+        /// @brief 씬을 오프스크린 렌더링할 FBO. Bind() 후 렌더 → mPostProgram 으로 화면 quad 에 블릿.
         FramebufferUPtr mFramebuffer;
 
         // === 라이팅 (Multi Light Caster — Directional + Point[N] + Spot) ===
@@ -167,6 +172,7 @@ namespace SJH
         /// @brief SpotLight 사용 여부.
         bool mSpotLightEnabled{true};
 
+        /// @brief 포스트프로세스 감마 값 — 셰이더 uniform `gamma`. ImGui SliderFloat 이 갱신. 기본 1.0(보정 없음).
         float mGamma {1.0f};
     };
 }

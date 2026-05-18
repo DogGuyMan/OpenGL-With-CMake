@@ -5,8 +5,8 @@
  * @details
  *  ### 책임
  *  - 텍스처 *논리 이름* + *해석된 비소유 관찰자*(@c const @c Texture*) 보관.
- *  - uniform 전송 대상 셰이더 프로그램 참조 보관 (@ref SetProgram 으로 주입).
- *  - @ref Apply — 보유 프로그램에 sampler 슬롯/shininess uniform + 텍스처 바인딩 일괄 적용.
+ *  - uniform 전송 대상 셰이더 프로그램 참조 보관 (@c SetProgram 으로 주입).
+ *  - @c Apply — 보유 프로그램에 sampler 슬롯/shininess uniform + 텍스처 바인딩 일괄 적용.
  *  - Phong shininess 지수 (specular highlight 집중도).
  *
  *  ### 모듈 위치 — 왜 `shader` 가 아니라 독립 `material` 모듈인가
@@ -17,7 +17,7 @@
  *  ### 캡슐화 — 왜 getter/setter (직접 대입 차단)
  *  - 텍스처 *이름* 과 *해석된 관찰자* 는 *짝* — 이름을 함부로 바꾸면 관찰자가 stale.
  *    → 이름 setter 가 *해석 캐시 무효화*(@c nullptr).
- *  - shininess 는 유효 범위 권장 @c [2, 256] — @ref SetShininess 가 clamp.
+ *  - shininess 는 유효 범위 권장 @c [2, 256] — @c SetShininess 가 clamp.
  *
  *  ### 비-책임
  *  - ❌ 텍스처 *데이터 보유* — @c SJH::ResourceRegistry / @c Model 의 책임 (Material 은 관찰자만).

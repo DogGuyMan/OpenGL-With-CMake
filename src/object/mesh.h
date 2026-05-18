@@ -58,6 +58,7 @@ namespace SJH
         /// @brief 기본 박스(큐브) 메시 생성 — 6면 × 2삼각형, 정점 24개, 법선/UV 포함.
         static MeshUPtr CreateBox();
 
+        /// @brief 평면(quad) 메시 생성 — XZ 평면 1×1 사각형. 바닥면 + 포스트프로세스 화면 quad 겸용.
         static MeshUPtr CreatePlane();
 
         /// @brief 현재 메시의 VAO 관찰자. Mesh 보다 오래 보관 금지 — 소유자는 @c mVertexLayout.
@@ -69,6 +70,7 @@ namespace SJH
         BufferPtr GetVertexBuffer() const { return mVertexBuffer; }
         /// @brief EBO 공유 포인터 — 인덱스 데이터 버퍼.
         BufferPtr GetIndexBuffer() const { return mIndexBuffer; }
+        /// @brief 드로우 토폴로지 반환 (@c GL_TRIANGLES / @c GL_LINES 등).
         GLuint GetPrimitiveType() const { return mPrimitiveType; }
 
         /// @brief VAO 바인딩 후 @c glDrawElements 호출. @c mPrimitiveType 에 따라 토폴로지 결정.

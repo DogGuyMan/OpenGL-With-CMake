@@ -53,6 +53,18 @@
 | **17** | `Uniforms` 네임스페이스 분리 + 광원 helper | program | ✅ 완료 | `program_uniforms.h` 신규 파일로 분리 — 작성 시점부터 `@file` 헤더 + 전 함수 Doxygen 완전. `SetDirLight`/`SetPointLight`/`SetSpotLight` 광원 helper 포함. |
 | **18** | `Model` 클래스 신설 (Assimp 로드) | object, resource | ✅ 완료 | `model.h` 신규 — `RenderUnit` struct + `Model` 클래스 레벨 docstring 추가. `Load`/`GetMeshCount`/`GetMesh`/`Draw` 메서드 `@brief` 추가. `context.h` 의 `mBox`/`mModel` docstring 추가. 클래스 의존 그래프에 `Model` 노드 + `Model→Mesh`/`Model→Material`/`Model→Texture` 엣지 추가. |
 | **19** | `ResourceRegistry` 리팩토링 (구 `ResourceManagement` 교체) | resource | ✅ 완료 | `src/resource_registry/` 신규 모듈 — `resource_registry.h`/`image.h`/`texture.h` 작성 시점부터 전체 Doxygen 완전. 클래스 의존 그래프에서 `ResourceManagement` → `ResourceRegistry` 대체. `DirLight`/`PointLight`/`SpotLight` 노드를 cluster_scene 에 추가. Context→VertexLayout/Buffer 직접 소유 엣지 제거 (Mesh 로 이전). |
+| **20** | 사용자 Doxygen 정비 커밋 (205bbc3) | 전반 | ✅ 완료 | `light.h` PascalCase 컨벤션 대응 + 멤버명 갱신. `mesh.h`/`model.h`/`transform.h` Doxygen 추가. `camera.h` 컨벤션 + docstring 추가. `context.h` mProgram label 보강. `00-mainpage.md` Graphviz 갱신. |
+| **21** | Material.Apply + Model Material 로드 + SpotLight 손전등 | material, object | ✅ 완료 | `material.h`: `SetProgram()`/`Apply()` + `mProgram` 멤버 Doxygen 추가. `model.h`: `GetMaterialCount()`/`GetMaterial()` docstring 추가. `mesh.h`: `CreatePlane()` / `GetPrimitiveType()` @brief 추가. |
+| **22** | Material 모듈 이동 (`shader/` → `material/`) | material | ✅ 완료 | `src/material/material.h` 신설 — 모듈 위치 변경 이유(순환 의존 회피) docstring 에 기록. `resource_registry.h`: `CreateMaterial` 시그니처 변경 반영. |
+| **23** | 텍스처 로딩 버그 + Camera/Light PascalCase 컨벤션 | object | ✅ 완료 | `camera.h` 멤버명 m-prefix 제거 (PascalCase) — docstring 의 stale `m*` 참조 전면 수정. `light.h` 멤버명 동일 컨벤션 갱신. `context.h`: `mTextureProgram`/`mPostProgram`/`mPlane`/`mFlashLightMode`/`mDepthFuncIndex` 신규 멤버 @brief 추가. |
+| **24** | Material 경로 의존 제거 | material, resource | ✅ 완료 | 의존 방향 정리 — 코드 변경 위주, 헤더 Doxygen 영향 없음. |
+| **25** | Depth buffer / Depth 시각화 / 원복 | context | ✅ 완료 | `context.cpp` 전용 변경, 헤더 변경 없음. |
+| **26** | Depth test (GLState 정책 문서화) | context, common | ✅ 완료 | `constants.h` 신규 — `@file` 헤더 + 전역 상수 그룹 작성 시점부터 완전. `camera.h` 컨벤션 갱신 추가 반영. |
+| **27** | 스텐실 테스트 | context | ✅ 완료 | `context.h` 대규모 재작성 — 신규 멤버 @brief 추가 완료. |
+| **28** | 블렌딩 | context, mesh | ✅ 완료 | `mesh.h` `CreatePlane()` docstring 추가. 나머지 context.cpp 변경 위주. |
+| **29** | 프레임버퍼 | buffer, resource, texture | ✅ 완료 | `framebuffer.h` 신규 — `@file` 헤더 + `Framebuffer` 클래스 전체 Doxygen 신규 작성. `texture.h`: `Create(width,height,format)` + `GetWidth/GetHeight/GetFormat` + `mWidth/mHeight/mFormat` Doxygen 추가. 클래스 의존 그래프에 `Framebuffer` 노드 추가 (cluster_gl). |
+| **30** | 컨벤션 + Viewport 정합 진단 | diagnostics, framebuffer | ✅ 완료 | `gl_validate.h` Cat G (`CheckViewport`) 신규 함수 — 작성 시점부터 완전. `framebuffer.h` 컨벤션 적용. `resource_registry.h` 인터페이스 갱신 반영. |
+| **31** | 포스트프로세스 셰이더 | context, constants | ✅ 완료 | `context.h`: `mPostProgram`/`mGamma` docstring 추가. `constants.h` 포스트프로세스 경로/uniform 상수 추가 — 파일 자체 이미 완전. 클래스 의존 그래프: Context→Material/Model 직접 소유 엣지 제거, Context→Framebuffer 추가, `Material→Program` 비소유 관찰자 엣지 추가. |
 
 ## 4. 비활성 모듈 처리 정책 (Phase 5 시점) — 현재는 *역사적 항목*
 

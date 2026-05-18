@@ -8,6 +8,16 @@
 
 namespace SJH
 {
+
+    TextureUPtr Texture::Create(int width, int height, uint32_t format)
+    {
+        auto texture = TextureUPtr(new Texture());
+        texture->CreateTexture();
+        texture->SetTextureFormat(width, height, format);
+        texture->SetFilter(GL_LINEAR, GL_LINEAR);
+        return std::move(texture);
+    }
+
     /**
      * @note **Internal Format vs Format** — @c glTexImage2D 의 두 포맷 인자는 의미가 다르다.
      *  - @c internalformat : GPU 메모리에 텍스처를 *어떤 채널/비트 정밀도로 저장*할지 (저장 정밀도).
@@ -90,10 +100,26 @@ namespace SJH
             break;
         }
 
+        mWidth = image->GetWidth();
+        mHeight = image->GetHeight();
+        mFormat = format;
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                     image->GetWidth(), image->GetHeight(), 0,
+                     mWidth, mHeight, 0,
                      format, GL_UNSIGNED_BYTE,
                      image->GetDataPtr());
         glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    void Texture::SetTextureFormat(int width, int height, uint32_t format)
+    {
+        mWidth = width;
+        mHeight = height;
+        mFormat = format;
+
+        glTexImage2D(GL_TEXTURE_2D, 0, mFormat,
+                     mWidth, mHeight, 0,
+                     mFormat, GL_UNSIGNED_BYTE,
+                     nullptr);
     }
 }

@@ -2,8 +2,8 @@
 #define __SJH_TEXTURE_H__
 
 #include "common/common.h"
-#include <glad/glad.h>
 #include "image.h"
+#include <glad/glad.h>
 #include <memory>
 
 /**
@@ -29,6 +29,7 @@ namespace SJH
     class Texture
     {
     public:
+        static TextureUPtr Create(int width, int height, uint32_t format);
         /**
          * @brief 디코드된 Image 로부터 GL 텍스처를 생성하고 GPU 에 업로드.
          * @param image  CPU 측 픽셀 데이터 컨테이너 (소유권 X — 호출 동안만 유효하면 됨).
@@ -41,11 +42,14 @@ namespace SJH
         /// @brief @c glDeleteTextures 로 GL 핸들 해제.
         ~Texture();
 
-        Texture(const Texture &) = delete;             ///< GL 핸들 단일 소유 — 복사 금지.
+        Texture(const Texture &) = delete; ///< GL 핸들 단일 소유 — 복사 금지.
         Texture &operator=(const Texture &) = delete;
-        Texture(Texture &&) noexcept;                  ///< @c noexcept 이동 — STL 컨테이너 재배치 안전.
+        Texture(Texture &&) noexcept; ///< @c noexcept 이동 — STL 컨테이너 재배치 안전.
         Texture &operator=(Texture &&) noexcept;
 
+        int GetWidth() const { return mWidth; }
+        int GetHeight() const { return mHeight; }
+        uint32_t GetFormat() const { return mFormat; }
         /// @brief GL 텍스처 핸들 — @c glBindTexture / @c glUniform1i 인자.
         GLuint GetTextureID() const { return mTextureID; }
         /// @brief @c GL_TEXTURE_2D 타깃에 본 텍스처를 바인딩.
@@ -57,9 +61,13 @@ namespace SJH
 
     private:
         Texture() = default;
-        void CreateTexture();                          ///< @c glGenTextures + 기본 필터/wrap 설정.
-        void SetTextureFromImage(const Image *image);  ///< @c glTexImage2D 로 GPU 업로드.
-        GLuint mTextureID = 0;                         ///< GL 텍스처 핸들 — 0 은 invalid.
+        void CreateTexture();                         ///< @c glGenTextures + 기본 필터/wrap 설정.
+        void SetTextureFromImage(const Image *image); ///< @c glTexImage2D 로 GPU 업로드.
+        void SetTextureFormat(int width, int height, uint32_t format);
+        GLuint mTextureID = 0; ///< GL 텍스처 핸들 — 0 은 invalid.
+        int mWidth{0};
+        int mHeight{0};
+        uint32_t mFormat{GL_RGBA};
     };
 
 }

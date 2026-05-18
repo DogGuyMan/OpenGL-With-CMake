@@ -22,6 +22,7 @@
 #include "program/program_uniforms.h"
 #include "diagnostics/uniform_diagnostics.h"
 #include "object/light.h"   // DirLight/PointLight/SpotLight + GetAttenuationCoeff (헤더는 forward decl 만)
+#include "common/constants.h"
 
 #include <cmath>            // cosf — SpotLight degree->cosine 변환
 #include <string>
@@ -187,33 +188,33 @@ namespace SJH::Uniforms
     void SetDirLight(const Program &prog, const char *prefix, const DirLight &light)
     {
         const std::string base = prefix;
-        SetVec3(prog, (base + ".direction").c_str(), light.Direction);
-        SetVec3(prog, (base + ".ambient").c_str(),   light.Ambient);
-        SetVec3(prog, (base + ".diffuse").c_str(),   light.Diffuse);
-        SetVec3(prog, (base + ".specular").c_str(),  light.Specular);
+        SetVec3(prog, (base + Const::SFX_DIRECTION).c_str(), light.Direction);
+        SetVec3(prog, (base + Const::SFX_AMBIENT).c_str(),   light.Ambient);
+        SetVec3(prog, (base + Const::SFX_DIFFUSE).c_str(),   light.Diffuse);
+        SetVec3(prog, (base + Const::SFX_SPECULAR).c_str(),  light.Specular);
     }
 
     void SetPointLight(const Program &prog, const char *prefix, const PointLight &light)
     {
         const std::string base = prefix;
-        SetVec3(prog, (base + ".position").c_str(),    light.Pos);
-        SetVec3(prog, (base + ".attenuation").c_str(), GetAttenuationCoeff(light.Distance));
-        SetVec3(prog, (base + ".ambient").c_str(),     light.Ambient);
-        SetVec3(prog, (base + ".diffuse").c_str(),     light.Diffuse);
-        SetVec3(prog, (base + ".specular").c_str(),    light.Specular);
+        SetVec3(prog, (base + Const::SFX_POSITION).c_str(),    light.Pos);
+        SetVec3(prog, (base + Const::SFX_ATTENUATION).c_str(), GetAttenuationCoeff(light.Distance));
+        SetVec3(prog, (base + Const::SFX_AMBIENT).c_str(),     light.Ambient);
+        SetVec3(prog, (base + Const::SFX_DIFFUSE).c_str(),     light.Diffuse);
+        SetVec3(prog, (base + Const::SFX_SPECULAR).c_str(),    light.Specular);
     }
 
     void SetSpotLight(const Program &prog, const char *prefix, const SpotLight &light)
     {
         const std::string base = prefix;
-        SetVec3 (prog, (base + ".position").c_str(),    light.Pos);
-        SetVec3 (prog, (base + ".direction").c_str(),   light.Direction);
+        SetVec3 (prog, (base + Const::SFX_POSITION).c_str(),    light.Pos);
+        SetVec3 (prog, (base + Const::SFX_DIRECTION).c_str(),   light.Direction);
         // CPU 는 degree, 셰이더는 cosine — 송신 시점에 변환 (struct 정의 시 의도된 분업).
-        SetFloat(prog, (base + ".cutoff").c_str(),      cosf(glm::radians(light.CutoffAngleDeg)));
-        SetFloat(prog, (base + ".outerCutoff").c_str(), cosf(glm::radians(light.OuterCutoffAngleDeg)));
-        SetVec3 (prog, (base + ".attenuation").c_str(), GetAttenuationCoeff(light.Distance));
-        SetVec3 (prog, (base + ".ambient").c_str(),     light.Ambient);
-        SetVec3 (prog, (base + ".diffuse").c_str(),     light.Diffuse);
-        SetVec3 (prog, (base + ".specular").c_str(),    light.Specular);
+        SetFloat(prog, (base + Const::SFX_CUTOFF).c_str(),      cosf(glm::radians(light.CutoffAngleDeg)));
+        SetFloat(prog, (base + Const::SFX_OUTER_CUTOFF).c_str(), cosf(glm::radians(light.OuterCutoffAngleDeg)));
+        SetVec3 (prog, (base + Const::SFX_ATTENUATION).c_str(), GetAttenuationCoeff(light.Distance));
+        SetVec3 (prog, (base + Const::SFX_AMBIENT).c_str(),     light.Ambient);
+        SetVec3 (prog, (base + Const::SFX_DIFFUSE).c_str(),     light.Diffuse);
+        SetVec3 (prog, (base + Const::SFX_SPECULAR).c_str(),    light.Specular);
     }
 }

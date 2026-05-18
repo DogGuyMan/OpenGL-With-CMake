@@ -1,5 +1,6 @@
 add_library(sjhopengl_buffer STATIC
     buffer.cpp
+    framebuffer.cpp
 )
 add_library(SJH::buffer ALIAS sjhopengl_buffer)
 

@@ -5,6 +5,7 @@
 #include "diagnostics/gl_validate.h"  // GLValidate — Mesh/Shader 정합성 진단
 #include "layout/vertex_layout.h"
 #include "program/program_uniforms.h" // program.h 가 더 이상 transitive 제공 안 함
+#include "common/constants.h"
 #include <imgui.h>
 #include <spdlog/spdlog.h>
 
@@ -70,7 +71,10 @@ namespace SJH
         mWidth = width;
         mHeight = height;
         glViewport(0, 0, mWidth, mHeight);
+
         mCamera.SetAspect((float)width, (float)height); // height==0 가드 내장
+
+        m_framebuffer = Framebuffer::Create(Texture::Create(width, height, GL_RGBA));
     }
 
     void Context::MouseMove(double x, double y)
@@ -154,77 +158,79 @@ namespace SJH
      *********************************************************************************/
     void Context::Render()
     {
-        if (ImGui::Begin("ui window"))
+        if (ImGui::Begin(Const::LBL_UI_WINDOW))
         {
-            if (ImGui::CollapsingHeader("dirLight"))
+            if (ImGui::CollapsingHeader(Const::LBL_DIRLIGHT))
             {
-                ImGui::Checkbox("dir.enabled", &mDirLightEnabled);
-                ImGui::DragFloat3("dir.direction", glm::value_ptr(mDirLight.Direction), 0.01f);
-                ImGui::ColorEdit3("dir.ambient", glm::value_ptr(mDirLight.Ambient));
-                ImGui::ColorEdit3("dir.diffuse", glm::value_ptr(mDirLight.Diffuse));
-                ImGui::ColorEdit3("dir.specular", glm::value_ptr(mDirLight.Specular));
+                ImGui::Checkbox(Const::LBL_DIR_ENABLED, &mDirLightEnabled);
+                ImGui::DragFloat3(Const::LBL_DIR_DIRECTION, glm::value_ptr(mDirLight.Direction), 0.01f);
+                ImGui::ColorEdit3(Const::LBL_DIR_AMBIENT, glm::value_ptr(mDirLight.Ambient));
+                ImGui::ColorEdit3(Const::LBL_DIR_DIFFUSE, glm::value_ptr(mDirLight.Diffuse));
+                ImGui::ColorEdit3(Const::LBL_DIR_SPECULAR, glm::value_ptr(mDirLight.Specular));
             }
 
             for (int i = 0; i < 2; ++i)
             {
                 ImGui::PushID(i); // 같은 라벨 충돌 방지
-                std::string header = "pointLight[" + std::to_string(i) + "]";
+                std::string header = Const::LBL_POINTLIGHT_PREFIX + std::to_string(i) + Const::STR_INDEX_CLOSE;
                 if (ImGui::CollapsingHeader(header.c_str()))
                 {
-                    ImGui::Checkbox("p.enabled", &mPointLightsEnabled[i]);
-                    ImGui::DragFloat3("p.position", glm::value_ptr(mPointLights[i].Pos), 0.01f);
-                    ImGui::DragFloat("p.distance", &mPointLights[i].Distance, 0.5f, 1.0f, 3250.0f);
-                    ImGui::ColorEdit3("p.ambient", glm::value_ptr(mPointLights[i].Ambient));
-                    ImGui::ColorEdit3("p.diffuse", glm::value_ptr(mPointLights[i].Diffuse));
-                    ImGui::ColorEdit3("p.specular", glm::value_ptr(mPointLights[i].Specular));
+                    ImGui::Checkbox(Const::LBL_P_ENABLED, &mPointLightsEnabled[i]);
+                    ImGui::DragFloat3(Const::LBL_P_POSITION, glm::value_ptr(mPointLights[i].Pos), 0.01f);
+                    ImGui::DragFloat(Const::LBL_P_DISTANCE, &mPointLights[i].Distance, 0.5f, 1.0f, 3250.0f);
+                    ImGui::ColorEdit3(Const::LBL_P_AMBIENT, glm::value_ptr(mPointLights[i].Ambient));
+                    ImGui::ColorEdit3(Const::LBL_P_DIFFUSE, glm::value_ptr(mPointLights[i].Diffuse));
+                    ImGui::ColorEdit3(Const::LBL_P_SPECULAR, glm::value_ptr(mPointLights[i].Specular));
                 }
                 ImGui::PopID();
             }
 
-            if (ImGui::CollapsingHeader("spotLight", ImGuiTreeNodeFlags_DefaultOpen))
+            if (ImGui::CollapsingHeader(Const::LBL_SPOTLIGHT, ImGuiTreeNodeFlags_DefaultOpen))
             {
-                ImGui::Checkbox("s.enabled", &mSpotLightEnabled);
-                ImGui::DragFloat3("s.position", glm::value_ptr(mSpotLight.Pos), 0.01f);
-                ImGui::DragFloat3("s.direction", glm::value_ptr(mSpotLight.Direction), 0.01f);
-                ImGui::DragFloat("s.cutoff(deg)", &mSpotLight.CutoffAngleDeg, 0.1f, 0.0f, 89.0f);
-                ImGui::DragFloat("s.outerCutoff(deg)", &mSpotLight.OuterCutoffAngleDeg, 0.1f, 0.0f, 90.0f);
-                ImGui::DragFloat("s.distance", &mSpotLight.Distance, 0.5f, 1.0f, 3250.0f);
-                ImGui::ColorEdit3("s.ambient", glm::value_ptr(mSpotLight.Ambient));
-                ImGui::ColorEdit3("s.diffuse", glm::value_ptr(mSpotLight.Diffuse));
-                ImGui::ColorEdit3("s.specular", glm::value_ptr(mSpotLight.Specular));
-                ImGui::Checkbox("flash light", &mFlashLightMode);
+                ImGui::Checkbox(Const::LBL_S_ENABLED, &mSpotLightEnabled);
+                ImGui::DragFloat3(Const::LBL_S_POSITION, glm::value_ptr(mSpotLight.Pos), 0.01f);
+                ImGui::DragFloat3(Const::LBL_S_DIRECTION, glm::value_ptr(mSpotLight.Direction), 0.01f);
+                ImGui::DragFloat(Const::LBL_S_CUTOFF, &mSpotLight.CutoffAngleDeg, 0.1f, 0.0f, 89.0f);
+                ImGui::DragFloat(Const::LBL_S_OUTER_CUTOFF, &mSpotLight.OuterCutoffAngleDeg, 0.1f, 0.0f, 90.0f);
+                ImGui::DragFloat(Const::LBL_S_DISTANCE, &mSpotLight.Distance, 0.5f, 1.0f, 3250.0f);
+                ImGui::ColorEdit3(Const::LBL_S_AMBIENT, glm::value_ptr(mSpotLight.Ambient));
+                ImGui::ColorEdit3(Const::LBL_S_DIFFUSE, glm::value_ptr(mSpotLight.Diffuse));
+                ImGui::ColorEdit3(Const::LBL_S_SPECULAR, glm::value_ptr(mSpotLight.Specular));
+                ImGui::Checkbox(Const::LBL_FLASH_LIGHT, &mFlashLightMode);
             }
 
-            ImGui::Checkbox("animation", &mAnimation);
+            ImGui::Checkbox(Const::LBL_ANIMATION, &mAnimation);
 
             // 함수 하나가 UI component 하나에 대응
             // 리턴 값이 true인 경우 해당 UI가 조작되었음을 의미
             // UI 조작 이벤트에 대한 액션 로직을 if으로 작성할 수 있음
-            if (ImGui::ColorEdit4("clear color", glm::value_ptr(mClearColor)))
+            if (ImGui::ColorEdit4(Const::LBL_CLEAR_COLOR, glm::value_ptr(mClearColor)))
             {
                 glClearColor(mClearColor.r, mClearColor.g, mClearColor.b, mClearColor.a);
             }
             ImGui::Separator();
-            ImGui::DragFloat3("camera pos", glm::value_ptr(mCamera.Pos), 0.01f);
-            ImGui::DragFloat("camera yaw", &mCamera.EulerYaw, 0.5f);
-            ImGui::DragFloat("camera pitch", &mCamera.EulerPitch, 0.5f, -89.0f, 89.0f);
+            ImGui::DragFloat3(Const::LBL_CAMERA_POS, glm::value_ptr(mCamera.Pos), 0.01f);
+            ImGui::DragFloat(Const::LBL_CAMERA_YAW, &mCamera.EulerYaw, 0.5f);
+            ImGui::DragFloat(Const::LBL_CAMERA_PITCH, &mCamera.EulerPitch, 0.5f, -89.0f, 89.0f);
             ImGui::Separator();
-            if (ImGui::Button("reset camera"))
+            if (ImGui::Button(Const::LBL_RESET_CAMERA))
             {
                 mCamera.EulerYaw = 0.0f;
                 mCamera.EulerPitch = 0.0f;
                 mCamera.Pos = glm::vec3(0.0f, 0.0f, 3.0f);
             }
 
-            ImGui::Combo("depth func", &mDepthFuncIndex,
-                         DEPTH_FUNC_LABELS, IM_ARRAYSIZE(DEPTH_FUNC_LABELS));
+            ImGui::Combo(Const::LBL_DEPTH_FUNC, &mDepthFuncIndex,
+                         Const::DEPTH_FUNC_LABELS, IM_ARRAYSIZE(Const::DEPTH_FUNC_LABELS));
         }
         ImGui::End();
+
+        m_framebuffer->Bind();
 
         // 1. ★ 매 프레임 stencil buffer 를 0 으로 리셋 ★
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST); // 깊이 테스트 사용하기
-        glEnable(GL_CULL_FACE); // face culling 활성화
+        glEnable(GL_CULL_FACE);  // face culling 활성화
         glFrontFace(GL_CW);
         glCullFace(GL_BACK);
         glCullFace(GL_FRONT);
@@ -232,7 +238,7 @@ namespace SJH
         // glDepthMask(GL_FALSE); // depth buffer의 업데이트 막기
         glClearDepth(1.0f); // depth buffer의 초기값 설정하기
 
-        // 비교 연산자 룩업 — 순서는 ImGui Combo 의 DEPTH_FUNC_LABELS[] 와 1:1 동일해야 함.
+        // 비교 연산자 룩업 — 순서는 ImGui Combo 의 Const::DEPTH_FUNC_LABELS[] 와 1:1 동일해야 함.
 
         // ImGui Combo 가 고른 인덱스로 depth test 비교 연산자 적용.
         {
@@ -250,7 +256,7 @@ namespace SJH
             // mCamera.FarPlane = 10.f;
             // mCamera.NearPlane = 0.5f;
         }
-        glDepthFunc(DEPTH_FUNC[mDepthFuncIndex]);
+        glDepthFunc(Const::DEPTH_FUNC[mDepthFuncIndex]);
 
         // 카메라: z=3 위치에서 원점을 바라봄. 인자 없는 const 게터 — 멤버 직접 사용.
         auto viewMat = mCamera.GetForwardViewMatrix();
@@ -277,23 +283,23 @@ namespace SJH
                 auto markerTransform =
                     glm::translate(glm::mat4(1.0f), markerPositions[i]) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
-                Uniforms::SetVec4(*mSimpleProgram.get(), "baseColor", glm::vec4(markerColors[i], 1.0f));
-                Uniforms::SetMat4(*mSimpleProgram.get(), "transformMat", projMat * viewMat * markerTransform);
+                Uniforms::SetVec4(*mSimpleProgram.get(), Const::UNI_BASE_COLOR, glm::vec4(markerColors[i], 1.0f));
+                Uniforms::SetMat4(*mSimpleProgram.get(), Const::UNI_TRANSFORM_MAT, projMat * viewMat * markerTransform);
                 mBox->Draw();
             }
         }
 
         mProgram->Use();
         {
-            Uniforms::SetVec3(*mProgram.get(), "viewPos", mCamera.Pos);
+            Uniforms::SetVec3(*mProgram.get(), Const::UNI_VIEW_POS, mCamera.Pos);
 
             // --- Light 활성 플래그 — 셰이더가 enabled==0 슬롯의 Calc* 호출을 건너뜀.
             //     ImGui 체크박스로 토글된 광원은 화면에 기여 안 함.
-            Uniforms::SetInt(*mProgram.get(), "dirLightEnabled", mDirLightEnabled ? 1 : 0);
-            Uniforms::SetInt(*mProgram.get(), "spotLightEnabled", mSpotLightEnabled ? 1 : 0);
+            Uniforms::SetInt(*mProgram.get(), Const::UNI_DIR_LIGHT_ENABLED, mDirLightEnabled ? 1 : 0);
+            Uniforms::SetInt(*mProgram.get(), Const::UNI_SPOT_LIGHT_ENABLED, mSpotLightEnabled ? 1 : 0);
             for (int i = 0; i < 2; ++i)
             {
-                const std::string name = "pointLightsEnabled[" + std::to_string(i) + "]";
+                const std::string name = Const::UNI_POINT_LIGHTS_ENABLED_PREFIX + std::to_string(i) + Const::STR_INDEX_CLOSE;
                 Uniforms::SetInt(*mProgram.get(), name.c_str(), mPointLightsEnabled[i] ? 1 : 0);
             }
             if (mFlashLightMode)
@@ -301,24 +307,24 @@ namespace SJH
                 mSpotLight.Pos = mCamera.Pos;
                 mSpotLight.Direction = mCamera.GetFront();
             }
-            Uniforms::SetSpotLight(*mProgram.get(), "spotLight", mSpotLight);
+            Uniforms::SetSpotLight(*mProgram.get(), Const::UNI_SPOT_LIGHT, mSpotLight);
             // --- DirLight 1개 (평행광 / 거리감쇠 없음) ---
-            Uniforms::SetDirLight(*mProgram, "dirLight", mDirLight);
+            Uniforms::SetDirLight(*mProgram, Const::UNI_DIR_LIGHT, mDirLight);
 
             // --- PointLight 2개 (배열, 거리감쇠는 helper 가 mDistance 로 내부 도출) ---
             for (int i = 0; i < 2; ++i)
             {
-                const std::string base = "pointLights[" + std::to_string(i) + "]";
+                const std::string base = Const::UNI_POINT_LIGHTS_PREFIX + std::to_string(i) + Const::STR_INDEX_CLOSE;
                 Uniforms::SetPointLight(*mProgram, base.c_str(), mPointLights[i]);
             }
 
             // --- SpotLight 1개 (점광원 + 콘 cutoff — degree->cosine 변환은 helper 내부) ---
             {
-                Uniforms::SetSpotLight(*mProgram, "spotLight", mSpotLight);
+                Uniforms::SetSpotLight(*mProgram, Const::UNI_SPOT_LIGHT, mSpotLight);
                 auto modelTransform = glm::mat4(1.0f);
                 auto transform = projMat * viewMat * modelTransform;
-                Uniforms::SetMat4(*mProgram.get(), "transformMat", transform);
-                Uniforms::SetMat4(*mProgram.get(), "modelTransformMat", modelTransform);
+                Uniforms::SetMat4(*mProgram.get(), Const::UNI_TRANSFORM_MAT, transform);
+                Uniforms::SetMat4(*mProgram.get(), Const::UNI_MODEL_TRANSFORM_MAT, modelTransform);
             }
 
             {
@@ -326,9 +332,9 @@ namespace SJH
                     glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
                 auto transform = projMat * viewMat * modelTransform;
-                Uniforms::SetMat4(*mProgram, "transformMat", transform);
-                Uniforms::SetMat4(*mProgram, "modelTransformMat", modelTransform);
-                auto planeMaterial = mRM->FindMaterial(STR_MATERIAL_PLANE);
+                Uniforms::SetMat4(*mProgram, Const::UNI_TRANSFORM_MAT, transform);
+                Uniforms::SetMat4(*mProgram, Const::UNI_MODEL_TRANSFORM_MAT, modelTransform);
+                auto planeMaterial = mRM->FindMaterial(Const::STR_MATERIAL_PLANE);
                 planeMaterial->Apply();
                 mBox->Draw();
             }
@@ -339,9 +345,9 @@ namespace SJH
                     glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
                 auto transform = projMat * viewMat * modelTransform;
-                Uniforms::SetMat4(*mProgram, "transformMat", transform);
-                Uniforms::SetMat4(*mProgram, "modelTransformMat", modelTransform);
-                auto box1Material = mRM->FindMaterial(STR_MATERIAL_BOX1);
+                Uniforms::SetMat4(*mProgram, Const::UNI_TRANSFORM_MAT, transform);
+                Uniforms::SetMat4(*mProgram, Const::UNI_MODEL_TRANSFORM_MAT, modelTransform);
+                auto box1Material = mRM->FindMaterial(Const::STR_MATERIAL_BOX1);
                 box1Material->Apply();
                 mBox->Draw();
             }
@@ -359,10 +365,10 @@ namespace SJH
                     glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
                 auto transform = projMat * viewMat * modelTransform;
-                Uniforms::SetMat4(*mProgram, "transformMat", transform);
-                Uniforms::SetMat4(*mProgram, "modelTransformMat", modelTransform);
+                Uniforms::SetMat4(*mProgram, Const::UNI_TRANSFORM_MAT, transform);
+                Uniforms::SetMat4(*mProgram, Const::UNI_MODEL_TRANSFORM_MAT, modelTransform);
 
-                auto box2Material = mRM->FindMaterial(STR_MATERIAL_BOX2);
+                auto box2Material = mRM->FindMaterial(Const::STR_MATERIAL_BOX2);
                 box2Material->Apply();
                 mBox->Draw();
             }
@@ -381,8 +387,8 @@ namespace SJH
                     glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
                     glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
                 auto transform = projMat * viewMat * modelTransform;
-                Uniforms::SetVec4(*mSimpleProgram.get(), "baseColor", glm::vec4(1.0f, 1.0f, 0.5f, 1.0f));
-                Uniforms::SetMat4(*mSimpleProgram.get(), "transformMat", transform * glm::scale(glm::mat4(1.0f), glm::vec3(1.05f, 1.05f, 1.05f)));
+                Uniforms::SetVec4(*mSimpleProgram.get(), Const::UNI_BASE_COLOR, glm::vec4(1.0f, 1.0f, 0.5f, 1.0f));
+                Uniforms::SetMat4(*mSimpleProgram.get(), Const::UNI_TRANSFORM_MAT, transform * glm::scale(glm::mat4(1.0f), glm::vec3(1.05f, 1.05f, 1.05f)));
 
                 mBox->Draw();
             }
@@ -401,67 +407,77 @@ namespace SJH
         {
             // 카메라 앞의 유리창을 먼저 그리는 경우 이 유리창이 depth buffer 값을 갱신
             // 뒤의 유리창은 depth test를 통과하지 못하고 그려지지 않음
-            auto textureWindow = mRM->FindTexture(STR_TEXTURE_WINDOW);
+            auto textureWindow = mRM->FindTexture(Const::STR_TEXTURE_WINDOW);
             if (textureWindow)
             {
                 glActiveTexture(GL_TEXTURE0 + 0);
                 textureWindow->Bind();
-                Uniforms::SetInt(*mTextureProgram, "tex", 0);
+                Uniforms::SetInt(*mTextureProgram, Const::UNI_TEX, 0);
             }
 
             auto modelTransform =
-            glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 4.0f));
+                glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 4.0f));
             auto transform = projMat * viewMat * modelTransform;
-            Uniforms::SetMat4(*mTextureProgram, "transformMat", transform);
+            Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, transform);
             mPlane->Draw();
 
             modelTransform =
                 glm::translate(glm::mat4(1.0f), glm::vec3(0.2f, 0.5f, 5.0f));
             transform = projMat * viewMat * modelTransform;
-            Uniforms::SetMat4(*mTextureProgram, "transformMat", transform);
+            Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, transform);
             mPlane->Draw();
 
             modelTransform =
                 glm::translate(glm::mat4(1.0f), glm::vec3(0.4f, 0.5f, 6.0f));
             transform = projMat * viewMat * modelTransform;
-            Uniforms::SetMat4(*mTextureProgram, "transformMat", transform);
+            Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, transform);
             mPlane->Draw();
-
         }
+        // glPointSize(50.0f);
+        // glDrawArrays(GL_POINTS, 0, 1);
+
+        Framebuffer::BindToDefault();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        mTextureProgram->Use();
+        Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
+
+
+        m_framebuffer
+            ->GetColorAttachment() // TexturePtr m_colorAttachment;
+            ->Bind();           // glBindTexture(GL_TEXTURE_2D, mTextureID);
+        Uniforms::SetInt(*mTextureProgram, Const::UNI_TEX, 0);
+        mPlane->Draw();
     }
 
-    // glPointSize(50.0f);
-    // glDrawArrays(GL_POINTS, 0, 1);
-}
+    /*********************************************************************************
+     *
+     * # GL state (enum=symbolic, handle=raw integer)
+     * vao:            0
+     * program:        0
+     * array_buffer:   0
+     * element_buffer: 0  (note: EBO state is per-VAO; with VAO=0, this is always 0)
+     * draw_fbo:       0
+     * read_fbo:       0
+     * active_texture: GL_TEXTURE0
+     * tex_2d[*]:      (all units empty)
+     * viewport:       [0, 0, 1600, 1200]
+     * depth_test:     disabled
+     * depth_func:     GL_LESS
+     * depth_write:    true
+     * blend:          disabled
+     * blend_src_rgb:  GL_ONE
+     * blend_dst_rgb:  GL_ZERO
+     * cull_face:      disabled
+     * cull_face_mode: GL_BACK
+     * front_face:     GL_CCW
+     * color_write:    [R, G, B, A]
+     * clear_color:    [0.000, 0.000, 0.000, 0.000]
+     * attrib[*]:      (all disabled)
+     *
+     *********************************************************************************/
 
-/*********************************************************************************
- *
- * # GL state (enum=symbolic, handle=raw integer)
- * vao:            0
- * program:        0
- * array_buffer:   0
- * element_buffer: 0  (note: EBO state is per-VAO; with VAO=0, this is always 0)
- * draw_fbo:       0
- * read_fbo:       0
- * active_texture: GL_TEXTURE0
- * tex_2d[*]:      (all units empty)
- * viewport:       [0, 0, 1600, 1200]
- * depth_test:     disabled
- * depth_func:     GL_LESS
- * depth_write:    true
- * blend:          disabled
- * blend_src_rgb:  GL_ONE
- * blend_dst_rgb:  GL_ZERO
- * cull_face:      disabled
- * cull_face_mode: GL_BACK
- * front_face:     GL_CCW
- * color_write:    [R, G, B, A]
- * clear_color:    [0.000, 0.000, 0.000, 0.000]
- * attrib[*]:      (all disabled)
- *
- *********************************************************************************/
-namespace SJH
-{
     bool Context::Init()
     {
         // === Light Casters 초기화 (사용자 제공 reference 값) ===
@@ -500,17 +516,17 @@ namespace SJH
             .EulerPitch = -20.f,
         };
 
-        mProgram = Program::CreateWithVSFS("./resources/shader/lighting.vs", "./resources/shader/lighting.fs");
+        mProgram = Program::CreateWithVSFS(Const::PATH_SHADER_LIGHTING_VS, Const::PATH_SHADER_LIGHTING_FS);
         if (!mProgram)
             return false;
 
-        mSimpleProgram = Program::CreateWithVSFS("./resources/shader/simple.vs", "./resources/shader/simple.fs");
+        mSimpleProgram = Program::CreateWithVSFS(Const::PATH_SHADER_SIMPLE_VS, Const::PATH_SHADER_SIMPLE_FS);
         if (!mSimpleProgram)
             return false;
 
         mTextureProgram = Program::CreateWithVSFS(
-            "./resources/shader/texture.vs",
-            "./resources/shader/texture.fs");
+            Const::PATH_SHADER_TEXTURE_VS,
+            Const::PATH_SHADER_TEXTURE_FS);
         if (!mTextureProgram)
             return false;
 
@@ -519,47 +535,47 @@ namespace SJH
 
         mRM = ResourceRegistry::Create();
 
-        auto imageDarkGary = Image::Create(STR_IMAGE_DARK_GRAY, 4, 4, 4);
+        auto imageDarkGary = Image::Create(Const::STR_IMAGE_DARK_GRAY, 4, 4, 4);
         imageDarkGary->SetSingleColorImage(glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
-        auto imageGray = Image::Create(STR_IMAGE_GRAY, 4, 4, 4);
+        auto imageGray = Image::Create(Const::STR_IMAGE_GRAY, 4, 4, 4);
         imageGray->SetSingleColorImage(glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
-        auto imageMarble = Image::Load(STR_IMAGE_MARBLE, "./resources/texture/marble.jpg");
+        auto imageMarble = Image::Load(Const::STR_IMAGE_MARBLE, Const::PATH_TEX_MARBLE);
 
         auto textureDarkGray = mRM->CreateTexture(
-            STR_TEXTURE_DARK_GRAY, imageDarkGary.get());
+            Const::STR_TEXTURE_DARK_GRAY, imageDarkGary.get());
         auto textureGray = mRM->CreateTexture(
-            STR_TEXTURE_GRAY, imageGray.get());
+            Const::STR_TEXTURE_GRAY, imageGray.get());
         auto textureMarble = mRM->CreateTexture(
-            STR_TEXTURE_MARBLE, imageMarble.get());
+            Const::STR_TEXTURE_MARBLE, imageMarble.get());
 
         // plane — diffuse: 그레이, specular: marble, shininess 128.
         // CreateMaterial 은 빈 Material 만 — 텍스처는 위에서 만든 것을 여기서 명시 주입.
-        auto planeMaterial = mRM->CreateMaterial(STR_MATERIAL_PLANE);
+        auto planeMaterial = mRM->CreateMaterial(Const::STR_MATERIAL_PLANE);
         planeMaterial->SetResolvedTextures(textureMarble, 0, textureGray, 1);
         planeMaterial->SetShininess(128.0f);
         planeMaterial->SetProgram(mProgram.get());
 
         // box1 — diffuse: container.jpg, specular: 다크 그레이, shininess 16.
-        auto imageBox1Diffuse = Image::Load(STR_IMAGE_BOX1_DIFFUSE, "./resources/texture/container.jpg");
-        auto textureBox1Diffuse = mRM->CreateTexture(STR_TEXTURE_BOX1_DIFFUSE, imageBox1Diffuse.get());
-        auto box1Material = mRM->CreateMaterial(STR_MATERIAL_BOX1);
+        auto imageBox1Diffuse = Image::Load(Const::STR_IMAGE_BOX1_DIFFUSE, Const::PATH_TEX_CONTAINER);
+        auto textureBox1Diffuse = mRM->CreateTexture(Const::STR_TEXTURE_BOX1_DIFFUSE, imageBox1Diffuse.get());
+        auto box1Material = mRM->CreateMaterial(Const::STR_MATERIAL_BOX1);
         box1Material->SetResolvedTextures(textureBox1Diffuse, 0, textureDarkGray, 1);
         box1Material->SetShininess(16.0f);
         box1Material->SetProgram(mProgram.get());
 
         // box2 — diffuse: container2.png, specular: container2_specular.png, shininess 64.
-        auto imageBox2Diffuse = Image::Load(STR_IMAGE_BOX2_DIFFUSE, "./resources/texture/container2.png");
-        auto textureBox2Diffuse = mRM->CreateTexture(STR_TEXTURE_BOX2_DIFFUSE, imageBox2Diffuse.get());
-        auto imageBox2Specular = Image::Load(STR_IMAGE_BOX2_SPECULAR, "./resources/texture/container2_specular.png");
-        auto textureBox2Specular = mRM->CreateTexture(STR_TEXTURE_BOX2_SPECULAR, imageBox2Specular.get());
-        auto box2Material = mRM->CreateMaterial(STR_MATERIAL_BOX2);
+        auto imageBox2Diffuse = Image::Load(Const::STR_IMAGE_BOX2_DIFFUSE, Const::PATH_TEX_CONTAINER2);
+        auto textureBox2Diffuse = mRM->CreateTexture(Const::STR_TEXTURE_BOX2_DIFFUSE, imageBox2Diffuse.get());
+        auto imageBox2Specular = Image::Load(Const::STR_IMAGE_BOX2_SPECULAR, Const::PATH_TEX_CONTAINER2_SPECULAR);
+        auto textureBox2Specular = mRM->CreateTexture(Const::STR_TEXTURE_BOX2_SPECULAR, imageBox2Specular.get());
+        auto box2Material = mRM->CreateMaterial(Const::STR_MATERIAL_BOX2);
         box2Material->SetResolvedTextures(textureBox2Diffuse, 0, textureBox2Specular, 1);
         box2Material->SetShininess(64.0f);
         box2Material->SetProgram(mProgram.get());
 
         // plane
-        auto imageWindow = Image::Load(STR_TEXTURE_WINDOW, "./resources/texture/blending_transparent_window.png");
-        auto textureWindow = mRM->CreateTexture(STR_TEXTURE_WINDOW, imageWindow.get());
+        auto imageWindow = Image::Load(Const::STR_TEXTURE_WINDOW, Const::PATH_TEX_WINDOW);
+        auto textureWindow = mRM->CreateTexture(Const::STR_TEXTURE_WINDOW, imageWindow.get());
 
         /*
         순서

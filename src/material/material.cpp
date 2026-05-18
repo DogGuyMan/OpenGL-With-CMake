@@ -10,6 +10,7 @@
  */
 #include "material/material.h"
 #include "program/program_uniforms.h"
+#include "common/constants.h"
 #include "resource_registry/texture.h" // Texture 완전 정의 — GetTextureID() inline 호출
 
 namespace SJH
@@ -23,14 +24,14 @@ namespace SJH
         {
             glActiveTexture(GL_TEXTURE0 + mDiffuseUnit);
             glBindTexture(GL_TEXTURE_2D, mDiffuseTexture->GetTextureID());
-            Uniforms::SetInt(*mProgram, "material.diffuse", mDiffuseUnit);
+            Uniforms::SetInt(*mProgram, Const::UNI_MATERIAL_DIFFUSE, mDiffuseUnit);
         }
         if (mSpecularTexture)
         {
             glActiveTexture(GL_TEXTURE0 + mSpecularUnit);
             glBindTexture(GL_TEXTURE_2D, mSpecularTexture->GetTextureID());
-            Uniforms::SetInt(*mProgram, "material.specular", mSpecularUnit);
+            Uniforms::SetInt(*mProgram, Const::UNI_MATERIAL_SPECULAR, mSpecularUnit);
         }
-        Uniforms::SetFloat(*mProgram, "material.shininess", mShininess);
+        Uniforms::SetFloat(*mProgram, Const::UNI_MATERIAL_SHININESS, mShininess);
     }
 }

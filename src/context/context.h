@@ -2,6 +2,7 @@
 #define __SJH_CONTEXT_H__
 
 #include "buffer/buffer.h"
+#include "buffer/framebuffer.h"
 #include "common/common.h"
 #include "layout/vertex_layout.h"
 #include "material/material.h"
@@ -142,6 +143,7 @@ namespace SJH
         // === ImGui / 프레임 클리어 ===
         /// @brief @c glClearColor 인자. ImGui ColorEdit3 위젯이 직접 갱신.
         glm::vec4 mClearColor{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
+        FramebufferUPtr m_framebuffer;
 
         // === 라이팅 (Multi Light Caster — Directional + Point[N] + Spot) ===
 
@@ -162,56 +164,6 @@ namespace SJH
         bool mPointLightsEnabled[2]{true, true};
         /// @brief SpotLight 사용 여부.
         bool mSpotLightEnabled{true};
-
-        const char *STR_IMAGE_DARK_GRAY = "image_dark_gray";
-        const char *STR_IMAGE_GRAY = "image_gray";
-        const char *STR_IMAGE_MARBLE = "image_marble";
-        const char *STR_IMAGE_BOX1_DIFFUSE = "image_box1_diffuse";
-        const char *STR_IMAGE_BOX2_DIFFUSE = "image_box2_diffuse";
-        const char *STR_IMAGE_BOX2_SPECULAR = "image_box2_specular";
-        const char *STR_IMAGE_PLANE = "image_plane";
-
-        const char *STR_TEXTURE_DARK_GRAY = "texture_dark_gray";
-        const char *STR_TEXTURE_GRAY = "texture_gray";
-        const char *STR_TEXTURE_MARBLE = "texture_marble";
-        const char *STR_TEXTURE_BOX1_DIFFUSE = "texture_box1_diffuse";
-        const char *STR_TEXTURE_BOX2_DIFFUSE = "texture_box2_diffuse";
-        const char *STR_TEXTURE_BOX2_SPECULAR = "texture_box2_specular";
-        const char *STR_TEXTURE_WINDOW = "texture_window";
-
-        const char *STR_MATERIAL_PLANE = "material_plane";
-        const char *STR_MATERIAL_BOX1 = "material_box1";
-        const char *STR_MATERIAL_BOX2 = "material_box2";
-
-        // depth test 비교 연산자 선택 — 라벨 배열 순서는 아래 DEPTH_FUNC[] 와 동일해야 함.
-        // Depth Test를 꺼야하는 상황은? -> ImGUI를 사용할때 이다.
-        // Depth 독립적으로 항상 앞으로 그려야 한다. 혹은 항상 뒤로 그려야 한다 할때.
-        // glClearDepth(1.0f)
-        //      제일 가까운애가 0, 제일 멀리있는게 1
-        //      GL_LESS : 1보다 더 작은애를 먼저 그리게 한다.
-        // ┌───────┬─────────────┬──────────────────────────────────┐
-        // │ 인덱스 │ 값          │ 의미                             │
-        // ├───────┼─────────────┼──────────────────────────────────┤
-        // │ 0     │ GL_ALWAYS   │ 항상 통과 (depth test 무력화 효과) │
-        // │ 1     │ GL_NEVER    │ 항상 실패 (아무것도 안 그려짐)    │
-        // │ 2     │ GL_LESS     │ 더 가까우면 통과 (기본값)        │
-        // │ 3     │ GL_LEQUAL   │ 같거나 가까우면 통과             │
-        // │ 4     │ GL_GREATER  │ 더 멀면 통과                     │
-        // │ 5     │ GL_GEQUAL   │ 같거나 멀면 통과                 │
-        // │ 6     │ GL_EQUAL    │ 깊이 같을 때만                   │
-        // │ 7     │ GL_NOTEQUAL │ 깊이 다를 때만                   │
-        // └───────┴─────────────┴──────────────────────────────────┘
-        const char *const DEPTH_FUNC_LABELS[8] = {
-            "GL_ALWAYS", "GL_NEVER",
-            "GL_LESS", "GL_LEQUAL",
-            "GL_GREATER", "GL_GEQUAL",
-            "GL_EQUAL", "GL_NOTEQUAL"};
-
-        const uint32_t DEPTH_FUNC[8] = {
-            GL_ALWAYS, GL_NEVER,
-            GL_LESS, GL_LEQUAL,
-            GL_GREATER, GL_GEQUAL,
-            GL_EQUAL, GL_NOTEQUAL};
     };
 }
 

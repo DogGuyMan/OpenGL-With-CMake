@@ -212,6 +212,7 @@ namespace SJH
                 glClearColor(mClearColor.r, mClearColor.g, mClearColor.b, mClearColor.a);
             }
             ImGui::Separator();
+            ImGui::DragFloat(Const::LBL_POSTPROCESS_GAMMA, &mGamma, 0.01f, 0.0f, 2.0f);
             ImGui::DragFloat3(Const::LBL_CAMERA_POS, glm::value_ptr(mCamera.Pos), 0.01f);
             ImGui::DragFloat(Const::LBL_CAMERA_YAW, &mCamera.EulerYaw, 0.5f);
             ImGui::DragFloat(Const::LBL_CAMERA_PITCH, &mCamera.EulerPitch, 0.5f, -89.0f, 89.0f);
@@ -443,13 +444,24 @@ namespace SJH
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        mTextureProgram->Use();
-        Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
+        // mTextureProgram->Use();
+        // Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
 
+        // mFramebuffer
+        //     ->GetColorAttachment() // TexturePtr m_colorAttachment;
+        //     ->Bind();              // glBindTexture(GL_TEXTURE_2D, mTextureID);
+        // Uniforms::SetInt(*mTextureProgram, Const::UNI_FRAMETEXTURE, 0);
+        // mPlane->Draw();
+
+        Framebuffer::BindToDefault();
+
+        mPostProgram->Use();
+        Uniforms::SetMat4(*mPostProgram, Const::UNI_TRANSFORM_MAT, glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
+        Uniforms::SetFloat(*mPostProgram, Const::UNI_POST_GAMMA, mGamma);
         mFramebuffer
-            ->GetColorAttachment() // TexturePtr m_colorAttachment;
-            ->Bind();              // glBindTexture(GL_TEXTURE_2D, mTextureID);
-        Uniforms::SetInt(*mTextureProgram, Const::UNI_TEX, 0);
+            ->GetColorAttachment()
+            ->Bind();
+        Uniforms::SetInt(*mPostProgram, Const::UNI_POST_FRAMETEXTURE, 0);
         mPlane->Draw();
     }
 
@@ -526,10 +538,13 @@ namespace SJH
         if (!mSimpleProgram)
             return false;
 
-        mTextureProgram = Program::CreateWithVSFS(
-            Const::PATH_SHADER_TEXTURE_VS,
-            Const::PATH_SHADER_TEXTURE_FS);
+        mTextureProgram = Program::CreateWithVSFS(Const::PATH_SHADER_TEXTURE_VS, Const::PATH_SHADER_TEXTURE_FS);
         if (!mTextureProgram)
+            return false;
+
+        // mPostProgram = Program::CreateWithVSFS(Const::PATH_SHADER_TEXTURE_VS, Const::PATH_SHADER_POST_INVERT_FS);
+        mPostProgram = Program::CreateWithVSFS(Const::PATH_SHADER_TEXTURE_VS, Const::PATH_SHADER_POSTPROCESS_GAMMA_FS);
+        if (!mPostProgram)
             return false;
 
         spdlog::info("program id: {}", mProgram->GetProgramAddr());

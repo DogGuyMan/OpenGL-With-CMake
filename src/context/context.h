@@ -111,6 +111,8 @@ namespace SJH
 
         ProgramUPtr mTextureProgram;
 
+        ProgramUPtr mPostProgram;
+
         /// @brief 박스(큐브) 메시 — 기본 씬 오브젝트. @c Mesh::CreateBox() 로 Init 에서 생성.
         MeshUPtr mBox;
 
@@ -164,6 +166,8 @@ namespace SJH
         bool mPointLightsEnabled[2]{true, true};
         /// @brief SpotLight 사용 여부.
         bool mSpotLightEnabled{true};
+
+        float mGamma {1.0f};
     };
 }
 

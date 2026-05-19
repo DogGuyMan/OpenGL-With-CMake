@@ -15,7 +15,7 @@
  *  - 캐시는 @c program_uniforms.cpp 의 anonymous namespace 내 정적 자료구조에 보유:
  *    @code{.cpp}
  *      std::unordered_map<GLuint, std::unordered_map<std::string, UniformEntry>>
- *      //                  ^^^ ProgramInstanceId        ^^^^^ name → entry
+ *      //                  ^^^ ProgramInstanceId        ^^^^^ name -> entry
  *    @endcode
  *  - **friend 선언 불필요** — 자유 함수들이 @c Program::GetProgramAddr() (public) 만 사용.
  *    @c Program 의 헤더는 @c Uniforms 의 존재를 *전혀 모름*.
@@ -55,7 +55,7 @@ namespace SJH
 
     namespace Uniforms
     {
-        /// @brief 캐시 한 칸 — name → (location, type).
+        /// @brief 캐시 한 칸 — name -> (location, type).
         struct UniformEntry
         {
             GLint  location{-1};   ///< -1 이면 미존재
@@ -63,7 +63,7 @@ namespace SJH
         };
 
         /// @brief Program link 직후 호출 — 모든 active uniform 의 (name, location, type) 캐싱.
-        /// @details @c Program::Create 가 자동으로 호출. link 후 셰이더 source 변경 → 다시 link 시 재호출 필요.
+        /// @details @c Program::Create 가 자동으로 호출. link 후 셰이더 source 변경 -> 다시 link 시 재호출 필요.
         void BuildCache(Program &prog);
 
         /// @brief Program 소멸 시 호출 — 외부 캐시에서 해당 program ID 의 항목 제거.
@@ -82,24 +82,26 @@ namespace SJH
         /// @brief 캐시된 location 반환. 미존재면 -1 (+ 첫 호출 시 diagnostics 가 warn).
         GLint Get(const Program &prog, const char *name);
 
-        // --- 광원 struct → uniform block 일괄 전송 helpers ----------------------------
+        // --- 광원 struct -> uniform block 일괄 전송 helpers ----------------------------
         // 각 helper 는 `<prefix>.<field>` 형태로 셰이더 struct 멤버에 1:1 대응. 내부적으로
         // SetVec3/SetFloat 를 호출 — 누락/타입불일치 진단도 자동 적용.
 
-        /// @brief DirLight → `<prefix>.{direction,ambient,diffuse,specular}` 4 uniform 전송.
-        /// @details 평행광 — 위치/거리감쇠 없음. @c prefix 예: @c "dirLight".
-        void SetDirLight(const Program &prog, const char *prefix, const DirLight &light);
+        /// @brief DirLight -> `<prefix>.{direction,ambient,diffuse,specular}` 4 uniform 전송.
+        /// @param worldDir 라이트 노드의 월드 전방 벡터 (방향). @c prefix 예: @c "dirLight".
+        void SetDirLight(const Program &prog, const char *prefix,
+                         const DirLight &light, const glm::vec3 &worldDir);
 
-        /// @brief PointLight → `<prefix>.{position,attenuation,ambient,diffuse,specular}` 5 uniform 전송.
-        /// @details @c mDistance → (Kc,Kl,Kq) 변환은 @c GetAttenuationCoeff 가 내부 수행.
-        ///          @c prefix 예: @c "pointLights[0]".
-        void SetPointLight(const Program &prog, const char *prefix, const PointLight &light);
+        /// @brief PointLight -> `<prefix>.{position,attenuation,ambient,diffuse,specular}` 5 uniform 전송.
+        /// @param worldPos 라이트 노드의 월드 위치. @c Distance -> (Kc,Kl,Kq) 는 helper 내부 도출.
+        void SetPointLight(const Program &prog, const char *prefix,
+                           const PointLight &light, const glm::vec3 &worldPos);
 
-        /// @brief SpotLight → 8 uniform 전송
+        /// @brief SpotLight -> 8 uniform 전송
         ///        (`<prefix>.{position,direction,cutoff,outerCutoff,attenuation,ambient,diffuse,specular}`).
+        /// @param worldPos 라이트 노드의 월드 위치. @param worldDir 라이트 노드의 월드 전방.
         /// @details CPU 는 degree 보관 / 셰이더는 cosine 비교 — 송신 시점에 @c cosf(glm::radians(...)) 변환.
-        ///          거리감쇠도 @c GetAttenuationCoeff(mDistance) 로 도출.
-        void SetSpotLight(const Program &prog, const char *prefix, const SpotLight &light);
+        void SetSpotLight(const Program &prog, const char *prefix,
+                          const SpotLight &light, const glm::vec3 &worldPos, const glm::vec3 &worldDir);
     }
 }
 

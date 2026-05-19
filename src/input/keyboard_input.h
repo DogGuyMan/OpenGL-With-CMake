@@ -1,6 +1,6 @@
 /**
  * @file keyboard_input.h
- * @brief 키 → 논리 액션 → 핸들러 2단 디스패처 (액션 타입에 제네릭).
+ * @brief 키 -> 논리 액션 -> 핸들러 2단 디스패처 (액션 타입에 제네릭).
  */
 #ifndef __SJH_KEYBOARD_INPUT_H__
 #define __SJH_KEYBOARD_INPUT_H__
@@ -24,9 +24,9 @@ namespace SJH
     class KeyboardInput
     {
     public:
-        /// @brief 물리 키 → 논리 액션 바인딩 (같은 키 재바인딩 시 덮어씀).
+        /// @brief 물리 키 -> 논리 액션 바인딩 (같은 키 재바인딩 시 덮어씀).
         void BindKey(int glfwKey, TAction action) { mKeyBindings[glfwKey] = action; }
-        /// @brief @p glfwKey 의 키→액션 바인딩 제거.
+        /// @brief @p glfwKey 의 키->액션 바인딩 제거.
         void UnbindKey(int glfwKey) { mKeyBindings.erase(glfwKey); }
 
         /// @brief 액션이 *눌려 있는 동안* 매 프레임 실행할 핸들러 (연속).

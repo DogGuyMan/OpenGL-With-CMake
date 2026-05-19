@@ -104,3 +104,62 @@ TEST_CASE("SceneNode 순환 가드 — 조상을 자식으로 부착 시 거부"
     REQUIRE(root.Parent() == nullptr);   // root 는 여전히 부모 없음
     REQUIRE(leaf.Children().empty());    // leaf 는 자식 없음
 }
+
+TEST_CASE("SceneNode WorldForward — 기본은 -Z", "[scene_node]")
+{
+    SJH::SceneNode node;
+    const glm::vec3 f = node.WorldForward();
+    REQUIRE_THAT(f.x, WithinAbs(0.0f, 1e-5f));
+    REQUIRE_THAT(f.y, WithinAbs(0.0f, 1e-5f));
+    REQUIRE_THAT(f.z, WithinAbs(-1.0f, 1e-5f));
+}
+
+TEST_CASE("SceneNode WorldForward — yaw 90도면 -X", "[scene_node]")
+{
+    SJH::SceneNode node;
+    node.SetEulerRot(glm::vec3(0.0f, 90.0f, 0.0f));
+    const glm::vec3 f = node.WorldForward();
+    REQUIRE_THAT(f.x, WithinAbs(-1.0f, 1e-5f));
+    REQUIRE_THAT(f.y, WithinAbs(0.0f, 1e-5f));
+    REQUIRE_THAT(f.z, WithinAbs(0.0f, 1e-5f));
+}
+
+TEST_CASE("SceneNode WorldForward — pitch -90도면 -Y", "[scene_node]")
+{
+    SJH::SceneNode node;
+    node.SetEulerRot(glm::vec3(-90.0f, 0.0f, 0.0f));
+    const glm::vec3 f = node.WorldForward();
+    REQUIRE_THAT(f.x, WithinAbs(0.0f, 1e-5f));
+    REQUIRE_THAT(f.y, WithinAbs(-1.0f, 1e-5f));
+    REQUIRE_THAT(f.z, WithinAbs(0.0f, 1e-5f));
+}
+
+TEST_CASE("SceneNode WorldForward — 부모 회전 반영", "[scene_node]")
+{
+    SJH::SceneNode root, child;
+    root.SetEulerRot(glm::vec3(0.0f, 90.0f, 0.0f));
+    root.Attach(&child);
+    const glm::vec3 f = child.WorldForward(); // child 로컬 identity, 부모 yaw 90
+    REQUIRE_THAT(f.x, WithinAbs(-1.0f, 1e-5f));
+    REQUIRE_THAT(f.z, WithinAbs(0.0f, 1e-5f));
+}
+
+TEST_CASE("SceneNode TranslateBy — 증분 누적", "[scene_node]")
+{
+    SJH::SceneNode node;
+    node.SetTranslate(glm::vec3(1.0f, 0.0f, 0.0f));
+    node.TranslateBy(glm::vec3(2.0f, 3.0f, 0.0f));
+    const glm::mat4 w = node.World();
+    REQUIRE_THAT(w[3][0], WithinAbs(3.0f, 1e-5f));
+    REQUIRE_THAT(w[3][1], WithinAbs(3.0f, 1e-5f));
+}
+
+TEST_CASE("SceneNode TranslateBy — 자식 World 갱신 (dirty 전파)", "[scene_node]")
+{
+    SJH::SceneNode root, child;
+    root.Attach(&child);
+    (void)child.World();
+    root.TranslateBy(glm::vec3(5.0f, 0.0f, 0.0f));
+    const glm::mat4 cw = child.World();
+    REQUIRE_THAT(cw[3][0], WithinAbs(5.0f, 1e-5f));
+}

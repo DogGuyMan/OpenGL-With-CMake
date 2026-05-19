@@ -185,36 +185,39 @@ namespace SJH::Uniforms
     // 책임 분리: 셰이더 struct 멤버 이름과의 *문자열 결합* 만 본 TU 가 담당, 실제
     // GL 호출은 SetVec3/SetFloat 가 재사용 — 캐시/진단/타입체크 경로 그대로 통과.
 
-    void SetDirLight(const Program &prog, const char *prefix, const DirLight &light)
+    void SetDirLight(const Program &prog, const char *prefix,
+                     const DirLight &light, const glm::vec3 &worldDir)
     {
         const std::string base = prefix;
-        SetVec3(prog, (base + Const::SFX_DIRECTION).c_str(), light.Direction);
+        SetVec3(prog, (base + Const::SFX_DIRECTION).c_str(), worldDir);
         SetVec3(prog, (base + Const::SFX_AMBIENT).c_str(),   light.Ambient);
         SetVec3(prog, (base + Const::SFX_DIFFUSE).c_str(),   light.Diffuse);
         SetVec3(prog, (base + Const::SFX_SPECULAR).c_str(),  light.Specular);
     }
 
-    void SetPointLight(const Program &prog, const char *prefix, const PointLight &light)
+    void SetPointLight(const Program &prog, const char *prefix,
+                       const PointLight &light, const glm::vec3 &worldPos)
     {
         const std::string base = prefix;
-        SetVec3(prog, (base + Const::SFX_POSITION).c_str(),    light.Pos);
+        SetVec3(prog, (base + Const::SFX_POSITION).c_str(),    worldPos);
         SetVec3(prog, (base + Const::SFX_ATTENUATION).c_str(), GetAttenuationCoeff(light.Distance));
         SetVec3(prog, (base + Const::SFX_AMBIENT).c_str(),     light.Ambient);
         SetVec3(prog, (base + Const::SFX_DIFFUSE).c_str(),     light.Diffuse);
         SetVec3(prog, (base + Const::SFX_SPECULAR).c_str(),    light.Specular);
     }
 
-    void SetSpotLight(const Program &prog, const char *prefix, const SpotLight &light)
+    void SetSpotLight(const Program &prog, const char *prefix,
+                      const SpotLight &light, const glm::vec3 &worldPos, const glm::vec3 &worldDir)
     {
         const std::string base = prefix;
-        SetVec3 (prog, (base + Const::SFX_POSITION).c_str(),    light.Pos);
-        SetVec3 (prog, (base + Const::SFX_DIRECTION).c_str(),   light.Direction);
+        SetVec3 (prog, (base + Const::SFX_POSITION).c_str(),     worldPos);
+        SetVec3 (prog, (base + Const::SFX_DIRECTION).c_str(),    worldDir);
         // CPU 는 degree, 셰이더는 cosine — 송신 시점에 변환 (struct 정의 시 의도된 분업).
-        SetFloat(prog, (base + Const::SFX_CUTOFF).c_str(),      cosf(glm::radians(light.CutoffAngleDeg)));
+        SetFloat(prog, (base + Const::SFX_CUTOFF).c_str(),       cosf(glm::radians(light.CutoffAngleDeg)));
         SetFloat(prog, (base + Const::SFX_OUTER_CUTOFF).c_str(), cosf(glm::radians(light.OuterCutoffAngleDeg)));
-        SetVec3 (prog, (base + Const::SFX_ATTENUATION).c_str(), GetAttenuationCoeff(light.Distance));
-        SetVec3 (prog, (base + Const::SFX_AMBIENT).c_str(),     light.Ambient);
-        SetVec3 (prog, (base + Const::SFX_DIFFUSE).c_str(),     light.Diffuse);
-        SetVec3 (prog, (base + Const::SFX_SPECULAR).c_str(),    light.Specular);
+        SetVec3 (prog, (base + Const::SFX_ATTENUATION).c_str(),  GetAttenuationCoeff(light.Distance));
+        SetVec3 (prog, (base + Const::SFX_AMBIENT).c_str(),      light.Ambient);
+        SetVec3 (prog, (base + Const::SFX_DIFFUSE).c_str(),      light.Diffuse);
+        SetVec3 (prog, (base + Const::SFX_SPECULAR).c_str(),     light.Specular);
     }
 }

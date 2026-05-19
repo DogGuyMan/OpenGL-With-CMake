@@ -22,7 +22,7 @@ namespace SJH
 {
     /**
      * @brief 로컬 TRS 값 객체.
-     * @details 회전은 오일러 각(degree, X→Y→Z 순서) — 짐벌락 주의. 계층/월드 합성은
+     * @details 회전은 오일러 각(degree, X->Y->Z 순서) — 짐벌락 주의. 계층/월드 합성은
      *          @ref SceneNode 가 담당하며 본 클래스는 로컬 변환만 안다. 모든 멤버 public
      *          (Camera/Light 와 같은 POD-like 컨벤션).
      */

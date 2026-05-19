@@ -16,7 +16,7 @@
  *
  *  ### 캡슐화 — 왜 getter/setter (직접 대입 차단)
  *  - 텍스처 *이름* 과 *해석된 관찰자* 는 *짝* — 이름을 함부로 바꾸면 관찰자가 stale.
- *    → 이름 setter 가 *해석 캐시 무효화*(@c nullptr).
+ *    -> 이름 setter 가 *해석 캐시 무효화*(@c nullptr).
  *  - shininess 는 유효 범위 권장 @c [2, 256] — @c SetShininess 가 clamp.
  *
  *  ### 비-책임
@@ -54,7 +54,7 @@ namespace SJH
         }
 
         /// @brief 디퓨즈 맵 이름 키 갱신 — *해석된 관찰자 무효화* (재 resolve 필요).
-        /// @details 이름이 바뀌면 기존 @c mDiffuseTexture 포인터는 stale → nullptr 로 되돌려 강제 재해석 유도.
+        /// @details 이름이 바뀌면 기존 @c mDiffuseTexture 포인터는 stale -> nullptr 로 되돌려 강제 재해석 유도.
         void SetDiffuseTextureName(const std::string &name)
         {
             mDiffuseTextureName = name;

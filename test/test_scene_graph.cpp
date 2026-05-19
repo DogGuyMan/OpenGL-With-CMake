@@ -75,3 +75,12 @@ TEST_CASE("SceneGraph Detach — enum 으로 분리", "[scene_graph]")
     graph.Detach(TestNode::A);
     REQUIRE(graph.At(TestNode::A).Parent() == nullptr);
 }
+
+TEST_CASE("SceneGraph WorldForward — enum 으로 노드 전방", "[scene_graph]")
+{
+    SJH::SceneGraph<TestNode> graph;
+    graph.At(TestNode::A).SetEulerRot(glm::vec3(0.0f, 90.0f, 0.0f));
+    const glm::vec3 f = graph.WorldForward(TestNode::A);
+    REQUIRE_THAT(f.x, WithinAbs(-1.0f, 1e-5f));
+    REQUIRE_THAT(f.z, WithinAbs(0.0f, 1e-5f));
+}

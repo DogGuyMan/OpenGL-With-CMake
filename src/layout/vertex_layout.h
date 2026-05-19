@@ -17,7 +17,7 @@
  *
  *  ### 사용 흐름 (3.3 core 강제 순서)
  *  ```
- *  VAO 생성/바인딩  →  VBO 생성/바인딩 + 데이터 업로드  →  TrySetAttrib (layout 기록)
+ *  VAO 생성/바인딩  ->  VBO 생성/바인딩 + 데이터 업로드  ->  TrySetAttrib (layout 기록)
  *  ```
  *  본 클래스의 `Create` 는 생성 직후 자동 바인딩. 호출자가 이어서 VBO + `TrySetAttrib` 호출.
  *

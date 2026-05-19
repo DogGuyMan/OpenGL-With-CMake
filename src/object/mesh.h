@@ -40,7 +40,7 @@ namespace SJH
      * @brief GL 버퍼(VBO/EBO) + VAO 를 소유하는 메시 단위 RAII 래퍼.
      * @details
      *  정점 데이터를 GPU 에 업로드하고 @ref Draw 한 번으로 @c glDrawElements 를 호출.
-     *  소유 관계: @c Mesh → @c VertexLayout (VAO) + @c Buffer ×2 (VBO/EBO).
+     *  소유 관계: @c Mesh -> @c VertexLayout (VAO) + @c Buffer ×2 (VBO/EBO).
      *  박스 메시는 @ref CreateBox 팩토리가 제공.
      */
     class Mesh

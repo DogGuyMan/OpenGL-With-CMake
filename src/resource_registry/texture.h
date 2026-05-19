@@ -41,7 +41,7 @@ namespace SJH
          * @brief 디코드된 Image 로부터 GL 텍스처를 생성하고 GPU 에 업로드.
          * @param image  CPU 측 픽셀 데이터 컨테이너 (소유권 X — 호출 동안만 유효하면 됨).
          * @return 생성된 텍스처 (단일 소유 @c unique_ptr). 실패 시 @c nullptr 반환 가능.
-         * @note 채널 수에 따라 자동 포맷 선택 — 1→@c GL_RED, 2→@c GL_RG, 3→@c GL_RGB, 그 외→@c GL_RGBA.
+         * @note 채널 수에 따라 자동 포맷 선택 — 1->@c GL_RED, 2->@c GL_RG, 3->@c GL_RGB, 그 외->@c GL_RGBA.
          *       @c internalformat 은 항상 @c GL_RGBA 로 고정 (학습용 단순화 — SRGB 등 확장 여지).
          */
         static TextureUPtr CreateTexture(const Image *image);

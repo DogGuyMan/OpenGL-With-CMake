@@ -26,7 +26,7 @@ namespace SJH
         }
 
         // [&] : 외부 변수 전부를 참조로 캡처. dirname·mTextures 접근에 사용.
-        //        수명은 LoadByAssimp 스코프 안으로 한정 → 댕글링 위험 없음.
+        //        수명은 LoadByAssimp 스코프 안으로 한정 -> 댕글링 위험 없음.
         //
         // 람다 캡처 리스트 종류:
         // ┌──────────────┬────────────────────────────┬──────────────────────────────┬───────────────────────────┐
@@ -59,7 +59,7 @@ namespace SJH
             auto tex = Texture::CreateTexture(image.get()); // TextureUPtr
             if (!tex)
                 return nullptr;
-            // 핵심 동기 ③ — [&] 가 this 도 캡처 → 멤버 mTextures 직접 접근.
+            // 핵심 동기 ③ — [&] 가 this 도 캡처 -> 멤버 mTextures 직접 접근.
             mTextures.push_back(std::move(tex)); // Model 이 lifetime owner
             return mTextures.back().get();       // 비소유 관찰자 반환
         };
@@ -78,7 +78,7 @@ namespace SJH
                 /*diffuse */ diffuse, /*diffuseUnit*/ 0,
                 /*specular*/ specular, /*specularUnit*/ 1);
 
-            mMaterials.push_back(std::move(glMaterial)); //  m_materials → mMaterials
+            mMaterials.push_back(std::move(glMaterial)); //  m_materials -> mMaterials
         }
 
         ProcessNode(scene->mRootNode, scene);
@@ -132,7 +132,7 @@ namespace SJH
         // 우리가 만들었던 Mesh 코드 호출
         auto glMesh = Mesh::Create(vertices, indices, GL_TRIANGLES);
         Material *mat = nullptr;
-        if (mesh->mMaterialIndex < mMaterials.size()) //  m_materials → mMaterials, unsigned 범위 안전
+        if (mesh->mMaterialIndex < mMaterials.size()) //  m_materials -> mMaterials, unsigned 범위 안전
             mat = mMaterials[mesh->mMaterialIndex].get();
         mRenderUnit.push_back({std::move(glMesh), mat});
     }
@@ -141,7 +141,7 @@ namespace SJH
     {
         for (auto &unit : mRenderUnit)
         {
-            // 머티리얼이 uniform/텍스처를 자기 프로그램에 적용 → 그 다음 메시 기하 드로우.
+            // 머티리얼이 uniform/텍스처를 자기 프로그램에 적용 -> 그 다음 메시 기하 드로우.
             if (unit.material)
                 unit.material->Apply();
             unit.mesh->Draw();

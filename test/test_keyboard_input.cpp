@@ -1,6 +1,6 @@
 /**
  * @file test_keyboard_input.cpp
- * @brief SJH::KeyboardInput<TAction> — 키→액션→핸들러 디스패치 (GL 컨텍스트 불요).
+ * @brief SJH::KeyboardInput<TAction> — 키->액션->핸들러 디스패치 (GL 컨텍스트 불요).
  */
 #include "input/keyboard_input.h"
 #include <catch2/catch_test_macros.hpp>
@@ -48,7 +48,7 @@ TEST_CASE("KeyboardInput 페이즈 격리 — press 만 바인딩 시 RELEASE/RE
     REQUIRE(presses == 1);
 }
 
-TEST_CASE("KeyboardInput 키→액션 해석 — 두 키를 같은 액션에", "[keyboard_input]")
+TEST_CASE("KeyboardInput 키->액션 해석 — 두 키를 같은 액션에", "[keyboard_input]")
 {
     SJH::KeyboardInput<TestAction> kb;
     int jumps = 0;

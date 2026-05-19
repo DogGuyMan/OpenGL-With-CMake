@@ -14,6 +14,11 @@ namespace SJH
         return mWorldCache;
     }
 
+    glm::vec3 SceneNode::WorldForward() const
+    {
+        return glm::normalize(glm::vec3(World() * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f)));
+    }
+
     void SceneNode::SetLocal(const Transform &local)
     {
         mLocal = local;
@@ -35,6 +40,12 @@ namespace SJH
     void SceneNode::SetScale(const glm::vec3 &s)
     {
         mLocal.Scale = s;
+        MarkSubtreeDirty();
+    }
+
+    void SceneNode::TranslateBy(const glm::vec3 &delta)
+    {
+        mLocal.Translate += delta;
         MarkSubtreeDirty();
     }
 

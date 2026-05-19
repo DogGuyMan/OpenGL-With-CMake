@@ -60,11 +60,9 @@ namespace SJH
     class DirLight
     {
     public:
-        /// @brief 평행광 방향 벡터 (world space). 셰이더 uniform `dirLight.direction`. 기본값은 아래-앞 방향.
-        glm::vec3 Direction{glm::vec3(-0.2f, -1.0f, -0.3f)};
-
         /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
         /// @details 광원과 무관한 기본 밝기. 일반적으로 매우 작은 값 (예: @c (0.1, 0.1, 0.1)) 으로 그림자 영역에도 약간의 색.
+        /// @note 방향은 `SceneNodeId::DirLight` 노드의 Transform(EulerRot) 이 소유 — WorldForward() 가 산출.
         glm::vec3 Ambient{glm::vec3(0.1f, 0.1f, 0.1f)};
 
         /// @brief Diffuse 항 색상 (RGB, 0~1). 셰이더 uniform `light.diffuse`.
@@ -86,10 +84,8 @@ namespace SJH
     class PointLight
     {
     public:
-        /// @brief 점 광원 월드 좌표. 셰이더 uniform `pointLights[i].position`. ImGui DragFloat3 위젯이 갱신.
-        glm::vec3 Pos{glm::vec3(3.0f, 3.0f, 3.0f)};
-
         /// @brief 거리 감쇠 산출 기준 도달 거리. 셰이더 uniform `pointLights[i].attenuation`(vec3) 는 @ref GetAttenuationCoeff 로 도출.
+        /// @note 위치는 `SceneNodeId::PointLight*` 노드의 Transform(Translate) 이 소유 — World() 가 산출.
         float Distance{32.0f};
 
         /// @brief Ambient 항 색상 (RGB, 0~1). 셰이더 uniform `light.ambient`.
@@ -112,12 +108,8 @@ namespace SJH
     class SpotLight
     {
     public:
-        /// @brief 광원 월드 좌표. 셰이더 uniform `light.position`. ImGui DragFloat3 위젯이 갱신.
-        glm::vec3 Pos{glm::vec3(3.0f, 3.0f, 3.0f)};
-
-        /// @brief 스포트 콘 축 방향 (world space, 정규화 권장). 셰이더 uniform `light.direction`.
-        /// @details `normalize(-mDirection)` 과 lightDir 의 dot 으로 `theta` 계산 → cutoff 비교.
-        glm::vec3 Direction{glm::vec3(0.0f, -1.0f, 0.0f)};
+        /// @note 위치/방향은 `SceneNodeId::SpotLight` 노드의 Transform 이 소유 —
+        ///       위치는 World(), 방향은 WorldForward() 가 산출.
 
         /// @brief 콘 안쪽 컷오프 각도 (degree). 이 각도 이내는 fully lit.
         /// @details degree 로 보관 — 셰이더 송신 시 `cosf(glm::radians(mCutoffAngleDeg))` 변환 후 push.

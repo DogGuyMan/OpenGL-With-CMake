@@ -14,7 +14,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 // 주의: @c stb_image.h 의 *함수 본문* 은 헤더에서 펼치지 않는다 (헤더에서 매크로 정의 시
-//       Image.h 를 include 하는 모든 TU 에서 정의가 중복 → linker duplicate symbols).
+//       Image.h 를 include 하는 모든 TU 에서 정의가 중복 -> linker duplicate symbols).
 //       @c #define STB_IMAGE_IMPLEMENTATION 은 image.cpp 에서만 1회.
 
 namespace SJH

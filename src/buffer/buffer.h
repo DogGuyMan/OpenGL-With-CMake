@@ -19,7 +19,7 @@ namespace SJH
      *    정점 배열을 GPU 로 옮긴 raw byte 묶음 (position/normal/color/uv 등 interleaved 가능).
      *  - **EBO** (Element Buffer Object, @c GL_ELEMENT_ARRAY_BUFFER) — 인덱스 데이터.
      *    어떤 정점을 어떤 순서로 그릴지 지정 (`glDrawElements` 가 사용).
-     *  - 둘은 GL 객체 종류가 같음 — @c buffer_type 인자로만 구분 → 동일 클래스로 통합.
+     *  - 둘은 GL 객체 종류가 같음 — @c buffer_type 인자로만 구분 -> 동일 클래스로 통합.
      *
      *  ### 다른 GL 객체와의 경계 — VAO 는 별도
      *  - VBO/EBO 는 *데이터*. 그 데이터의 *구조* (layout) 를 알려주는 descriptor 는 @c SJH::VertexLayout
@@ -27,7 +27,7 @@ namespace SJH
      *
      *  ### 호출 흐름
      *  ```
-     *  VAO 바인딩 → VBO 생성/바인딩 + 데이터 업로드 → glVertexAttribPointer
+     *  VAO 바인딩 -> VBO 생성/바인딩 + 데이터 업로드 -> glVertexAttribPointer
      *  ```
      *  VAO 바인딩 *없이* `Buffer::CreateWithData(GL_ARRAY_BUFFER, ...)` 만 호출해도 GL 자체는
      *  성공하지만, 후속 `glVertexAttribPointer` 가 GL_INVALID_OPERATION (3.3 core 강제).

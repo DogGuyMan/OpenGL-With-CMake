@@ -1,6 +1,6 @@
 /**
  * @file mouse_input.h
- * @brief 마우스 드래그 → (dx, dy) delta 콜백. SSU MouseInput 의 GLFW 적응.
+ * @brief 마우스 드래그 -> (dx, dy) delta 콜백. SSU MouseInput 의 GLFW 적응.
  */
 #ifndef __SJH_MOUSE_INPUT_H__
 #define __SJH_MOUSE_INPUT_H__

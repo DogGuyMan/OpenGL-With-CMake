@@ -36,6 +36,8 @@ namespace SJH
 
         /// @brief 월드 행렬 — dirty 면 재계산 후 캐시. parent 가 있으면 parent->World() 합성.
         glm::mat4 World() const;
+        /// @brief 노드의 월드 전방 단위 벡터 — 회전된 -Z. 카메라 front·라이트 방향에 사용.
+        glm::vec3 WorldForward() const;
 
         /// @brief 로컬 변환 일괄 교체 — 자신+자손 dirty.
         void SetLocal(const Transform &local);
@@ -45,6 +47,8 @@ namespace SJH
         void SetEulerRot(const glm::vec3 &r);
         /// @brief 로컬 Scale 만 교체 — 자신+자손 dirty.
         void SetScale(const glm::vec3 &s);
+        /// @brief 로컬 Translate 를 @p delta 만큼 증분 — 자신+자손 dirty.
+        void TranslateBy(const glm::vec3 &delta);
 
         /**
          * @brief @p child 를 이 노드의 자식으로 부착.

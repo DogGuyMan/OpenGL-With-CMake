@@ -1,6 +1,6 @@
 /**
  * @file scene_graph.h
- * @brief enum 인덱스 기반 씬 그래프 — 노드 소유 + enum→노드 O(1) 조회 파사드.
+ * @brief enum 인덱스 기반 씬 그래프 — 노드 소유 + enum->노드 O(1) 조회 파사드.
  */
 #ifndef __SJH_SCENE_GRAPH_H__
 #define __SJH_SCENE_GRAPH_H__
@@ -32,6 +32,9 @@ namespace SJH
 
         /// @brief @p id 노드의 월드 행렬.
         glm::mat4 World(TId id) const { return mNodes[Index(id)].World(); }
+
+        /// @brief @p id 노드의 월드 전방 벡터.
+        glm::vec3 WorldForward(TId id) const { return mNodes[Index(id)].WorldForward(); }
 
         /// @brief @p id 노드의 로컬 변환 일괄 교체.
         void SetLocal(TId id, const Transform &local) { mNodes[Index(id)].SetLocal(local); }

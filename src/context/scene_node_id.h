@@ -21,9 +21,11 @@ namespace SJH
         Window0,
         Window1,
         Window2,
-        PointMarker0,
-        PointMarker1,
-        SpotMarker,
+        Camera,
+        DirLight,
+        PointLight0,
+        PointLight1,
+        SpotLight,
         Count
     };
 }

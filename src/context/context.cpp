@@ -23,7 +23,7 @@ namespace SJH
     namespace
     {
         constexpr float kCameraSpeed = 0.05f;   // WASD/QE 이동 속도 (프레임당 world unit)
-        constexpr float kCameraRotSpeed = 0.1f; // 마우스 드래그 → yaw/pitch 회전 배율
+        constexpr float kCameraRotSpeed = 0.1f; // 마우스 드래그 -> yaw/pitch 회전 배율
     }
 
     std::vector<glm::vec3> cubePositions = {
@@ -75,35 +75,6 @@ namespace SJH
         mMouse.HandleButton(button, action, x, y);
     }
 
-    /*********************************************************************************
-     *
-     * # GL state (enum=symbolic, handle=raw integer)
-     * vao:            1
-     * program:        0
-     * array_buffer:   3
-     * element_buffer: 4
-     * draw_fbo:       0
-     * read_fbo:       0
-     * active_texture: GL_TEXTURE0
-     * tex_2d[unit 0]: 8
-     * viewport:       [0, 0, 1600, 1200]
-     * depth_test:     disabled
-     * depth_func:     GL_LESS
-     * depth_write:    true
-     * blend:          disabled
-     * blend_src_rgb:  GL_ONE
-     * blend_dst_rgb:  GL_ZERO
-     * cull_face:      disabled
-     * cull_face_mode: GL_BACK
-     * front_face:     GL_CCW
-     * color_write:    [R, G, B, A]
-     * clear_color:    [0.000, 0.100, 0.200, 0.000]
-     * attrib[0]:      vec3 GL_FLOAT, normalized=false, stride=32, vbo=3
-     * attrib[1]:      vec3 GL_FLOAT, normalized=false, stride=32, vbo=3
-     * attrib[2]:      vec2 GL_FLOAT, normalized=false, stride=32, vbo=3
-     *
-     *********************************************************************************/
-
     void Context::Render()
     {
         // ... 기존 ImGui 코드 ...
@@ -112,7 +83,11 @@ namespace SJH
             if (ImGui::CollapsingHeader(Const::LBL_DIRLIGHT))
             {
                 ImGui::Checkbox(Const::LBL_DIR_ENABLED, &mDirLightEnabled);
-                ImGui::DragFloat3(Const::LBL_DIR_DIRECTION, glm::value_ptr(mDirLight.Direction), 0.01f);
+                {
+                    Transform t = mScene.At(SceneNodeId::DirLight).Local();
+                    if (ImGui::DragFloat3(Const::LBL_DIR_DIRECTION, glm::value_ptr(t.EulerRot), 0.5f))
+                        mScene.At(SceneNodeId::DirLight).SetLocal(t);
+                }
                 ImGui::ColorEdit3(Const::LBL_DIR_AMBIENT, glm::value_ptr(mDirLight.Ambient));
                 ImGui::ColorEdit3(Const::LBL_DIR_DIFFUSE, glm::value_ptr(mDirLight.Diffuse));
                 ImGui::ColorEdit3(Const::LBL_DIR_SPECULAR, glm::value_ptr(mDirLight.Specular));
@@ -125,7 +100,12 @@ namespace SJH
                 if (ImGui::CollapsingHeader(header.c_str()))
                 {
                     ImGui::Checkbox(Const::LBL_P_ENABLED, &mPointLightsEnabled[i]);
-                    ImGui::DragFloat3(Const::LBL_P_POSITION, glm::value_ptr(mPointLights[i].Pos), 0.01f);
+                    {
+                        const SceneNodeId pid = (i == 0) ? SceneNodeId::PointLight0 : SceneNodeId::PointLight1;
+                        Transform t = mScene.At(pid).Local();
+                        if (ImGui::DragFloat3(Const::LBL_P_POSITION, glm::value_ptr(t.Translate), 0.01f))
+                            mScene.At(pid).SetLocal(t);
+                    }
                     ImGui::DragFloat(Const::LBL_P_DISTANCE, &mPointLights[i].Distance, 0.5f, 1.0f, 3250.0f);
                     ImGui::ColorEdit3(Const::LBL_P_AMBIENT, glm::value_ptr(mPointLights[i].Ambient));
                     ImGui::ColorEdit3(Const::LBL_P_DIFFUSE, glm::value_ptr(mPointLights[i].Diffuse));
@@ -137,8 +117,14 @@ namespace SJH
             if (ImGui::CollapsingHeader(Const::LBL_SPOTLIGHT, ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::Checkbox(Const::LBL_S_ENABLED, &mSpotLightEnabled);
-                ImGui::DragFloat3(Const::LBL_S_POSITION, glm::value_ptr(mSpotLight.Pos), 0.01f);
-                ImGui::DragFloat3(Const::LBL_S_DIRECTION, glm::value_ptr(mSpotLight.Direction), 0.01f);
+                {
+                    Transform t = mScene.At(SceneNodeId::SpotLight).Local();
+                    bool spotChanged = false;
+                    spotChanged |= ImGui::DragFloat3(Const::LBL_S_POSITION, glm::value_ptr(t.Translate), 0.01f);
+                    spotChanged |= ImGui::DragFloat3(Const::LBL_S_DIRECTION, glm::value_ptr(t.EulerRot), 0.5f);
+                    if (spotChanged)
+                        mScene.At(SceneNodeId::SpotLight).SetLocal(t);
+                }
                 ImGui::DragFloat(Const::LBL_S_CUTOFF, &mSpotLight.CutoffAngleDeg, 0.1f, 0.0f, 89.0f);
                 ImGui::DragFloat(Const::LBL_S_OUTER_CUTOFF, &mSpotLight.OuterCutoffAngleDeg, 0.1f, 0.0f, 90.0f);
                 ImGui::DragFloat(Const::LBL_S_DISTANCE, &mSpotLight.Distance, 0.5f, 1.0f, 3250.0f);
@@ -159,15 +145,19 @@ namespace SJH
             }
             ImGui::Separator();
             ImGui::DragFloat(Const::LBL_POSTPROCESS_GAMMA, &mGamma, 0.01f, 0.0f, 2.0f);
-            ImGui::DragFloat3(Const::LBL_CAMERA_POS, glm::value_ptr(mCamera.Pos), 0.01f);
-            ImGui::DragFloat(Const::LBL_CAMERA_YAW, &mCamera.EulerYaw, 0.5f);
-            ImGui::DragFloat(Const::LBL_CAMERA_PITCH, &mCamera.EulerPitch, 0.5f, -89.0f, 89.0f);
+            {
+                Transform camT = mScene.At(SceneNodeId::Camera).Local();
+                bool camChanged = false;
+                camChanged |= ImGui::DragFloat3(Const::LBL_CAMERA_POS, glm::value_ptr(camT.Translate), 0.01f);
+                camChanged |= ImGui::DragFloat(Const::LBL_CAMERA_YAW, &camT.EulerRot.y, 0.5f);
+                camChanged |= ImGui::DragFloat(Const::LBL_CAMERA_PITCH, &camT.EulerRot.x, 0.5f, -89.0f, 89.0f);
+                if (camChanged)
+                    mScene.At(SceneNodeId::Camera).SetLocal(camT);
+            }
             ImGui::Separator();
             if (ImGui::Button(Const::LBL_RESET_CAMERA))
             {
-                mCamera.EulerYaw = 0.0f;
-                mCamera.EulerPitch = 0.0f;
-                mCamera.Pos = glm::vec3(0.0f, 0.0f, 3.0f);
+                mScene.At(SceneNodeId::Camera).SetLocal(Transform{.Translate = {0.0f, 0.0f, 3.0f}});
             }
 
             ImGui::Combo(Const::LBL_DEPTH_FUNC, &mDepthFuncIndex,
@@ -208,32 +198,26 @@ namespace SJH
         }
         glDepthFunc(Const::DEPTH_FUNC[mDepthFuncIndex]);
 
-        // 카메라: z=3 위치에서 원점을 바라봄. 인자 없는 const 게터 — 멤버 직접 사용.
-        auto viewMat = mCamera.GetForwardViewMatrix();
+        // 카메라 노드의 월드 변환 역행렬 = view 행렬. proj 는 렌즈(mCamera).
+        auto viewMat = glm::inverse(mScene.World(SceneNodeId::Camera));
         auto projMat = mCamera.GetProjMatrix(); // mAspect 멤버 사용 (Reshape 에서 갱신)
 
         // 2. Use Program — 광원 *위치 표시 큐브* 들 (DirLight 는 방향만 가지므로 표시 안 함)
         mSimpleProgram->Use();
         {
             // 두 점광원 + 스포트라이트 = 총 3개 마커 큐브. 각자 자기 diffuse 색으로 출력.
-            const glm::vec3 markerPositions[3] = {
-                mPointLights[0].Pos,
-                mPointLights[1].Pos,
-                mSpotLight.Pos,
-            };
+            // 마커 = 라이트 노드 자체 — 노드 World() 에 직접 그림 (per-frame 위치 복사 없음).
             const glm::vec3 markerColors[3] = {
                 mPointLights[0].Diffuse,
                 mPointLights[1].Diffuse,
                 mSpotLight.Diffuse,
             };
             const SceneNodeId markerIds[3] = {
-                SceneNodeId::PointMarker0, SceneNodeId::PointMarker1, SceneNodeId::SpotMarker};
+                SceneNodeId::PointLight0, SceneNodeId::PointLight1, SceneNodeId::SpotLight};
             for (int i = 0; i < 3; ++i)
             {
                 if (mFlashLightMode && i >= 2)
                     continue;
-                // 동적 노드 — 광원 위치를 매 프레임 로컬 Translate 로 갱신.
-                mScene.At(markerIds[i]).SetTranslate(markerPositions[i]);
                 Uniforms::SetVec4(*mSimpleProgram.get(), Const::UNI_BASE_COLOR, glm::vec4(markerColors[i], 1.0f));
                 Uniforms::SetMat4(*mSimpleProgram.get(), Const::UNI_TRANSFORM_MAT,
                                   projMat * viewMat * mScene.World(markerIds[i]));
@@ -243,7 +227,8 @@ namespace SJH
 
         mProgram->Use();
         {
-            Uniforms::SetVec3(*mProgram.get(), Const::UNI_VIEW_POS, mCamera.Pos);
+            Uniforms::SetVec3(*mProgram.get(), Const::UNI_VIEW_POS,
+                              glm::vec3(mScene.World(SceneNodeId::Camera)[3]));
 
             // --- Light 활성 플래그 — 셰이더가 enabled==0 슬롯의 Calc* 호출을 건너뜀.
             //     ImGui 체크박스로 토글된 광원은 화면에 기여 안 함.
@@ -256,23 +241,30 @@ namespace SJH
             }
             if (mFlashLightMode)
             {
-                mSpotLight.Pos = mCamera.Pos;
-                mSpotLight.Direction = mCamera.GetFront();
+                // 스포트 노드가 카메라 노드를 추종 — 마커 큐브 크기(Scale 0.1) 는 보존.
+                Transform spotT = mScene.At(SceneNodeId::Camera).Local();
+                spotT.Scale = glm::vec3(0.1f, 0.1f, 0.1f);
+                mScene.At(SceneNodeId::SpotLight).SetLocal(spotT);
             }
-            Uniforms::SetSpotLight(*mProgram.get(), Const::UNI_SPOT_LIGHT, mSpotLight);
+            Uniforms::SetSpotLight(*mProgram.get(), Const::UNI_SPOT_LIGHT, mSpotLight,
+                                   glm::vec3(mScene.World(SceneNodeId::SpotLight)[3]),
+                                   mScene.WorldForward(SceneNodeId::SpotLight));
             // --- DirLight 1개 (평행광 / 거리감쇠 없음) ---
-            Uniforms::SetDirLight(*mProgram, Const::UNI_DIR_LIGHT, mDirLight);
+            Uniforms::SetDirLight(*mProgram, Const::UNI_DIR_LIGHT, mDirLight,
+                                  mScene.WorldForward(SceneNodeId::DirLight));
 
             // --- PointLight 2개 (배열, 거리감쇠는 helper 가 mDistance 로 내부 도출) ---
+            const SceneNodeId pointLightIds[2] = {
+                SceneNodeId::PointLight0, SceneNodeId::PointLight1};
             for (int i = 0; i < 2; ++i)
             {
                 const std::string base = Const::UNI_POINT_LIGHTS_PREFIX + std::to_string(i) + Const::STR_INDEX_CLOSE;
-                Uniforms::SetPointLight(*mProgram, base.c_str(), mPointLights[i]);
+                Uniforms::SetPointLight(*mProgram, base.c_str(), mPointLights[i],
+                                        glm::vec3(mScene.World(pointLightIds[i])[3]));
             }
 
-            // --- SpotLight 1개 (점광원 + 콘 cutoff — degree->cosine 변환은 helper 내부) ---
+            // --- SpotLight uniform 은 위에서 전송됨 — 본 블록은 transform uniform 만 ---
             {
-                Uniforms::SetSpotLight(*mProgram, Const::UNI_SPOT_LIGHT, mSpotLight);
                 auto modelTransform = glm::mat4(1.0f);
                 auto transform = projMat * viewMat * modelTransform;
                 Uniforms::SetMat4(*mProgram.get(), Const::UNI_TRANSFORM_MAT, transform);
@@ -370,19 +362,18 @@ namespace SJH
             Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, transform);
             mPlane->Draw();
         }
-        // glPointSize(50.0f);
-        // glDrawArrays(GL_POINTS, 0, 1);
 
         Framebuffer::BindToDefault();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+        // 텍스쳐에 넣는거.
         // mTextureProgram->Use();
         // Uniforms::SetMat4(*mTextureProgram, Const::UNI_TRANSFORM_MAT, glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
 
         // mFramebuffer
-        //     ->GetColorAttachment() // TexturePtr m_colorAttachment;
-        //     ->Bind();              // glBindTexture(GL_TEXTURE_2D, mTextureID);
+        //     ->GetColorAttachment()
+        //     ->Bind();
         // Uniforms::SetInt(*mTextureProgram, Const::UNI_FRAMETEXTURE, 0);
         // mPlane->Draw();
 
@@ -392,79 +383,38 @@ namespace SJH
         Uniforms::SetMat4(*mPostProgram, Const::UNI_TRANSFORM_MAT, glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
         Uniforms::SetFloat(*mPostProgram, Const::UNI_POSTPROCESS_GAMMA, mGamma);
         mFramebuffer
-            ->GetColorAttachment()
-            ->Bind();
+            ->GetColorAttachment() // TexturePtr m_colorAttachment;
+            ->Bind();              // glBindTexture(GL_TEXTURE_2D, mTextureID);
         Uniforms::SetInt(*mPostProgram, Const::UNI_POSTPROCESS_FRAMETEXTURE, 0);
         mPlane->Draw();
     }
 
-    /*********************************************************************************
-     *
-     * # GL state (enum=symbolic, handle=raw integer)
-     * vao:            0
-     * program:        0
-     * array_buffer:   0
-     * element_buffer: 0  (note: EBO state is per-VAO; with VAO=0, this is always 0)
-     * draw_fbo:       0
-     * read_fbo:       0
-     * active_texture: GL_TEXTURE0
-     * tex_2d[*]:      (all units empty)
-     * viewport:       [0, 0, 1600, 1200]
-     * depth_test:     disabled
-     * depth_func:     GL_LESS
-     * depth_write:    true
-     * blend:          disabled
-     * blend_src_rgb:  GL_ONE
-     * blend_dst_rgb:  GL_ZERO
-     * cull_face:      disabled
-     * cull_face_mode: GL_BACK
-     * front_face:     GL_CCW
-     * color_write:    [R, G, B, A]
-     * clear_color:    [0.000, 0.000, 0.000, 0.000]
-     * attrib[*]:      (all disabled)
-     *
-     *********************************************************************************/
-
     bool Context::Init()
     {
-        // === Light Casters 초기화 (사용자 제공 reference 값) ===
-        // 거리감쇠 c1=0.09 / c2=0.032 -> learnopengl 표 distance≈50 행에 대응하므로 mDistance=50 로 설정.
-        // (project 의 GetAttenuationCoeff 가 distance->(Kc,Kl,Kq) 변환을 담당)
-
         mDirLight = {
-            .Direction = glm::vec3(0.0f, -1.0f, 0.0f),
             .Ambient = glm::vec3(1.0f, 1.0f, 1.0f),
             .Diffuse = glm::vec3(1.0f, 1.0f, 1.0f),
             .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mPointLights[0] = {.Pos = glm::vec3(1.2f, 1.0f, 1.0f),
-                           .Distance = 50.0f,
+        mPointLights[0] = {.Distance = 50.0f,
                            .Ambient = glm::vec3(0.05f, 0.05f, 0.05f),
                            .Diffuse = glm::vec3(0.8f, 0.4f, 0.2f),
                            .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mPointLights[1] = {.Pos = glm::vec3(-1.2f, 1.0f, -1.0f),
-                           .Distance = 50.0f,
+        mPointLights[1] = {.Distance = 50.0f,
                            .Ambient = glm::vec3(0.05f, 0.05f, 0.05f),
                            .Diffuse = glm::vec3(0.2f, 0.4f, 0.8f),
                            .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mSpotLight = {.Pos = glm::vec3(1.0f, 4.0f, 4.0f),
-                      .Direction = glm::vec3(0.0f, -1.0f, 0.0f),
-                      .CutoffAngleDeg = 5.0f,
+        mSpotLight = {.CutoffAngleDeg = 5.0f,
                       .OuterCutoffAngleDeg = 120.0f,
                       .Distance = 128.0f,
                       .Ambient = glm::vec3(0.0f, 0.0f, 0.0f),
                       .Diffuse = glm::vec3(1.0f, 1.0f, 1.0f),
                       .Specular = glm::vec3(1.0f, 1.0f, 1.0f)};
 
-        mCamera = {
-            .Pos = glm::vec3(0.0f, 2.5f, 8.0f),
-            .EulerPitch = -20.f,
-        };
-
         // === Input 바인딩 ===
-        // 1단 — 물리 키 → 논리 액션 (InputMap 계층).
+        // 1단 — 물리 키 -> 논리 액션 (InputMap 계층).
         mKeyboard.BindKey(GLFW_KEY_W, GameAction::MoveForward);
         mKeyboard.BindKey(GLFW_KEY_S, GameAction::MoveBackward);
         mKeyboard.BindKey(GLFW_KEY_D, GameAction::MoveRight);
@@ -472,47 +422,52 @@ namespace SJH
         mKeyboard.BindKey(GLFW_KEY_E, GameAction::MoveUp);
         mKeyboard.BindKey(GLFW_KEY_Q, GameAction::MoveDown);
 
-        // 2단 — 논리 액션 → 핸들러 (연속 이동). 카메라 right/up 은 front 에서 매번 산출.
-        mKeyboard.BindHeldHandler(GameAction::MoveForward,
-                                  [this]
-                                  { mCamera.Pos += kCameraSpeed * mCamera.GetFront(); });
-        mKeyboard.BindHeldHandler(GameAction::MoveBackward,
-                                  [this]
-                                  { mCamera.Pos -= kCameraSpeed * mCamera.GetFront(); });
+        // 2단 — 논리 액션 -> 핸들러 (연속 이동). 카메라 노드를 증분 갱신.
+        // front = 카메라 노드 월드 전방, right/up 은 수평 strafe 위해 world-up 과 외적.
+        mKeyboard.BindHeldHandler(GameAction::MoveForward, [this]
+                                  { mScene.At(SceneNodeId::Camera)
+                                        .TranslateBy(kCameraSpeed * mScene.WorldForward(SceneNodeId::Camera)); });
+        mKeyboard.BindHeldHandler(GameAction::MoveBackward, [this]
+                                  { mScene.At(SceneNodeId::Camera)
+                                        .TranslateBy(-kCameraSpeed * mScene.WorldForward(SceneNodeId::Camera)); });
         mKeyboard.BindHeldHandler(GameAction::MoveRight, [this]
                                   {
-            const auto right = glm::normalize(glm::cross(mCamera.CamUp, -mCamera.GetFront()));
-            mCamera.Pos += kCameraSpeed * right; });
+            const glm::vec3 front = mScene.WorldForward(SceneNodeId::Camera);
+            const glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), -front));
+            mScene.At(SceneNodeId::Camera).TranslateBy(kCameraSpeed * right); });
         mKeyboard.BindHeldHandler(GameAction::MoveLeft, [this]
                                   {
-            const auto right = glm::normalize(glm::cross(mCamera.CamUp, -mCamera.GetFront()));
-            mCamera.Pos -= kCameraSpeed * right; });
+            const glm::vec3 front = mScene.WorldForward(SceneNodeId::Camera);
+            const glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), -front));
+            mScene.At(SceneNodeId::Camera).TranslateBy(-kCameraSpeed * right); });
         mKeyboard.BindHeldHandler(GameAction::MoveUp, [this]
                                   {
-            const auto front = mCamera.GetFront();
-            const auto right = glm::normalize(glm::cross(mCamera.CamUp, -front));
-            const auto up = glm::normalize(glm::cross(-front, right));
-            mCamera.Pos += kCameraSpeed * up; });
+            const glm::vec3 front = mScene.WorldForward(SceneNodeId::Camera);
+            const glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), -front));
+            const glm::vec3 up = glm::normalize(glm::cross(-front, right));
+            mScene.At(SceneNodeId::Camera).TranslateBy(kCameraSpeed * up); });
         mKeyboard.BindHeldHandler(GameAction::MoveDown, [this]
                                   {
-            const auto front = mCamera.GetFront();
-            const auto right = glm::normalize(glm::cross(mCamera.CamUp, -front));
-            const auto up = glm::normalize(glm::cross(-front, right));
-            mCamera.Pos -= kCameraSpeed * up; });
+            const glm::vec3 front = mScene.WorldForward(SceneNodeId::Camera);
+            const glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), -front));
+            const glm::vec3 up = glm::normalize(glm::cross(-front, right));
+            mScene.At(SceneNodeId::Camera).TranslateBy(-kCameraSpeed * up); });
 
-        // 마우스 우클릭 드래그 → 시점 회전 (yaw/pitch). 기존 MouseMove 로직 이식.
+        // 마우스 우클릭 드래그 -> 카메라 노드 EulerRot (yaw=.y / pitch=.x) 갱신.
         mMouse.BindLookHandler([this](double dx, double dy)
                                {
-            mCamera.EulerYaw -= static_cast<float>(dx) * kCameraRotSpeed;
-            mCamera.EulerPitch -= static_cast<float>(dy) * kCameraRotSpeed;
-            if (mCamera.EulerYaw < 0.0f)
-                mCamera.EulerYaw += 360.0f;
-            if (mCamera.EulerYaw > 360.0f)
-                mCamera.EulerYaw -= 360.0f;
-            if (mCamera.EulerPitch > 89.0f)
-                mCamera.EulerPitch = 89.0f;
-            if (mCamera.EulerPitch < -89.0f)
-                mCamera.EulerPitch = -89.0f; });
+            glm::vec3 rot = mScene.At(SceneNodeId::Camera).Local().EulerRot;
+            rot.y -= static_cast<float>(dx) * kCameraRotSpeed; // yaw
+            rot.x -= static_cast<float>(dy) * kCameraRotSpeed; // pitch
+            if (rot.y < 0.0f)
+                rot.y += 360.0f;
+            if (rot.y > 360.0f)
+                rot.y -= 360.0f;
+            if (rot.x > 89.0f)
+                rot.x = 89.0f;
+            if (rot.x < -89.0f)
+                rot.x = -89.0f;
+            mScene.At(SceneNodeId::Camera).SetEulerRot(rot); });
 
         mProgram = Program::CreateWithVSFS(Const::PATH_SHADER_LIGHTING_VS, Const::PATH_SHADER_LIGHTING_FS);
         if (!mProgram)
@@ -647,10 +602,21 @@ namespace SJH
         mScene.SetLocal(SceneNodeId::Window0, Transform{.Translate = {0.0f, 0.5f, 4.0f}});
         mScene.SetLocal(SceneNodeId::Window1, Transform{.Translate = {0.2f, 0.5f, 5.0f}});
         mScene.SetLocal(SceneNodeId::Window2, Transform{.Translate = {0.4f, 0.5f, 6.0f}});
-        // 마커는 스케일만 고정 — 위치는 Render() 가 광원 위치로 매 프레임 갱신.
-        mScene.SetLocal(SceneNodeId::PointMarker0, Transform{.Scale = {0.1f, 0.1f, 0.1f}});
-        mScene.SetLocal(SceneNodeId::PointMarker1, Transform{.Scale = {0.1f, 0.1f, 0.1f}});
-        mScene.SetLocal(SceneNodeId::SpotMarker, Transform{.Scale = {0.1f, 0.1f, 0.1f}});
+        // 카메라 — 위치 + (pitch, yaw, 0). view 행렬은 inverse(World(Camera)).
+        mScene.SetLocal(SceneNodeId::Camera,
+                        Transform{.Translate = {0.0f, 2.5f, 8.0f},
+                                  .EulerRot = {-20.0f, 0.0f, 0.0f}});
+        // 라이트 노드 — 위치(Translate) + 마커 큐브 크기(Scale 0.1). 방향은 EulerRot.
+        mScene.SetLocal(SceneNodeId::DirLight,
+                        Transform{.EulerRot = {-90.0f, 0.0f, 0.0f}}); // forward = (0,-1,0)
+        mScene.SetLocal(SceneNodeId::PointLight0,
+                        Transform{.Translate = {1.2f, 1.0f, 1.0f}, .Scale = {0.1f, 0.1f, 0.1f}});
+        mScene.SetLocal(SceneNodeId::PointLight1,
+                        Transform{.Translate = {-1.2f, 1.0f, -1.0f}, .Scale = {0.1f, 0.1f, 0.1f}});
+        mScene.SetLocal(SceneNodeId::SpotLight,
+                        Transform{.Translate = {1.0f, 4.0f, 4.0f},
+                                  .EulerRot = {-90.0f, 0.0f, 0.0f}, // forward = (0,-1,0)
+                                  .Scale = {0.1f, 0.1f, 0.1f}});
 
         mScene.Attach(SceneNodeId::Plane, SceneNodeId::Root);
         mScene.Attach(SceneNodeId::Box1, SceneNodeId::Root);
@@ -660,9 +626,11 @@ namespace SJH
         mScene.Attach(SceneNodeId::Window0, SceneNodeId::Windows);
         mScene.Attach(SceneNodeId::Window1, SceneNodeId::Windows);
         mScene.Attach(SceneNodeId::Window2, SceneNodeId::Windows);
-        mScene.Attach(SceneNodeId::PointMarker0, SceneNodeId::Root);
-        mScene.Attach(SceneNodeId::PointMarker1, SceneNodeId::Root);
-        mScene.Attach(SceneNodeId::SpotMarker, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::Camera, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::DirLight, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::PointLight0, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::PointLight1, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::SpotLight, SceneNodeId::Root);
 
         return true;
     }

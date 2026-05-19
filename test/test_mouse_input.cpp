@@ -1,6 +1,6 @@
 /**
  * @file test_mouse_input.cpp
- * @brief SJH::MouseInput — 드래그 → delta 콜백 (GL 컨텍스트 불요).
+ * @brief SJH::MouseInput — 드래그 -> delta 콜백 (GL 컨텍스트 불요).
  */
 #include "input/mouse_input.h"
 #include <catch2/catch_test_macros.hpp>

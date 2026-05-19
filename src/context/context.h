@@ -35,13 +35,13 @@ namespace SJH
      *  - VAO + Vertex Attribute (@ref VertexLayout) — @c glGenVertexArrays + @c glVertexAttribPointer
      *  - 셰이더/프로그램 (@ref Shader / @ref Program)
      *  - 텍스처 로드 + 바인딩 + uniform 설정 (@ref ResourceRegistry)
-     *  - 카메라 상태 보관 + 입력 → 카메라 갱신 위임 (@ref Camera)
+     *  - 카메라 상태 보관 + 입력 -> 카메라 갱신 위임 (@ref Camera)
      *  - 매 프레임 draw call 시퀀스 (@ref Render)
      *  - 위 객체들의 자동 파괴 (@c UPtr 소멸 시점)
      *
      * @par Context 가 담당하지 *않는* 것 — 앱 전반(저변동, 보일러플레이트)
      *  - GLFW @c init/terminate, OpenGL 컨텍스트 생성, glad 함수 로딩
-     *  - 키/마우스 입력 콜백 등록 (콜백 자체는 @c app/main.cpp 가 GLFW 에 등록 → @ref ProcessInput / @ref MouseMove / @ref MouseButton 으로 위임)
+     *  - 키/마우스 입력 콜백 등록 (콜백 자체는 @c app/main.cpp 가 GLFW 에 등록 -> @ref ProcessInput / @ref MouseMove / @ref MouseButton 으로 위임)
      *  - 프레임버퍼 리사이즈 콜백 (콜백은 main 이 받고 @ref Reshape 위임)
      *  - @c glfwSwapBuffers / @c glfwPollEvents 메인 루프
      *  - 위 항목은 @c app/main.cpp 의 라이프 사이클 영역.
@@ -60,7 +60,7 @@ namespace SJH
         void Render();
 
         /**
-         * @brief 키보드 입력 폴링 → 카메라 위치 이동.
+         * @brief 키보드 입력 폴링 -> 카메라 위치 이동.
          * @param window 폴링 대상 GLFW 윈도우 (키 상태 조회용).
          * @details 매핑:
          *  - @c W / @c S — front 방향 +/-
@@ -80,7 +80,7 @@ namespace SJH
         void Reshape(int width, int height);
 
         /**
-         * @brief 마우스 이동 → 카메라 yaw/pitch 회전 갱신.
+         * @brief 마우스 이동 -> 카메라 yaw/pitch 회전 갱신.
          * @param x,y 현재 커서 위치 (스크린 좌표).
          * @details 이전 위치(@c mPrevMousePos)와의 델타로 회전 각도 계산:
          *  - yaw   ← @c -deltaX * 0.1
@@ -92,7 +92,7 @@ namespace SJH
         void MouseMove(double x, double y);
 
         /**
-         * @brief 마우스 버튼 이벤트 → 카메라 회전 모드 토글.
+         * @brief 마우스 버튼 이벤트 -> 카메라 회전 모드 토글.
          * @param button GLFW 버튼 코드 (@c GLFW_MOUSE_BUTTON_LEFT 등).
          * @param action @c GLFW_PRESS / @c GLFW_RELEASE.
          * @param x,y    이벤트 발생 시 커서 위치.
@@ -148,7 +148,7 @@ namespace SJH
         /// @brief 키보드 입력 — 물리 키↔GameAction 매핑 + 액션↔핸들러. Init 에서 바인딩.
         KeyboardInput<GameAction> mKeyboard;
 
-        /// @brief 마우스 입력 — 우클릭 드래그 → 시점 회전. IsDragging() 이 조작 상태.
+        /// @brief 마우스 입력 — 우클릭 드래그 -> 시점 회전. IsDragging() 이 조작 상태.
         MouseInput mMouse;
 
         /// @brief 카메라 상태(POD-like). View/Projection 행렬 산출 + 입력 메서드들이 직접 갱신.
@@ -160,7 +160,7 @@ namespace SJH
         // === ImGui / 프레임 클리어 ===
         /// @brief @c glClearColor 인자. ImGui ColorEdit3 위젯이 직접 갱신.
         glm::vec4 mClearColor{glm::vec4(0.1f, 0.2f, 0.3f, 0.0f)};
-        /// @brief 씬을 오프스크린 렌더링할 FBO. Bind() 후 렌더 → mPostProgram 으로 화면 quad 에 블릿.
+        /// @brief 씬을 오프스크린 렌더링할 FBO. Bind() 후 렌더 -> mPostProgram 으로 화면 quad 에 블릿.
         FramebufferUPtr mFramebuffer;
 
         // === 라이팅 (Multi Light Caster — Directional + Point[N] + Spot) ===

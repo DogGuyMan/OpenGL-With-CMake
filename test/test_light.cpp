@@ -72,16 +72,10 @@ TEST_CASE("SJH::Light — 복사 시멘틱 (POD-like)", "[light][copy]")
 // DirLight (평행광 — 방향만 가짐, 거리 감쇠 없음)
 // ──────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("SJH::DirLight default — direction (-0.2, -1.0, -0.3) + Phong 3항",
-          "[dirlight][defaults]")
+TEST_CASE("SJH::DirLight default — Phong 3항 기본 비율", "[dirlight][defaults]")
 {
     SJH::DirLight d;
-
-    // 위에서 비추는 태양 — Y 음의 방향이 dominant
-    REQUIRE_THAT(d.Direction.x, WithinAbs(-0.2f, 1e-6f));
-    REQUIRE_THAT(d.Direction.y, WithinAbs(-1.0f, 1e-6f));
-    REQUIRE_THAT(d.Direction.z, WithinAbs(-0.3f, 1e-6f));
-
+    // 방향은 SceneNodeId::DirLight 노드의 Transform 이 소유 — 본 구조체는 색상 3항만.
     REQUIRE_THAT(d.Ambient.x,  WithinAbs(0.1f, 1e-6f));
     REQUIRE_THAT(d.Diffuse.x,  WithinAbs(0.5f, 1e-6f));
     REQUIRE_THAT(d.Specular.x, WithinAbs(1.0f, 1e-6f));
@@ -91,15 +85,11 @@ TEST_CASE("SJH::DirLight default — direction (-0.2, -1.0, -0.3) + Phong 3항",
 // PointLight (점광원 — 거리 감쇠)
 // ──────────────────────────────────────────────────────────────────────────
 
-TEST_CASE("SJH::PointLight default — mDistance 32 + position (3,3,3)",
-          "[pointlight][defaults]")
+TEST_CASE("SJH::PointLight default — mDistance 32 + Phong 3항", "[pointlight][defaults]")
 {
     SJH::PointLight p;
-
-    // 거리 감쇠 산출 기준 — 셰이더의 attenuation vec3 도출용
+    // 거리 감쇠 산출 기준. 위치는 SceneNodeId::PointLight* 노드의 Transform 이 소유.
     REQUIRE_THAT(p.Distance, WithinAbs(32.0f, 1e-6f));
-
-    REQUIRE_THAT(p.Pos.x, WithinAbs(3.0f, 1e-6f));
     REQUIRE_THAT(p.Ambient.x, WithinAbs(0.1f, 1e-6f));
 }
 
@@ -115,10 +105,8 @@ TEST_CASE("SJH::SpotLight default — 콘 cutoff 12.5°/17.5° (inner/outer)",
     // 손전등 — inner 콘 안쪽은 100% 밝기, outer 바깥은 0%, 사이는 soft edge
     REQUIRE_THAT(s.CutoffAngleDeg,      WithinAbs(12.5f, 1e-6f));
     REQUIRE_THAT(s.OuterCutoffAngleDeg, WithinAbs(17.5f, 1e-6f));
-
-    REQUIRE_THAT(s.Pos.x, WithinAbs(3.0f, 1e-6f));
-    REQUIRE_THAT(s.Direction.y, WithinAbs(-1.0f, 1e-6f));   // 아래 향해
     REQUIRE_THAT(s.Distance, WithinAbs(32.0f, 1e-6f));
+    // 위치/방향은 SceneNodeId::SpotLight 노드의 Transform 이 소유 — 본 구조체엔 없음.
 }
 
 TEST_CASE("SJH::SpotLight — outer > inner 가 spec (페이드 구간 양수)",

@@ -41,9 +41,7 @@ namespace SJH
         /// @brief 카메라의 위 방향 단위 벡터. 기본값 @c (0,1,0).
         glm::vec3 CamUp  = glm::vec3(0.0f, 1.0f, 0.0f);
 
-        // === 입력 / 회전 ===
-        /// @brief 입력으로 카메라를 조작 중인지 여부. 마우스 좌클릭 PRESS/RELEASE 가 토글.
-        bool  IsCamControl{false};
+        // === 회전 (Yaw / Pitch) ===
         /// @brief Pitch (X축 회전, 위/아래). 단위: degree. 호출자가 @c [-89, 89] 로 클램프.
         float EulerPitch{0.0f};
         /// @brief Yaw (Y축 회전, 좌/우). 단위: degree. 호출자가 @c [0, 360) 으로 정규화.

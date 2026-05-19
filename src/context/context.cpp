@@ -20,6 +20,12 @@ namespace SJH
      *********************************************************************************/
     // 엥? 교안 CW 배치네..
 
+    namespace
+    {
+        constexpr float kCameraSpeed = 0.05f;   // WASD/QE 이동 속도 (프레임당 world unit)
+        constexpr float kCameraRotSpeed = 0.1f; // 마우스 드래그 → yaw/pitch 회전 배율
+    }
+
     std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(2.0f, 5.0f, -15.0f),
@@ -43,27 +49,9 @@ namespace SJH
 
     void Context::ProcessInput(GLFWwindow *window)
     {
-        if (!mCamera.IsCamControl)
-            return;
-        const float cameraSpeed = 0.05f;
-        const auto cameraFront = mCamera.GetFront(); // 매 프레임 1회만 계산 — 재사용
-
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            mCamera.Pos += cameraSpeed * cameraFront;
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            mCamera.Pos -= cameraSpeed * cameraFront;
-
-        auto cameraRight = glm::normalize(glm::cross(mCamera.CamUp, -cameraFront));
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            mCamera.Pos += cameraSpeed * cameraRight;
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            mCamera.Pos -= cameraSpeed * cameraRight;
-
-        auto cameraUp = glm::normalize(glm::cross(-cameraFront, cameraRight));
-        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-            mCamera.Pos += cameraSpeed * cameraUp;
-        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-            mCamera.Pos -= cameraSpeed * cameraUp;
+        // 우클릭 드래그 중일 때만 카메라 이동 — 기존 IsCamControl 가드와 동일 거동.
+        if (mMouse.IsDragging())
+            mKeyboard.PollHeld(window);
     }
 
     void Context::Reshape(int width, int height)
@@ -79,54 +67,12 @@ namespace SJH
 
     void Context::MouseMove(double x, double y)
     {
-        if (!mCamera.IsCamControl)
-            return;
-        auto pos = glm::vec2((float)x, (float)y);
-        auto deltaPos = pos - mPrevMousePos;
-
-        // yaw/pitch 반전 조작 — cameraRotSpeed 부호를 +로 두어 마우스 이동 ↔ 시점 회전을
-        // 반대 방향으로 매핑 (이전 -0.1f 의 부호 반전). 두 축 동시 반전.
-        // const float cameraRotSpeed = -0.1f;
-        const float cameraRotSpeed = 0.1f;
-        mCamera.EulerYaw -= deltaPos.x * cameraRotSpeed;
-        mCamera.EulerPitch -= deltaPos.y * cameraRotSpeed;
-
-        if (mCamera.EulerYaw < 0.0f)
-            mCamera.EulerYaw += 360.0f;
-        if (mCamera.EulerYaw > 360.0f)
-            mCamera.EulerYaw -= 360.0f;
-
-        if (mCamera.EulerPitch > 89.0f)
-            mCamera.EulerPitch = 89.0f;
-        if (mCamera.EulerPitch < -89.0f)
-            mCamera.EulerPitch = -89.0f;
-
-        mPrevMousePos = pos;
+        mMouse.HandleMove(x, y);
     }
 
     void Context::MouseButton(int button, int action, double x, double y)
     {
-        const char *btnName = (button == GLFW_MOUSE_BUTTON_LEFT)     ? "LEFT"
-                              : (button == GLFW_MOUSE_BUTTON_RIGHT)  ? "RIGHT"
-                              : (button == GLFW_MOUSE_BUTTON_MIDDLE) ? "MIDDLE"
-                                                                     : "OTHER";
-        const char *actName = (action == GLFW_PRESS) ? "PRESS" : "RELEASE";
-        spdlog::info("[MouseButton] {} {} at ({:.1f}, {:.1f})", btnName, actName, x, y);
-
-        if (button == GLFW_MOUSE_BUTTON_RIGHT)
-        {
-            if (action == GLFW_PRESS)
-            {
-                mPrevMousePos = glm::vec2((float)x, (float)y);
-                mCamera.IsCamControl = true;
-                spdlog::info("[MouseButton] IsCamControl=true, mPrevMousePos=({:.1f},{:.1f})", x, y);
-            }
-            else if (action == GLFW_RELEASE)
-            {
-                mCamera.IsCamControl = false;
-                spdlog::info("[MouseButton] IsCamControl=false");
-            }
-        }
+        mMouse.HandleButton(button, action, x, y);
     }
 
     /*********************************************************************************
@@ -517,6 +463,57 @@ namespace SJH
             .EulerPitch = -20.f,
         };
 
+        // === Input 바인딩 ===
+        // 1단 — 물리 키 → 논리 액션 (InputMap 계층).
+        mKeyboard.BindKey(GLFW_KEY_W, GameAction::MoveForward);
+        mKeyboard.BindKey(GLFW_KEY_S, GameAction::MoveBackward);
+        mKeyboard.BindKey(GLFW_KEY_D, GameAction::MoveRight);
+        mKeyboard.BindKey(GLFW_KEY_A, GameAction::MoveLeft);
+        mKeyboard.BindKey(GLFW_KEY_E, GameAction::MoveUp);
+        mKeyboard.BindKey(GLFW_KEY_Q, GameAction::MoveDown);
+
+        // 2단 — 논리 액션 → 핸들러 (연속 이동). 카메라 right/up 은 front 에서 매번 산출.
+        mKeyboard.BindHeldHandler(GameAction::MoveForward,
+                                  [this]
+                                  { mCamera.Pos += kCameraSpeed * mCamera.GetFront(); });
+        mKeyboard.BindHeldHandler(GameAction::MoveBackward,
+                                  [this]
+                                  { mCamera.Pos -= kCameraSpeed * mCamera.GetFront(); });
+        mKeyboard.BindHeldHandler(GameAction::MoveRight, [this]
+                                  {
+            const auto right = glm::normalize(glm::cross(mCamera.CamUp, -mCamera.GetFront()));
+            mCamera.Pos += kCameraSpeed * right; });
+        mKeyboard.BindHeldHandler(GameAction::MoveLeft, [this]
+                                  {
+            const auto right = glm::normalize(glm::cross(mCamera.CamUp, -mCamera.GetFront()));
+            mCamera.Pos -= kCameraSpeed * right; });
+        mKeyboard.BindHeldHandler(GameAction::MoveUp, [this]
+                                  {
+            const auto front = mCamera.GetFront();
+            const auto right = glm::normalize(glm::cross(mCamera.CamUp, -front));
+            const auto up = glm::normalize(glm::cross(-front, right));
+            mCamera.Pos += kCameraSpeed * up; });
+        mKeyboard.BindHeldHandler(GameAction::MoveDown, [this]
+                                  {
+            const auto front = mCamera.GetFront();
+            const auto right = glm::normalize(glm::cross(mCamera.CamUp, -front));
+            const auto up = glm::normalize(glm::cross(-front, right));
+            mCamera.Pos -= kCameraSpeed * up; });
+
+        // 마우스 우클릭 드래그 → 시점 회전 (yaw/pitch). 기존 MouseMove 로직 이식.
+        mMouse.BindLookHandler([this](double dx, double dy)
+                               {
+            mCamera.EulerYaw -= static_cast<float>(dx) * kCameraRotSpeed;
+            mCamera.EulerPitch -= static_cast<float>(dy) * kCameraRotSpeed;
+            if (mCamera.EulerYaw < 0.0f)
+                mCamera.EulerYaw += 360.0f;
+            if (mCamera.EulerYaw > 360.0f)
+                mCamera.EulerYaw -= 360.0f;
+            if (mCamera.EulerPitch > 89.0f)
+                mCamera.EulerPitch = 89.0f;
+            if (mCamera.EulerPitch < -89.0f)
+                mCamera.EulerPitch = -89.0f; });
+
         mProgram = Program::CreateWithVSFS(Const::PATH_SHADER_LIGHTING_VS, Const::PATH_SHADER_LIGHTING_FS);
         if (!mProgram)
             return false;
@@ -653,19 +650,19 @@ namespace SJH
         // 마커는 스케일만 고정 — 위치는 Render() 가 광원 위치로 매 프레임 갱신.
         mScene.SetLocal(SceneNodeId::PointMarker0, Transform{.Scale = {0.1f, 0.1f, 0.1f}});
         mScene.SetLocal(SceneNodeId::PointMarker1, Transform{.Scale = {0.1f, 0.1f, 0.1f}});
-        mScene.SetLocal(SceneNodeId::SpotMarker,   Transform{.Scale = {0.1f, 0.1f, 0.1f}});
+        mScene.SetLocal(SceneNodeId::SpotMarker, Transform{.Scale = {0.1f, 0.1f, 0.1f}});
 
-        mScene.Attach(SceneNodeId::Plane,        SceneNodeId::Root);
-        mScene.Attach(SceneNodeId::Box1,         SceneNodeId::Root);
-        mScene.Attach(SceneNodeId::Box2,         SceneNodeId::Root);
-        mScene.Attach(SceneNodeId::Outline,      SceneNodeId::Box2);
-        mScene.Attach(SceneNodeId::Windows,      SceneNodeId::Root);
-        mScene.Attach(SceneNodeId::Window0,      SceneNodeId::Windows);
-        mScene.Attach(SceneNodeId::Window1,      SceneNodeId::Windows);
-        mScene.Attach(SceneNodeId::Window2,      SceneNodeId::Windows);
+        mScene.Attach(SceneNodeId::Plane, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::Box1, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::Box2, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::Outline, SceneNodeId::Box2);
+        mScene.Attach(SceneNodeId::Windows, SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::Window0, SceneNodeId::Windows);
+        mScene.Attach(SceneNodeId::Window1, SceneNodeId::Windows);
+        mScene.Attach(SceneNodeId::Window2, SceneNodeId::Windows);
         mScene.Attach(SceneNodeId::PointMarker0, SceneNodeId::Root);
         mScene.Attach(SceneNodeId::PointMarker1, SceneNodeId::Root);
-        mScene.Attach(SceneNodeId::SpotMarker,   SceneNodeId::Root);
+        mScene.Attach(SceneNodeId::SpotMarker, SceneNodeId::Root);
 
         return true;
     }

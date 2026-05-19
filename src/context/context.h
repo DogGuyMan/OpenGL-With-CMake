@@ -4,6 +4,9 @@
 #include "buffer/buffer.h"
 #include "buffer/framebuffer.h"
 #include "common/common.h"
+#include "context/game_action.h"
+#include "input/keyboard_input.h"
+#include "input/mouse_input.h"
 #include "layout/vertex_layout.h"
 #include "material/material.h"
 #include "object/camera.h"
@@ -142,8 +145,11 @@ namespace SJH
         /// @brief 현재 프레임버퍼 높이.
         int mHeight{480};
 
-        /// @brief 직전 프레임 마우스 위치 — 회전 델타 계산용. @ref MouseButton(LEFT, PRESS) 에서 초기화.
-        glm::vec2 mPrevMousePos{glm::vec2(0.0f)};
+        /// @brief 키보드 입력 — 물리 키↔GameAction 매핑 + 액션↔핸들러. Init 에서 바인딩.
+        KeyboardInput<GameAction> mKeyboard;
+
+        /// @brief 마우스 입력 — 우클릭 드래그 → 시점 회전. IsDragging() 이 조작 상태.
+        MouseInput mMouse;
 
         /// @brief 카메라 상태(POD-like). View/Projection 행렬 산출 + 입력 메서드들이 직접 갱신.
         Camera mCamera;

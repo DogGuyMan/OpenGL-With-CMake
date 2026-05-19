@@ -17,6 +17,7 @@ target_link_libraries(sjhopengl_context
             SJH::material
             SJH::resource_registry
             SJH::program
+            SJH::input
             glad::glad
             glm::glm
             glfw

@@ -174,6 +174,12 @@ digraph ClassDependencyGraph {
     Transform; SceneNode; SceneGraph;
   }
 
+  // 입력 디스패치 — 콜백 바인딩 (논리 액션 계층)
+  subgraph cluster_input {
+    label="Input"; style=dashed; color="#aaaaaa";
+    KeyboardInput; MouseInput;
+  }
+
   // 소유 관계 (실선) — 멤버로 보유, 수명 결합
   Context -> Program          [label="UPtr ×4\n(lighting/simple/texture/post)"];
   Context -> ResourceRegistry [label="UPtr (mRM)"];
@@ -184,6 +190,8 @@ digraph ClassDependencyGraph {
   Context -> Mesh             [label="MeshUPtr ×2\n(mBox + mPlane)"];
   Context -> Framebuffer      [label="FramebufferUPtr"];
   Context -> SceneGraph       [label="value (mScene)"];
+  Context -> KeyboardInput    [label="value (mKeyboard)\n<GameAction>"];
+  Context -> MouseInput       [label="value (mMouse)"];
 
   Mesh -> VertexLayout        [label="UPtr"];
   Mesh -> Buffer              [label="BufferPtr ×2\n(VBO/EBO)"];

@@ -240,6 +240,24 @@ target_link_libraries(test_scene_graph PRIVATE
 target_compile_features(test_scene_graph PRIVATE cxx_std_17)
 catch_discover_tests(test_scene_graph)
 
+#  input 모듈 — MouseInput 드래그 (GL 불요)
+add_executable(test_mouse_input test_mouse_input.cpp)
+target_link_libraries(test_mouse_input PRIVATE
+    Catch2::Catch2WithMain
+    SJH::input
+)
+target_compile_features(test_mouse_input PRIVATE cxx_std_17)
+catch_discover_tests(test_mouse_input)
+
+#  input 모듈 — KeyboardInput<TAction> 디스패치 (GL 불요)
+add_executable(test_keyboard_input test_keyboard_input.cpp)
+target_link_libraries(test_keyboard_input PRIVATE
+    Catch2::Catch2WithMain
+    SJH::input
+)
+target_compile_features(test_keyboard_input PRIVATE cxx_std_17)
+catch_discover_tests(test_keyboard_input)
+
 #  Shader source contract — simple.fs 와 C++ Material/Light 클래스의 약속 검증
 # GL context 불필요. CMake 가 SJH_RESOURCES_DIR 절대 경로 주입 (빌드 디렉토리 위치 무관).
 add_executable(test_shader_uniform_contract test_shader_uniform_contract.cpp)
@@ -300,6 +318,8 @@ add_custom_target(tests DEPENDS
     test_transform          # Transform 값 객체 (GetLocalMatrix)
     test_scene_node         # SceneNode 노드/계층
     test_scene_graph        # SceneGraph enum 인덱싱
+    test_mouse_input        # MouseInput 드래그
+    test_keyboard_input     # KeyboardInput<TAction> 디스패치
     test_shader_uniform_contract  # lighting.fs ↔ Material/Light caster contract
     test_gl_validate        # GLValidate 6 카테고리 (Cat A-F)
     test_program_uniforms

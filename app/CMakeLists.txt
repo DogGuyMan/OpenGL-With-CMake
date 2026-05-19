@@ -24,6 +24,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SJH::object
     SJH::common
     SJH::context
+    SJH::input
     SJH::diagnostics
     SJH::layout
     SJH::program
